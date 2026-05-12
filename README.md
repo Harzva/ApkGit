@@ -54,9 +54,32 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo run --release
 ```
 
+### Android preview APK
+
+The Android preview app is a small WebView shell for the GitHub Pages product page. It is not the planned Kotlin + Jetpack Compose MVP yet, but it gives the repository a reproducible Android package while the native mobile product is designed.
+
+Requirements:
+
+- JDK 17
+- Android SDK command-line tools
+- Android SDK Platform 35 and Build-Tools 35.0.0
+
+On Windows, set `ANDROID_HOME` and `ANDROID_SDK_ROOT` to your Android SDK path, then run:
+
+```powershell
+cd android-preview
+.\gradlew.bat :app:assembleRelease `
+  -PreleaseStoreFile="D:\path\to\release.jks" `
+  -PreleaseStorePassword="changeit" `
+  -PreleaseKeyAlias="release" `
+  -PreleaseKeyPassword="changeit"
+```
+
+The signed APK is written to `android-preview/app/build/outputs/apk/release/app-release.apk`.
+
 ## Release Builds
 
-The GitHub Actions workflow builds desktop artifacts for Linux, macOS, and Windows on every push and pull request. Android cargo-apk output is kept as an experimental artifact only; the product route for a polished Android MVP is Kotlin + Jetpack Compose.
+The GitHub Actions workflow builds desktop artifacts for Linux, macOS, and Windows on every push and pull request. It also builds the Android preview APK through `android-preview/gradlew`. Android cargo-apk output is kept as an experimental artifact only; the product route for a polished Android MVP is Kotlin + Jetpack Compose.
 
 Tag a release with `v*`, for example:
 
