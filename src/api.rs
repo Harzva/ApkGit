@@ -1,4 +1,4 @@
-use crate::data::{ApkAsset, Platform, ReleaseInfo, RepoInfo};
+use crate::data::{ApkAsset, Platform, ReleaseInfo, RepoInfo, SearchRepo};
 use reqwest::blocking::Client;
 
 pub struct ApiClient {
@@ -10,7 +10,7 @@ impl ApiClient {
     pub fn new() -> Self {
         Self {
             client: Client::builder()
-                .user_agent("GitMarket/0.1.2")
+                .user_agent("GitMarket/0.1.3")
                 .timeout(std::time::Duration::from_secs(30))
                 .build()
                 .unwrap_or_default(),
@@ -29,6 +29,10 @@ impl ApiClient {
         owner: &str,
         repo: &str,
     ) -> Result<RepoInfo, String> {
+        if platform == Platform::GitCode {
+            return Err("GitCode direct repository API is not stable yet. Open the source search from Discover.".to_string());
+        }
+
         let url = format!("{}/repos/{}/{}", platform.api_base(), owner, repo);
 
         let mut request = self.client.get(&url);
@@ -65,6 +69,13 @@ impl ApiClient {
         owner: &str,
         repo: &str,
     ) -> Result<Vec<ReleaseInfo>, String> {
+        if platform == Platform::GitCode {
+            return Err(
+                "GitCode release API is not stable yet. Open the upstream project page."
+                    .to_string(),
+            );
+        }
+
         let url = format!(
             "{}/repos/{}/{}/releases?per_page=20",
             platform.api_base(),
@@ -111,7 +122,7 @@ impl ApiClient {
             if let Some(assets) = raw["assets"].as_array() {
                 for asset in assets {
                     let name = asset["name"].as_str().unwrap_or("");
-                    if name.ends_with(".apk") || name.contains(".apk") {
+                    if is_supported_asset(name) {
                         release.assets.push(ApkAsset {
                             name: name.to_string(),
                             size: asset["size"].as_u64().unwrap_or(0),
@@ -133,10 +144,270 @@ impl ApiClient {
 
         Ok(releases)
     }
+
+    pub fn search_repositories(
+        &self,
+        platform: Platform,
+        query: &str,
+        limit: usize,
+    ) -> Result<Vec<SearchRepo>, String> {
+        let query = query.trim();
+        if query.is_empty() {
+            return Ok(curated_repositories(platform, limit));
+        }
+
+        match platform {
+            Platform::GitHub => self.search_github(query, limit),
+            Platform::Gitee => self.search_gitee(query, limit),
+            Platform::GitCode => Ok(curated_repositories(Platform::GitCode, limit.min(2))),
+        }
+    }
+
+    fn search_github(&self, query: &str, limit: usize) -> Result<Vec<SearchRepo>, String> {
+        let url = format!(
+            "{}/search/repositories?q={}&sort=stars&order=desc&per_page={}",
+            Platform::GitHub.api_base(),
+            encode_query(query),
+            limit.min(30)
+        );
+
+        let mut request = self.client.get(&url);
+        if let Some(token) = &self.github_token {
+            request = request.header("Authorization", format!("token {}", token));
+        }
+
+        let response = request
+            .send()
+            .map_err(|e| format!("GitHub search failed: {}", e))?;
+
+        if response.status() == 403 {
+            return Err(
+                "GitHub API rate limit reached. Configure a token in Settings.".to_string(),
+            );
+        }
+        if !response.status().is_success() {
+            return Err(format!("GitHub search HTTP error: {}", response.status()));
+        }
+
+        let raw: serde_json::Value = response
+            .json()
+            .map_err(|e| format!("Failed to parse GitHub search JSON: {}", e))?;
+        let items = raw["items"].as_array().cloned().unwrap_or_default();
+
+        Ok(items
+            .into_iter()
+            .map(|item| SearchRepo {
+                full_name: item["full_name"].as_str().unwrap_or("unknown").to_string(),
+                description: item["description"].as_str().map(|s| s.to_string()),
+                stargazers_count: item["stargazers_count"].as_u64().unwrap_or(0),
+                forks_count: item["forks_count"].as_u64().unwrap_or(0),
+                language: item["language"].as_str().map(|s| s.to_string()),
+                html_url: item["html_url"].as_str().unwrap_or("").to_string(),
+                updated_at: item["updated_at"].as_str().map(|s| s.to_string()),
+                topics: item["topics"]
+                    .as_array()
+                    .map(|topics| {
+                        topics
+                            .iter()
+                            .filter_map(|topic| topic.as_str().map(str::to_string))
+                            .collect()
+                    })
+                    .unwrap_or_default(),
+                source: Platform::GitHub.label().to_string(),
+            })
+            .collect())
+    }
+
+    fn search_gitee(&self, query: &str, limit: usize) -> Result<Vec<SearchRepo>, String> {
+        let url = format!(
+            "{}/search/repositories?q={}&sort=stars_count&order=desc&page=1&per_page={}",
+            Platform::Gitee.api_base(),
+            encode_query(query),
+            limit.min(30)
+        );
+
+        let response = self
+            .client
+            .get(&url)
+            .send()
+            .map_err(|e| format!("Gitee search failed: {}", e))?;
+
+        if !response.status().is_success() {
+            return Err(format!("Gitee search HTTP error: {}", response.status()));
+        }
+
+        let raw: serde_json::Value = response
+            .json()
+            .map_err(|e| format!("Failed to parse Gitee search JSON: {}", e))?;
+        let items = raw.as_array().cloned().unwrap_or_default();
+
+        Ok(items
+            .into_iter()
+            .map(|item| {
+                let full_name = item["full_name"]
+                    .as_str()
+                    .or_else(|| item["path_with_namespace"].as_str())
+                    .or_else(|| item["human_name"].as_str())
+                    .or_else(|| item["name"].as_str())
+                    .unwrap_or("unknown");
+                SearchRepo {
+                    full_name: full_name.to_string(),
+                    description: item["description"].as_str().map(|s| s.to_string()),
+                    stargazers_count: item["stargazers_count"]
+                        .as_u64()
+                        .or_else(|| item["stars_count"].as_u64())
+                        .unwrap_or(0),
+                    forks_count: item["forks_count"].as_u64().unwrap_or(0),
+                    language: item["language"].as_str().map(|s| s.to_string()),
+                    html_url: item["html_url"]
+                        .as_str()
+                        .or_else(|| item["url"].as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    updated_at: item["updated_at"]
+                        .as_str()
+                        .or_else(|| item["pushed_at"].as_str())
+                        .map(|s| s.to_string()),
+                    topics: Vec::new(),
+                    source: Platform::Gitee.label().to_string(),
+                }
+            })
+            .collect())
+    }
 }
 
 impl Default for ApiClient {
     fn default() -> Self {
         Self::new()
     }
+}
+
+fn is_supported_asset(name: &str) -> bool {
+    let name = name.to_lowercase();
+    let exts = [
+        ".apk",
+        ".exe",
+        ".msi",
+        ".dmg",
+        ".pkg",
+        ".appimage",
+        ".deb",
+        ".rpm",
+        ".ipa",
+        ".zip",
+        ".tar.gz",
+        ".tgz",
+        ".7z",
+    ];
+    exts.iter()
+        .any(|ext| name.ends_with(ext) || name.contains(ext))
+}
+
+fn encode_query(query: &str) -> String {
+    query
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join("+")
+        .replace('/', "%2F")
+}
+
+fn curated_repositories(platform: Platform, limit: usize) -> Vec<SearchRepo> {
+    let items = match platform {
+        Platform::GitHub => [
+            (
+                "termux/termux-app",
+                "Android terminal emulator",
+                54800,
+                "Java",
+            ),
+            ("2dust/v2rayNG", "Android proxy client", 55900, "Kotlin"),
+            (
+                "obsproject/obs-studio",
+                "Streaming and recording",
+                72300,
+                "C",
+            ),
+            ("pbatard/rufus", "USB formatting utility", 36000, "C"),
+            ("KeePassXC/KeePassXC", "Password manager", 25100, "C++"),
+            (
+                "laurent22/joplin",
+                "Privacy-focused notes",
+                54800,
+                "TypeScript",
+            ),
+            (
+                "PowerShell/PowerShell",
+                "Shell for every system",
+                49800,
+                "C#",
+            ),
+            ("ShareX/ShareX", "Screen capture workflow", 35000, "C#"),
+            ("sharkdp/fd", "Fast find alternative", 38400, "Rust"),
+            ("BurntSushi/ripgrep", "Fast recursive search", 55000, "Rust"),
+        ]
+        .as_slice(),
+        Platform::Gitee => [
+            (
+                "openharmony/docs",
+                "OpenHarmony documentation",
+                9200,
+                "Markdown",
+            ),
+            ("dromara/hutool", "Java utility library", 31000, "Java"),
+            (
+                "dromara/Sa-Token",
+                "Java permission framework",
+                17000,
+                "Java",
+            ),
+            ("mindspore/mindspore", "AI computing framework", 6400, "C++"),
+            ("oschina/git-osc", "Gitee tools", 1800, "Java"),
+            (
+                "anolis/cloud-kernel",
+                "Linux kernel distribution",
+                1100,
+                "C",
+            ),
+            ("src-openeuler/kernel", "openEuler kernel", 1400, "C"),
+            ("dromara/Jpom", "DevOps project manager", 12000, "Java"),
+            ("jeecg/jeecg-boot", "Low-code platform", 42000, "Java"),
+            ("layui/layui", "Classic UI framework", 28000, "JavaScript"),
+        ]
+        .as_slice(),
+        Platform::GitCode => [
+            (
+                "GitCode mirror",
+                "Open GitCode source search",
+                0,
+                "Fallback",
+            ),
+            (
+                "Release keyword",
+                "Use upstream search for GitCode projects",
+                0,
+                "Fallback",
+            ),
+        ]
+        .as_slice(),
+    };
+
+    items
+        .iter()
+        .take(limit)
+        .map(|(name, desc, stars, lang)| SearchRepo {
+            full_name: (*name).to_string(),
+            description: Some((*desc).to_string()),
+            stargazers_count: *stars,
+            forks_count: 0,
+            language: Some((*lang).to_string()),
+            html_url: match platform {
+                Platform::GitHub => format!("https://github.com/{}", name),
+                Platform::Gitee => format!("https://gitee.com/{}", name),
+                Platform::GitCode => "https://gitcode.com/search?keyword=release".to_string(),
+            },
+            updated_at: None,
+            topics: Vec::new(),
+            source: platform.label().to_string(),
+        })
+        .collect()
 }
