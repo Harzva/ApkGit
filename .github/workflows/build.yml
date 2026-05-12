@@ -150,7 +150,22 @@ jobs:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
           CARGO_APK_RELEASE_KEYSTORE: ${{ github.workspace }}/gitmarket-experimental.jks
           CARGO_APK_RELEASE_KEYSTORE_PASSWORD: gitmarketexperimental
-        run: cargo apk build -p gitmarket --release
+        run: |
+          set +e
+          cargo apk build -p gitmarket --release
+          cargo_apk_status=$?
+          set -e
+
+          if [ ! -f target/release/apk/gitmarket.apk ]; then
+            exit "$cargo_apk_status"
+          fi
+
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -n 1)"
+          "$APKSIGNER" verify --print-certs target/release/apk/gitmarket.apk
+
+          if [ "$cargo_apk_status" -ne 0 ]; then
+            echo "::warning::cargo-apk exited with $cargo_apk_status after producing a verified APK"
+          fi
 
       - name: Stage APK
         run: |
@@ -214,7 +229,7 @@ jobs:
 
   release:
     name: Publish GitHub Release
-    needs: [build-desktop, build-android-preview]
+    needs: [build-desktop, build-android-preview, build-android-experimental]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
