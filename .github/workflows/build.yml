@@ -150,7 +150,7 @@ jobs:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
           CARGO_APK_RELEASE_KEYSTORE: ${{ github.workspace }}/gitmarket-experimental.jks
           CARGO_APK_RELEASE_KEYSTORE_PASSWORD: gitmarketexperimental
-        run: cargo apk build --release
+        run: cargo apk build -p gitmarket --release
 
       - name: Stage APK
         run: |
