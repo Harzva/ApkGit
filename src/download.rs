@@ -72,6 +72,7 @@ pub fn filename_from_url(url: &str) -> String {
 }
 
 pub fn open_download_dir() {
+    #[cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))]
     let dir = get_download_dir();
     #[cfg(target_os = "windows")]
     std::process::Command::new("explorer")

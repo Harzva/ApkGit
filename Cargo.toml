@@ -24,6 +24,7 @@ dirs = "5.0"
 android-activity = { version = "0.6", features = ["native-activity"] }
 android_logger = "0.14"
 log = "0.4"
+winit = "0.30"
 
 [[bin]]
 name = "gitmarket"
