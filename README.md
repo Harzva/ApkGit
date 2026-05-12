@@ -1,12 +1,12 @@
-# ReleaseMarket
+# GitMarket
 
-ReleaseMarket is a desktop-first open-source tool for discovering software packages published in GitHub and Gitee Releases. It helps users inspect repositories, list release assets for Android, Windows, macOS, Linux, and future iOS packages, then download the original files from the upstream release page.
+GitMarket is a desktop-first open-source tool for discovering software packages published in GitHub and Gitee Releases. It helps users inspect repositories, list release assets for Android, Windows, macOS, Linux, and future iOS packages, then download the original files from the upstream release page.
 
 > Current product route: this Rust/egui codebase is positioned as the **desktop utility**. The Android-native MVP described in the planning documents should be built separately with Kotlin + Jetpack Compose when mobile installation, permissions, PackageManager integration, and Material 3 UX become the main goal.
 
 ## Status
 
-This repository is an early `0.1.1` MVP. It is intended for testing the core chain:
+This repository is an early `0.1.2` MVP. It is intended for testing the core chain:
 
 1. Parse a GitHub/Gitee repository URL.
 2. Fetch repository metadata and releases.
@@ -34,7 +34,7 @@ The project does **not** host binaries, re-sign packages, mirror files, or audit
 
 ## Safety Model
 
-ReleaseMarket is a discovery and download helper, not an app store with review guarantees.
+GitMarket is a discovery and download helper, not an app store with review guarantees.
 
 - Release assets are downloaded from upstream GitHub/Gitee Release URLs.
 - Users should verify the upstream project, release notes, license, signatures, and hashes before installing.
@@ -83,18 +83,18 @@ The GitHub Actions workflow builds desktop artifacts for Linux, macOS, and Windo
 
 Current CI artifacts:
 
-- `release-market-windows-x86_64.zip`, containing `release-market.exe`
-- `release-market-linux-x86_64.tar.gz`
-- `release-market-macos-aarch64.tar.gz`
-- `release-market-android-preview-v0.1.0.apk`
+- `gitmarket-windows-x86_64.zip`, containing `gitmarket.exe`
+- `gitmarket-linux-x86_64.tar.gz`
+- `gitmarket-macos-aarch64.tar.gz`
+- `gitmarket-android-preview-v0.1.2.apk`
 
 Android cargo-apk output is kept as an experimental, non-blocking job only; the product route for a polished Android MVP is Kotlin + Jetpack Compose. iOS packaging is not enabled yet because there is no native iOS project or Apple Developer signing setup in this repository. The correct next step is a SwiftUI/WebKit preview target first, then signed IPA/TestFlight automation after certificates are available.
 
 Tag a release with `v*`, for example:
 
 ```bash
-git tag v0.1.1
-git push origin v0.1.1
+git tag v0.1.2
+git push origin v0.1.2
 ```
 
 The workflow will publish GitHub Release artifacts when CI passes.
@@ -116,4 +116,4 @@ The GitHub Pages site lives in `docs/`. `docs/index.html` is the product landing
 
 ## License
 
-ReleaseMarket is licensed under GPL-3.0-or-later. See [LICENSE](LICENSE).
+GitMarket is licensed under GPL-3.0-or-later. See [LICENSE](LICENSE).

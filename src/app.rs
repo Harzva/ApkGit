@@ -5,7 +5,7 @@ use eframe::egui;
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 
-pub struct ReleaseMarketApp {
+pub struct GitMarketApp {
     repo_input: String,
     github_token: String,
     repo_info: Option<RepoInfo>,
@@ -39,7 +39,7 @@ enum AppMessage {
     InstallComplete(String),
 }
 
-impl Default for ReleaseMarketApp {
+impl Default for GitMarketApp {
     fn default() -> Self {
         let (tx, rx) = mpsc::channel();
         let is_android = cfg!(target_os = "android");
@@ -63,7 +63,7 @@ impl Default for ReleaseMarketApp {
     }
 }
 
-impl ReleaseMarketApp {
+impl GitMarketApp {
     fn text_size(&self) -> f32 {
         if self.is_android {
             18.0
@@ -219,7 +219,7 @@ impl ReleaseMarketApp {
     }
 }
 
-impl eframe::App for ReleaseMarketApp {
+impl eframe::App for GitMarketApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.check_messages();
 
@@ -238,7 +238,7 @@ impl eframe::App for ReleaseMarketApp {
         egui::TopBottomPanel::top("header").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.label(
-                    egui::RichText::new("ReleaseMarket")
+                    egui::RichText::new("GitMarket")
                         .size(self.text_size() + 6.0)
                         .strong(),
                 );
@@ -319,7 +319,7 @@ impl eframe::App for ReleaseMarketApp {
     }
 }
 
-impl ReleaseMarketApp {
+impl GitMarketApp {
     fn show_repo_tab(&mut self, ui: &mut egui::Ui) {
         ui.vertical(|ui| {
             ui.group(|ui| {

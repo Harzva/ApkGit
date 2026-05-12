@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping make ReleaseMarket safer and more useful.
+Thanks for helping make GitMarket safer and more useful.
 
 ## Development Checks
 

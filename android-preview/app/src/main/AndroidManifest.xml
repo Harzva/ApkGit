@@ -4,7 +4,7 @@
 
     <application
         android:allowBackup="false"
-        android:label="ReleaseMarket"
+        android:label="GitMarket"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity

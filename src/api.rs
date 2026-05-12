@@ -10,7 +10,7 @@ impl ApiClient {
     pub fn new() -> Self {
         Self {
             client: Client::builder()
-                .user_agent("ReleaseMarket/0.1.1")
+                .user_agent("GitMarket/0.1.2")
                 .timeout(std::time::Duration::from_secs(30))
                 .build()
                 .unwrap_or_default(),

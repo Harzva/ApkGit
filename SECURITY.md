@@ -15,7 +15,7 @@ Please do not open a public issue for vulnerabilities. Use GitHub private vulner
 
 ## APK Safety Scope
 
-ReleaseMarket does not review, host, modify, or re-sign third-party APK files. It links to upstream Release assets and downloads them from their original URLs.
+GitMarket does not review, host, modify, or re-sign third-party APK files. It links to upstream Release assets and downloads them from their original URLs.
 
 Before public release, the app should visibly expose:
 

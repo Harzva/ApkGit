@@ -36,7 +36,7 @@ pub fn get_download_dir() -> std::path::PathBuf {
     let home = dirs::download_dir()
         .or_else(dirs::home_dir)
         .unwrap_or_else(|| std::path::PathBuf::from("."));
-    home.join("ReleaseMarket_Downloads")
+    home.join("GitMarket_Downloads")
 }
 
 pub fn calc_sha256(path: &Path) -> Result<String, String> {

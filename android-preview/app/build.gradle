@@ -8,15 +8,15 @@ def releaseKeyAlias = providers.gradleProperty("releaseKeyAlias").orNull
 def releaseKeyPassword = providers.gradleProperty("releaseKeyPassword").orNull
 
 android {
-    namespace "com.releasemarket.preview"
+    namespace "com.gitmarket.preview"
     compileSdk 35
 
     defaultConfig {
-        applicationId "com.releasemarket.preview"
+        applicationId "com.gitmarket.preview"
         minSdk 26
         targetSdk 35
-        versionCode 2
-        versionName "0.1.1"
+        versionCode 3
+        versionName "0.1.2"
     }
 
     signingConfigs {

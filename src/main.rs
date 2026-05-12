@@ -15,9 +15,9 @@ fn main() -> eframe::Result<()> {
     };
 
     eframe::run_native(
-        "ReleaseMarket v0.1.1",
+        "GitMarket v0.1.2",
         options,
-        Box::new(|_cc| Ok(Box::new(app::ReleaseMarketApp::default()))),
+        Box::new(|_cc| Ok(Box::new(app::GitMarketApp::default()))),
     )
 }
 
@@ -36,9 +36,9 @@ fn android_main(app: android_activity::AndroidApp) {
     };
 
     eframe::run_native(
-        "ReleaseMarket",
+        "GitMarket",
         options,
-        Box::new(|_cc| Ok(Box::new(app::ReleaseMarketApp::default()))),
+        Box::new(|_cc| Ok(Box::new(app::GitMarketApp::default()))),
     )
     .unwrap();
 }

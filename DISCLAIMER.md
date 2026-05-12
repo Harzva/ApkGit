@@ -1,6 +1,6 @@
 # Disclaimer
 
-ReleaseMarket is not Google Play, F-Droid, GitHub, Gitee, or an APK review authority.
+GitMarket is not Google Play, F-Droid, GitHub, Gitee, or an APK review authority.
 
 The software helps users discover and download upstream Release assets. It does not guarantee that any third-party APK is safe, legal to install in your jurisdiction, free of malware, compatible with your device, or signed by an expected developer key.
 

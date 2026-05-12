@@ -19,7 +19,7 @@ labels: bug
 ## Environment
 
 - OS:
-- ApkGit version or commit:
+- GitMarket version or commit:
 - Repository URL tested:
 
 ## Logs or Screenshots
