@@ -1,11 +1,6 @@
-mod api;
-mod app;
-mod data;
-mod download;
-
 use eframe::{egui, NativeOptions};
+use gitmarket::app::GitMarketApp;
 
-#[cfg(not(target_os = "android"))]
 fn main() -> eframe::Result<()> {
     let options = NativeOptions {
         viewport: egui::ViewportBuilder::default()
@@ -17,31 +12,6 @@ fn main() -> eframe::Result<()> {
     eframe::run_native(
         "GitMarket v0.1.2",
         options,
-        Box::new(|_cc| Ok(Box::new(app::GitMarketApp::default()))),
+        Box::new(|_cc| Ok(Box::new(GitMarketApp::default()))),
     )
 }
-
-#[cfg(target_os = "android")]
-#[no_mangle]
-fn android_main(app: android_activity::AndroidApp) {
-    use eframe::NativeOptions;
-
-    android_logger::init_once(
-        android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
-    );
-
-    let options = NativeOptions {
-        android_app: Some(app),
-        ..Default::default()
-    };
-
-    eframe::run_native(
-        "GitMarket",
-        options,
-        Box::new(|_cc| Ok(Box::new(app::GitMarketApp::default()))),
-    )
-    .unwrap();
-}
-
-#[cfg(target_os = "android")]
-pub use android_logger;

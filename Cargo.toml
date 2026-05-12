@@ -29,13 +29,20 @@ log = "0.4"
 name = "gitmarket"
 path = "src/main.rs"
 
+[lib]
+name = "gitmarket"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
 # Experimental Rust Android packaging. The primary Android route is the
 # android-preview Gradle project, and the polished mobile MVP should be native.
 [package.metadata.android]
-application_id = "com.gitmarket.app"
-label = "GitMarket"
+package = "com.gitmarket.app"
 version_code = 3
 version_name = "0.1.2"
+build_targets = ["aarch64-linux-android"]
+
+[package.metadata.android.sdk]
 min_sdk_version = 26
 target_sdk_version = 34
 
@@ -45,11 +52,6 @@ name = "android.permission.INTERNET"
 [[package.metadata.android.uses_permission]]
 name = "android.permission.REQUEST_INSTALL_PACKAGES"
 
-[package.metadata.android.build_targets]
-aarch64 = true
-armv7 = false
-x86 = false
-x86_64 = false
-
 [package.metadata.android.application]
+label = "GitMarket"
 debuggable = false
