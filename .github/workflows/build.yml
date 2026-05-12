@@ -1,0 +1,219 @@
+name: Build
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Format, test, and lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install Linux build dependencies
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev libgtk-3-dev
+
+      - name: Verify lockfile
+        run: cargo generate-lockfile --locked
+
+      - name: Format check
+        run: cargo fmt --check
+
+      - name: Tests
+        run: cargo test --locked
+
+      - name: Clippy
+        run: cargo clippy --locked --all-targets --all-features -- -D warnings
+
+  build-desktop:
+    name: Build ${{ matrix.name }}
+    needs: check
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            name: linux-x86_64
+            binary: apkgit
+            archive: tar.gz
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            name: macos-aarch64
+            binary: apkgit
+            archive: tar.gz
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            name: windows-x86_64
+            binary: apkgit.exe
+            archive: zip
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Linux build dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev libgtk-3-dev
+
+      - name: Build release
+        run: cargo build --locked --release --target ${{ matrix.target }}
+
+      - name: Stage artifact
+        shell: bash
+        run: |
+          mkdir -p dist/package
+          cp "target/${{ matrix.target }}/release/${{ matrix.binary }}" "dist/package/${{ matrix.binary }}"
+          cp README.md LICENSE SECURITY.md PRIVACY.md DISCLAIMER.md dist/package/
+
+      - name: Package tarball
+        if: matrix.archive == 'tar.gz'
+        shell: bash
+        run: |
+          cd dist
+          tar czf "apkgit-${{ matrix.name }}.tar.gz" package
+
+      - name: Package zip
+        if: matrix.archive == 'zip'
+        shell: pwsh
+        run: Compress-Archive -Path dist/package/* -DestinationPath dist/apkgit-${{ matrix.name }}.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apkgit-${{ matrix.name }}
+          path: |
+            dist/*.tar.gz
+            dist/*.zip
+
+  build-android-experimental:
+    name: Build Android experimental
+    needs: check
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Install cargo-apk
+        run: cargo install cargo-apk --locked
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r26d
+          link-to-sdk: true
+
+      - name: Build Android APK
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: cargo apk build --locked --release
+
+      - name: Stage APK
+        run: |
+          mkdir -p dist
+          cp target/release/apk/apkgit.apk dist/apkgit-android-experimental.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apkgit-android-experimental
+          path: dist/*.apk
+
+  build-android-preview:
+    name: Build Android preview APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+
+      - name: Create release signing key
+        run: |
+          keytool -genkeypair \
+            -keystore android-preview/apkgit-preview.jks \
+            -storepass apkgitpreview \
+            -keypass apkgitpreview \
+            -alias apkgit \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=ApkGit Preview,O=ApkGit,C=US"
+
+      - name: Build signed preview APK
+        run: |
+          gradle -p android-preview :app:assembleRelease \
+            -PreleaseStoreFile="$(pwd)/android-preview/apkgit-preview.jks" \
+            -PreleaseStorePassword=apkgitpreview \
+            -PreleaseKeyAlias=apkgit \
+            -PreleaseKeyPassword=apkgitpreview
+
+      - name: Stage APK
+        run: |
+          mkdir -p dist
+          cp android-preview/app/build/outputs/apk/release/app-release.apk dist/apkgit-android-preview-v0.1.0.apk
+          sha256sum dist/apkgit-android-preview-v0.1.0.apk > dist/apkgit-android-preview-v0.1.0.apk.sha256
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apkgit-android-preview
+          path: dist/*
+
+  release:
+    name: Publish GitHub Release
+    needs: [build-desktop, build-android-preview]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: apkgit-*
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true

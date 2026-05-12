@@ -1,0 +1,54 @@
+[package]
+name = "apkgit"
+version = "0.1.0"
+edition = "2021"
+description = "GitHub/Gitee APK 发现与下载工具"
+authors = ["ApkGit Team"]
+license = "GPL-3.0-or-later"
+readme = "README.md"
+repository = "https://github.com/harzva/ApkGit"
+keywords = ["github", "apk", "release", "downloader", "foss"]
+categories = ["gui", "network-programming"]
+
+[dependencies]
+eframe = { version = "0.29", default-features = false, features = ["default_fonts", "glow"] }
+reqwest = { version = "0.12", features = ["json", "blocking"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
+hex = "0.4"
+dirs = "5.0"
+
+# Android 平台依赖
+[target.'cfg(target_os = "android")'.dependencies]
+android-activity = { version = "0.6", features = ["native-activity"] }
+android_logger = "0.14"
+log = "0.4"
+
+[[bin]]
+name = "apkgit"
+path = "src/main.rs"
+
+# ===== Android 打包配置（cargo-apk）=====
+[package.metadata.android]
+application_id = "com.apkgit.app"
+label = "ApkGit"
+version_code = 1
+version_name = "0.1.0"
+min_sdk_version = 26
+target_sdk_version = 34
+
+[[package.metadata.android.uses_permission]]
+name = "android.permission.INTERNET"
+
+[[package.metadata.android.uses_permission]]
+name = "android.permission.REQUEST_INSTALL_PACKAGES"
+
+[package.metadata.android.build_targets]
+aarch64 = true
+armv7 = false
+x86 = false
+x86_64 = false
+
+[package.metadata.android.application]
+debuggable = false

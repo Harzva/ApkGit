@@ -1,0 +1,43 @@
+plugins {
+    id "com.android.application"
+}
+
+def releaseStoreFile = providers.gradleProperty("releaseStoreFile").orNull
+def releaseStorePassword = providers.gradleProperty("releaseStorePassword").orNull
+def releaseKeyAlias = providers.gradleProperty("releaseKeyAlias").orNull
+def releaseKeyPassword = providers.gradleProperty("releaseKeyPassword").orNull
+
+android {
+    namespace "com.apkgit.preview"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.apkgit.preview"
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName "0.1.0"
+    }
+
+    signingConfigs {
+        release {
+            if (releaseStoreFile != null) {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable false
+        }
+        release {
+            debuggable false
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+}

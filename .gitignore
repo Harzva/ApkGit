@@ -1,0 +1,12 @@
+/target/
+Cargo.lock.tmp
+*.apk
+*.aab
+*.keystore
+*.jks
+*.p12
+*.pem
+*.key
+*.log
+dist/
+ApkGit_Downloads/
