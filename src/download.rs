@@ -35,7 +35,7 @@ pub fn download_file(url: &str, dest_path: &Path) -> Result<(), String> {
 /// 获取下载目录
 pub fn get_download_dir() -> std::path::PathBuf {
     let home = dirs::download_dir()
-        .or_else(|| dirs::home_dir())
+        .or_else(dirs::home_dir)
         .unwrap_or_else(|| std::path::PathBuf::from("."));
     home.join("ApkGit_Downloads")
 }
@@ -66,7 +66,7 @@ pub fn calc_sha256(path: &Path) -> Result<String, String> {
 /// 获取文件名从 URL
 pub fn filename_from_url(url: &str) -> String {
     url.split('/')
-        .last()
+        .next_back()
         .unwrap_or("download.apk")
         .split('?')
         .next()
