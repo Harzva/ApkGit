@@ -40,9 +40,7 @@ impl ApiClient {
             }
         }
 
-        let response = request
-            .send()
-            .map_err(|e| format!("网络请求失败: {}", e))?;
+        let response = request.send().map_err(|e| format!("网络请求失败: {}", e))?;
 
         if response.status() == 403 {
             return Err("API 限流，请配置 GitHub Token（设置页面）".to_string());
@@ -80,9 +78,7 @@ impl ApiClient {
             }
         }
 
-        let response = request
-            .send()
-            .map_err(|e| format!("网络请求失败: {}", e))?;
+        let response = request.send().map_err(|e| format!("网络请求失败: {}", e))?;
 
         if response.status() == 404 {
             return Err("该仓库没有 Release".to_string());

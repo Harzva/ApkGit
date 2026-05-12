@@ -25,11 +25,9 @@ pub fn download_file(url: &str, dest_path: &Path) -> Result<(), String> {
         std::fs::create_dir_all(parent).map_err(|e| format!("创建目录失败: {}", e))?;
     }
 
-    let mut file = std::fs::File::create(dest_path)
-        .map_err(|e| format!("创建文件失败: {}", e))?;
+    let mut file = std::fs::File::create(dest_path).map_err(|e| format!("创建文件失败: {}", e))?;
 
-    std::io::copy(&mut response, &mut file)
-        .map_err(|e| format!("写入文件失败: {}", e))?;
+    std::io::copy(&mut response, &mut file).map_err(|e| format!("写入文件失败: {}", e))?;
 
     Ok(())
 }
@@ -53,7 +51,9 @@ pub fn calc_sha256(path: &Path) -> Result<String, String> {
     let mut buffer = [0u8; 8192];
 
     loop {
-        let n = file.read(&mut buffer).map_err(|e| format!("读取失败: {}", e))?;
+        let n = file
+            .read(&mut buffer)
+            .map_err(|e| format!("读取失败: {}", e))?;
         if n == 0 {
             break;
         }
@@ -78,11 +78,17 @@ pub fn filename_from_url(url: &str) -> String {
 pub fn open_download_dir() {
     let dir = get_download_dir();
     #[cfg(target_os = "windows")]
-    std::process::Command::new("explorer").arg(&dir).spawn().ok();
+    std::process::Command::new("explorer")
+        .arg(&dir)
+        .spawn()
+        .ok();
     #[cfg(target_os = "macos")]
     std::process::Command::new("open").arg(&dir).spawn().ok();
     #[cfg(target_os = "linux")]
-    std::process::Command::new("xdg-open").arg(&dir).spawn().ok();
+    std::process::Command::new("xdg-open")
+        .arg(&dir)
+        .spawn()
+        .ok();
 }
 
 /// 使用 ADB 安装 APK（需要设备连接和 ADB）
@@ -103,7 +109,10 @@ pub fn install_apk_via_adb(apk_path: &Path) -> Result<String, String> {
     if output.status.success() || stdout.contains("Success") {
         Ok("安装成功！".to_string())
     } else {
-        Err(format!("安装失败:\n{}", if stderr.is_empty() { &stdout } else { &stderr }))
+        Err(format!(
+            "安装失败:\n{}",
+            if stderr.is_empty() { &stdout } else { &stderr }
+        ))
     }
 }
 

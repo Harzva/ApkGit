@@ -223,14 +223,12 @@ impl eframe::App for ApkGitApp {
         // Android 触摸优化：更大的字体
         if self.is_android {
             ctx.style_mut(|style| {
-                style.text_styles.insert(
-                    egui::TextStyle::Body,
-                    egui::FontId::proportional(18.0),
-                );
-                style.text_styles.insert(
-                    egui::TextStyle::Button,
-                    egui::FontId::proportional(18.0),
-                );
+                style
+                    .text_styles
+                    .insert(egui::TextStyle::Body, egui::FontId::proportional(18.0));
+                style
+                    .text_styles
+                    .insert(egui::TextStyle::Button, egui::FontId::proportional(18.0));
                 style.spacing.touch_extra = egui::vec2(8.0, 8.0);
                 style.spacing.interact_size.y = 44.0;
             });
@@ -238,7 +236,11 @@ impl eframe::App for ApkGitApp {
 
         egui::TopBottomPanel::top("header").show(ctx, |ui| {
             ui.horizontal(|ui| {
-                ui.label(egui::RichText::new("ApkGit").size(self.text_size() + 6.0).strong());
+                ui.label(
+                    egui::RichText::new("ApkGit")
+                        .size(self.text_size() + 6.0)
+                        .strong(),
+                );
                 ui.label("GitHub/Gitee APK 发现");
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ui
@@ -412,18 +414,16 @@ impl ApkGitApp {
     }
 
     fn show_release(&mut self, ui: &mut egui::Ui, _idx: usize, release: &ReleaseInfo) {
-        egui::CollapsingHeader::new(
-            format!(
-                "{} {} ({} APKs)",
-                if release.prerelease {
-                    "[预发布] "
-                } else {
-                    ""
-                },
-                release.tag_name,
-                release.assets.len()
-            ),
-        )
+        egui::CollapsingHeader::new(format!(
+            "{} {} ({} APKs)",
+            if release.prerelease {
+                "[预发布] "
+            } else {
+                ""
+            },
+            release.tag_name,
+            release.assets.len()
+        ))
         .show(ui, |ui| {
             if let Some(date) = &release.published_at {
                 ui.small(format!("发布: {}", &date[..10.min(date.len())]));
@@ -468,10 +468,20 @@ impl ApkGitApp {
         ui.small("基于 GitHub Search API 实时获取");
         ui.add_space(10.0);
 
-        let topics = ["Android 工具", "隐私工具", "AI 工具", "网络工具", "娱乐", "文件管理"];
+        let topics = [
+            "Android 工具",
+            "隐私工具",
+            "AI 工具",
+            "网络工具",
+            "娱乐",
+            "文件管理",
+        ];
         ui.horizontal_wrapped(|ui| {
             for label in topics {
-                if ui.button(egui::RichText::new(label).size(self.text_size())).clicked() {
+                if ui
+                    .button(egui::RichText::new(label).size(self.text_size()))
+                    .clicked()
+                {
                     self.error_message = Some(format!("搜索: {}（热榜增强版后续推出）", label));
                 }
             }

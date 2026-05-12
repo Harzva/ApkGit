@@ -25,10 +25,9 @@ fn main() -> eframe::Result<()> {
 #[no_mangle]
 fn android_main(app: android_activity::AndroidApp) {
     use eframe::NativeOptions;
-    
+
     android_logger::init_once(
-        android_logger::Config::default()
-            .with_max_level(log::LevelFilter::Debug),
+        android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
     );
 
     let options = NativeOptions {
@@ -40,7 +39,8 @@ fn android_main(app: android_activity::AndroidApp) {
         "ApkGit",
         options,
         Box::new(|_cc| Ok(Box::new(app::ApkGitApp::default()))),
-    ).unwrap();
+    )
+    .unwrap();
 }
 
 #[cfg(target_os = "android")]

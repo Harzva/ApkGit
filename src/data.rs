@@ -71,11 +71,7 @@ pub fn parse_repo_url(url: &str) -> Option<(Platform, String, String)> {
     if let Some(rest) = url.strip_prefix("https://github.com/") {
         let parts: Vec<&str> = rest.split('/').collect();
         if parts.len() >= 2 {
-            return Some((
-                Platform::GitHub,
-                parts[0].to_string(),
-                parts[1].to_string(),
-            ));
+            return Some((Platform::GitHub, parts[0].to_string(), parts[1].to_string()));
         }
     }
 
@@ -83,11 +79,7 @@ pub fn parse_repo_url(url: &str) -> Option<(Platform, String, String)> {
     if !url.contains("://") && url.matches('/').count() == 1 {
         let parts: Vec<&str> = url.split('/').collect();
         if parts.len() == 2 && !parts[0].is_empty() && !parts[1].is_empty() {
-            return Some((
-                Platform::GitHub,
-                parts[0].to_string(),
-                parts[1].to_string(),
-            ));
+            return Some((Platform::GitHub, parts[0].to_string(), parts[1].to_string()));
         }
     }
 
@@ -95,11 +87,7 @@ pub fn parse_repo_url(url: &str) -> Option<(Platform, String, String)> {
     if let Some(rest) = url.strip_prefix("https://gitee.com/") {
         let parts: Vec<&str> = rest.split('/').collect();
         if parts.len() >= 2 {
-            return Some((
-                Platform::Gitee,
-                parts[0].to_string(),
-                parts[1].to_string(),
-            ));
+            return Some((Platform::Gitee, parts[0].to_string(), parts[1].to_string()));
         }
     }
 
