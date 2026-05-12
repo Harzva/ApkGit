@@ -134,3 +134,9 @@ impl ApiClient {
         Ok(releases)
     }
 }
+
+impl Default for ApiClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
