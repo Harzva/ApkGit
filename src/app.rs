@@ -1198,7 +1198,7 @@ impl GitMarketApp {
                     let _ = tx.send(AppMessage::Discover(Vec::new()));
                 }
             } else {
-                merged.sort_by(|a, b| b.stargazers_count.cmp(&a.stargazers_count));
+                merged.sort_by_key(|item| std::cmp::Reverse(item.stargazers_count));
                 let _ = tx.send(AppMessage::Discover(merged));
             }
         });
