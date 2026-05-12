@@ -6,7 +6,7 @@ ReleaseMarket is a desktop-first open-source tool for discovering software packa
 
 ## Status
 
-This repository is an early `0.1.0` MVP. It is intended for testing the core chain:
+This repository is an early `0.1.1` MVP. It is intended for testing the core chain:
 
 1. Parse a GitHub/Gitee repository URL.
 2. Fetch repository metadata and releases.
@@ -93,8 +93,8 @@ Android cargo-apk output is kept as an experimental, non-blocking job only; the 
 Tag a release with `v*`, for example:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
 The workflow will publish GitHub Release artifacts when CI passes.

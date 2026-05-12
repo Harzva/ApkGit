@@ -15,7 +15,7 @@ fn main() -> eframe::Result<()> {
     };
 
     eframe::run_native(
-        "ReleaseMarket v0.1.0",
+        "ReleaseMarket v0.1.1",
         options,
         Box::new(|_cc| Ok(Box::new(app::ReleaseMarketApp::default()))),
     )

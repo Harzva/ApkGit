@@ -182,8 +182,9 @@ jobs:
       - name: Stage APK
         run: |
           mkdir -p dist
-          cp android-preview/app/build/outputs/apk/release/app-release.apk dist/release-market-android-preview-v0.1.0.apk
-          sha256sum dist/release-market-android-preview-v0.1.0.apk > dist/release-market-android-preview-v0.1.0.apk.sha256
+          VERSION="${GITHUB_REF_NAME:-dev}"
+          cp android-preview/app/build/outputs/apk/release/app-release.apk "dist/release-market-android-preview-${VERSION}.apk"
+          sha256sum "dist/release-market-android-preview-${VERSION}.apk" > "dist/release-market-android-preview-${VERSION}.apk.sha256"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

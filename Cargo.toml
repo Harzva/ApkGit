@@ -1,6 +1,6 @@
 [package]
 name = "release-market"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "GitHub/Gitee Release software discovery tool"
 authors = ["ReleaseMarket Team"]
@@ -34,8 +34,8 @@ path = "src/main.rs"
 [package.metadata.android]
 application_id = "com.releasemarket.app"
 label = "ReleaseMarket"
-version_code = 1
-version_name = "0.1.0"
+version_code = 2
+version_name = "0.1.1"
 min_sdk_version = 26
 target_sdk_version = 34
 
