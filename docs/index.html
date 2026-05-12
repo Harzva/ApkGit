@@ -3,210 +3,291 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GitMarket - GitHub Release 软件发现工具</title>
-  <meta name="description" content="GitMarket 帮助用户从 GitHub/Gitee Release 发现、校验并下载 Android、Windows、macOS、Linux、iOS 等平台的软件包。">
+  <title>GitMarket - ??? Release ????</title>
+  <meta name="description" content="GitMarket ????? GitHub?Gitee?GitCode ??????? Release ??????????????????????????">
   <style>
     :root {
       color-scheme: dark;
-      --bg: #0b0f14;
-      --panel: #111820;
-      --line: #24313f;
-      --text: #eef4f7;
-      --muted: #9badb8;
-      --blue: #4aa3ff;
-      --green: #63d297;
-      --amber: #e7c76a;
-      --ink: #071018;
+      --bg: #0a0d0f;
+      --panel: #10161a;
+      --panel-2: #151d22;
+      --paper: #f2ead8;
+      --ink: #0a0d0f;
+      --text: #eef3ed;
+      --muted: #9facaa;
+      --line: #28343a;
+      --green: #63d38a;
+      --blue: #6bb7ff;
+      --amber: #e8bd61;
+      --red: #f07d6b;
     }
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
-      background:
-        radial-gradient(circle at 20% 0%, rgba(74, 163, 255, .22), transparent 32rem),
-        radial-gradient(circle at 90% 20%, rgba(99, 210, 151, .16), transparent 28rem),
-        var(--bg);
+      background: var(--bg);
       color: var(--text);
-      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: "Segoe UI", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
       letter-spacing: 0;
     }
     a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
     header {
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 20;
       border-bottom: 1px solid rgba(255,255,255,.08);
-      background: rgba(11, 15, 20, .82);
-      backdrop-filter: blur(18px);
+      background: rgba(10, 13, 15, .86);
+      backdrop-filter: blur(16px);
     }
     nav {
-      max-width: 1180px;
+      max-width: 1160px;
+      min-height: 62px;
       margin: 0 auto;
-      height: 64px;
-      padding: 0 22px;
+      padding: 0 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 20px;
+      gap: 18px;
     }
-    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; }
+    .brand { display: inline-flex; align-items: center; gap: 11px; font-weight: 850; }
     .mark {
       width: 34px;
       height: 34px;
-      border: 1px solid rgba(255,255,255,.18);
       display: grid;
       place-items: center;
-      background: linear-gradient(135deg, var(--blue), var(--green));
-      color: var(--ink);
-      font-weight: 900;
       border-radius: 8px;
+      background: var(--paper);
+      color: var(--ink);
+      font-weight: 950;
+      box-shadow: inset 0 -3px 0 rgba(0,0,0,.18);
     }
-    .nav-links { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; }
-    .nav-links a { padding: 9px 11px; border-radius: 8px; }
-    .nav-links a:hover { background: rgba(255,255,255,.08); color: var(--text); }
-    .wrap { max-width: 1180px; margin: 0 auto; padding: 0 22px; }
+    .nav-links { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; }
+    .nav-links a { padding: 9px 10px; border-radius: 8px; }
+    .nav-links a:hover { color: var(--text); background: rgba(255,255,255,.07); }
+    .wrap { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
     .hero {
-      min-height: calc(100vh - 64px);
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(360px, 500px);
-      gap: 48px;
-      align-items: center;
-      padding: 70px 22px 54px;
+      min-height: calc(100vh - 132px);
+      padding: 76px 0 46px;
+      display: flex;
+      align-items: end;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background:
+        linear-gradient(90deg, rgba(10,13,15,.96) 0%, rgba(10,13,15,.78) 48%, rgba(10,13,15,.38) 100%),
+        url("assets/architecture_diagram.png") right center / min(56vw, 740px) auto no-repeat;
     }
-    .kicker { color: var(--green); font-size: 13px; font-weight: 800; text-transform: uppercase; }
+    .hero-copy { max-width: 780px; padding-bottom: 22px; }
+    .eyebrow {
+      width: fit-content;
+      padding: 7px 10px;
+      border: 1px solid rgba(99,211,138,.36);
+      border-radius: 8px;
+      color: var(--green);
+      background: rgba(99,211,138,.08);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
     h1 {
+      margin: 18px 0 20px;
       max-width: 760px;
-      margin: 16px 0 20px;
-      font-size: clamp(46px, 7vw, 88px);
-      line-height: .94;
+      font-size: clamp(44px, 7vw, 86px);
+      line-height: .96;
       letter-spacing: 0;
     }
     .lead {
-      max-width: 680px;
+      max-width: 720px;
+      margin: 0;
       color: var(--muted);
-      font-size: 19px;
+      font-size: 18px;
       line-height: 1.8;
     }
-    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
     .button {
       min-height: 44px;
-      padding: 0 18px;
-      border-radius: 8px;
+      padding: 0 16px;
       display: inline-flex;
       align-items: center;
-      border: 1px solid rgba(255,255,255,.16);
-      color: var(--text);
-      font-weight: 700;
-    }
-    .button.primary {
-      border-color: transparent;
-      background: var(--green);
-      color: var(--ink);
-    }
-    .product {
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(17, 24, 32, .78);
+      gap: 8px;
       border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 28px 80px rgba(0,0,0,.42);
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      font-weight: 760;
     }
-    .bar { height: 42px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-bottom: 1px solid var(--line); }
-    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); }
-    .dot:nth-child(2) { background: var(--green); }
-    .dot:nth-child(3) { background: var(--amber); }
-    .screen { padding: 18px; display: grid; gap: 12px; }
-    .row { padding: 14px; border: 1px solid rgba(255,255,255,.08); border-radius: 8px; background: rgba(255,255,255,.04); }
-    .row strong { display: block; margin-bottom: 5px; }
-    .row small { color: var(--muted); }
-    section { padding: 54px 0; border-top: 1px solid rgba(255,255,255,.08); }
-    .section-title { max-width: 720px; margin-bottom: 24px; }
-    h2 { font-size: clamp(28px, 4vw, 48px); margin: 0 0 12px; letter-spacing: 0; }
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .card { border: 1px solid rgba(255,255,255,.1); border-radius: 8px; padding: 18px; background: rgba(255,255,255,.035); }
-    .card h3 { margin: 0 0 8px; }
-    .card p, li { color: var(--muted); line-height: 1.7; }
-    .media-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-    .media-grid img { width: 100%; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: #0f151c; }
-    footer { padding: 34px 22px; color: var(--muted); text-align: center; }
-    @media (max-width: 840px) {
-      .hero { grid-template-columns: 1fr; padding-top: 44px; }
-      .nav-links a:not(.keep) { display: none; }
-      .grid, .media-grid { grid-template-columns: 1fr; }
-      h1 { font-size: 48px; }
+    .button.primary { border-color: transparent; background: var(--paper); color: var(--ink); }
+    .button:hover { transform: translateY(-1px); }
+    section { padding: 58px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .section-head { max-width: 720px; margin-bottom: 24px; }
+    h2 { margin: 0 0 12px; font-size: clamp(28px, 4vw, 48px); line-height: 1.08; letter-spacing: 0; }
+    .lane-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .lane {
+      min-height: 220px;
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: 8px;
+      background: var(--panel);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .lane small { color: var(--muted); text-transform: uppercase; font-weight: 800; }
+    .lane h3 { margin: 12px 0 8px; font-size: 24px; }
+    .lane p { margin: 0; color: var(--muted); line-height: 1.7; }
+    .lane .button { width: fit-content; margin-top: 18px; min-height: 38px; }
+    .source-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .source {
+      border-left: 4px solid var(--green);
+      padding: 16px 16px 16px 18px;
+      background: var(--panel-2);
+      border-radius: 8px;
+    }
+    .source:nth-child(2) { border-left-color: var(--amber); }
+    .source:nth-child(3) { border-left-color: var(--blue); }
+    .source h3 { margin: 0 0 7px; }
+    .source p { margin: 0; color: var(--muted); line-height: 1.65; }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      counter-reset: step;
+    }
+    .step {
+      position: relative;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px;
+      background: rgba(255,255,255,.035);
+    }
+    .step::before {
+      counter-increment: step;
+      content: "0" counter(step);
+      display: block;
+      margin-bottom: 16px;
+      color: var(--amber);
+      font-weight: 900;
+    }
+    .step strong { display: block; margin-bottom: 8px; }
+    .step span { color: var(--muted); line-height: 1.65; }
+    .media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .media-grid figure { margin: 0; border: 1px solid rgba(255,255,255,.1); border-radius: 8px; overflow: hidden; background: #0f151a; }
+    .media-grid figcaption { padding: 12px 14px; color: var(--muted); font-size: 13px; border-top: 1px solid rgba(255,255,255,.08); }
+    footer { padding: 34px 20px; color: var(--muted); text-align: center; }
+    @media (max-width: 860px) {
+      .hero { background-position: center top 40px; background-size: 920px auto; align-items: end; }
+      .hero-copy { padding-top: 200px; }
+      .lane-grid, .source-strip, .flow, .media-grid { grid-template-columns: 1fr; }
+      .nav-links a.optional { display: none; }
     }
   </style>
 </head>
 <body>
   <header>
     <nav>
-      <a class="brand" href="./">
-        <span class="mark">R</span>
-        <span>GitMarket</span>
-      </a>
+      <a class="brand" href="./"><span class="mark">G</span><span>GitMarket</span></a>
       <div class="nav-links">
-        <a href="./app.html">在线体验</a>
-        <a href="#safety">安全边界</a>
-        <a class="keep" href="https://github.com/harzva/GitReleaseMarket/releases/latest">下载</a>
-        <a class="keep" href="https://github.com/harzva/GitReleaseMarket">GitHub</a>
+        <a href="./app.html">????</a>
+        <a class="optional" href="#sources">??</a>
+        <a class="optional" href="#flow">??</a>
+        <a href="https://github.com/Harzva/GitReleaseMarket/releases/latest">??</a>
+        <a href="https://github.com/Harzva/GitReleaseMarket">GitHub</a>
       </div>
     </nav>
   </header>
 
   <main>
-    <div class="wrap hero">
-      <div>
-        <span class="kicker">Open-source release marketplace</span>
-        <h1>从 Release 里找到可信的软件包。</h1>
-        <p class="lead">
-          GitMarket 面向开源软件分发：从 GitHub/Gitee Release 发现 Android APK、Windows EXE、macOS DMG、Linux AppImage/DEB/RPM、iOS IPA 等资产，保留上游链接，并把许可证、哈希与签名信息放到下载前。
-        </p>
-        <div class="actions">
-          <a class="button primary" href="./app.html">打开 Web 版</a>
-          <a class="button" href="https://github.com/harzva/GitReleaseMarket/releases/latest">下载最新版</a>
-          <a class="button" href="https://github.com/harzva/GitReleaseMarket">查看源码</a>
-        </div>
-      </div>
-      <div class="product" aria-label="GitMarket preview">
-        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-        <div class="screen">
-          <div class="row"><strong>termux/termux-app</strong><small>APK assets, SHA256, upstream release link</small></div>
-          <div class="row"><strong>obsproject/obs-studio</strong><small>Windows, macOS and Linux release packages</small></div>
-          <div class="row"><strong>No binary hosting</strong><small>Every package points back to the original Release asset</small></div>
-        </div>
-      </div>
-    </div>
-
-    <section>
+    <section class="hero">
       <div class="wrap">
-        <div class="section-title">
-          <h2>先把分发链路做可信。</h2>
-          <p class="lead">它不是另一个封闭应用商店，而是补齐开源仓库、Release 资产、下载验证和本地安装之间缺失的展示层。</p>
-        </div>
-        <div class="grid">
-          <div class="card"><h3>发现</h3><p>按平台和类别浏览，也可以输入仓库地址直接检查 Release 资产。</p></div>
-          <div class="card"><h3>校验</h3><p>展示上游仓库、许可证、源代码地址、SHA256、下载量和签名指纹规划位。</p></div>
-          <div class="card"><h3>下载</h3><p>不托管、不重签、不修改第三方二进制，只链接官方 Release 文件。</p></div>
+        <div class="hero-copy">
+          <div class="eyebrow">GitHub / Gitee / GitCode release discovery</div>
+          <h1>GitMarket</h1>
+          <p class="lead">?????????? Release ????????Explore ?????????????????? Release?????????????????</p>
+          <div class="actions">
+            <a class="button primary" href="./app.html">?????</a>
+            <a class="button" href="https://github.com/trending">GitHub Trending</a>
+            <a class="button" href="https://github.com/explore">GitHub Explore</a>
+          </div>
         </div>
       </div>
     </section>
 
-    <section id="safety">
+    <section>
       <div class="wrap">
-        <div class="section-title">
-          <h2>合规底线写在前面。</h2>
+        <div class="section-head">
+          <h2>?????????????????</h2>
+          <p class="lead">????? GitHub Trending?GitHub Explore ? GitMarket ?????????????????????GitMarket ??????????????? Release ????</p>
         </div>
-        <ul>
-          <li>GitMarket 不是安全审核机构，也不保证第三方软件绝对安全。</li>
-          <li>下载链接来自上游 GitHub/Gitee Release，不托管 APK、EXE、IPA 等文件。</li>
-          <li>后续版本会前置展示 SHA256、签名指纹、许可证、源码地址和签名变更警告。</li>
-          <li>GitHub Token 是可选项，只用于提高 API 频率限制，桌面端应改用系统凭据存储。</li>
-        </ul>
+        <div class="lane-grid">
+          <article class="lane">
+            <div>
+              <small>Trend</small>
+              <h3>GitHub Trending</h3>
+              <p>?????????????????? Release ????????</p>
+            </div>
+            <a class="button" href="https://github.com/trending">????</a>
+          </article>
+          <article class="lane">
+            <div>
+              <small>Explore</small>
+              <h3>GitHub Explore</h3>
+              <p>?????????????????????????????</p>
+            </div>
+            <a class="button" href="https://github.com/explore">?? Explore</a>
+          </article>
+          <article class="lane">
+            <div>
+              <small>Search</small>
+              <h3>GitMarket Console</h3>
+              <p>??????? GitHub?Gitee?GitCode?????????????</p>
+            </div>
+            <a class="button primary" href="./app.html">?????</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="sources">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>????????????</h2>
+          <p class="lead">??????????????????????????????????? 10 ????????? 20 ???????? Show more ??????</p>
+        </div>
+        <div class="source-strip">
+          <article class="source"><h3>GitHub</h3><p>?????? REST API??? Token ?????????????</p></article>
+          <article class="source"><h3>Gitee</h3><p>?????? API???????????????????</p></article>
+          <article class="source"><h3>GitCode</h3><p>????????????????????????????</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="flow">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>????????????</h2>
+        </div>
+        <div class="flow">
+          <div class="step"><strong>????</strong><span>????????????????????</span></div>
+          <div class="step"><strong>????</strong><span>??????????????????</span></div>
+          <div class="step"><strong>????</strong><span>?? 10 ???? 20 ????????????</span></div>
+          <div class="step"><strong>????</strong><span>Show more ????????????????</span></div>
+        </div>
       </div>
     </section>
 
     <section>
       <div class="wrap media-grid">
-        <img src="assets/architecture_diagram.png" alt="GitMarket architecture diagram">
-        <img src="assets/phase_comparison_chart.png" alt="GitMarket roadmap chart">
+        <figure>
+          <img src="assets/architecture_diagram.png" alt="GitMarket architecture diagram">
+          <figcaption>???????? Release??????????????????</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/phase_comparison_chart.png" alt="GitMarket roadmap chart">
+          <figcaption>??????????????????????????????</figcaption>
+        </figure>
       </div>
     </section>
   </main>
