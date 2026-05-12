@@ -509,15 +509,19 @@ impl GitMarketApp {
     }
 
     fn search_box(&mut self, ui: &mut egui::Ui) {
+        let search_label = self.t("search");
+        let search_hint = self.t("search_hint");
+        let go_label = self.t("go");
+        let body_size = self.body_size();
         card(ui, self.palette(), |ui| {
             ui.horizontal(|ui| {
-                ui.label(RichText::new(self.t("search")).size(self.body_size() + 2.0));
+                ui.label(RichText::new(search_label).size(body_size + 2.0));
                 let response = ui.add(
                     egui::TextEdit::singleline(&mut self.search_input)
-                        .hint_text(self.t("search_hint"))
+                        .hint_text(search_hint)
                         .desired_width(f32::INFINITY),
                 );
-                if self.primary_button(ui, self.t("go")).clicked()
+                if self.primary_button(ui, go_label).clicked()
                     || (response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)))
                 {
                     self.current_tab = Tab::Discover;
@@ -1577,7 +1581,7 @@ fn format_count(value: u64) -> String {
     }
 }
 
-fn zh(key: &str) -> &str {
+fn zh(key: &str) -> &'static str {
     match key {
         "today" => "????",
         "me_hero_title" => "?? Release ????",
@@ -1649,7 +1653,7 @@ fn zh(key: &str) -> &str {
     }
 }
 
-fn en(key: &str) -> &str {
+fn en(key: &str) -> &'static str {
     match key {
         "today" => "Today",
         "me_hero_title" => "Your release intelligence board",
