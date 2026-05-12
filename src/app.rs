@@ -253,16 +253,17 @@ impl eframe::App for ApkGitApp {
         });
 
         egui::TopBottomPanel::top("tabs").show(ctx, |ui| {
+            let text_size = self.text_size();
             ui.horizontal(|ui| {
                 ui.selectable_value(
                     &mut self.current_tab,
                     Tab::Repo,
-                    egui::RichText::new("仓库").size(self.text_size()),
+                    egui::RichText::new("仓库").size(text_size),
                 );
                 ui.selectable_value(
                     &mut self.current_tab,
                     Tab::Hot,
-                    egui::RichText::new("热榜").size(self.text_size()),
+                    egui::RichText::new("热榜").size(text_size),
                 );
             });
         });
