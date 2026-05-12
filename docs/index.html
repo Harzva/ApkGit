@@ -3,424 +3,216 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ApkGit - GitHub 开源 APK 发现工具</title>
-  <meta name="description" content="ApkGit 帮助开源爱好者从 GitHub/Gitee Release 发现、检查并下载上游 APK。">
+  <title>ReleaseMarket - GitHub Release 软件发现工具</title>
+  <meta name="description" content="ReleaseMarket 帮助用户从 GitHub/Gitee Release 发现、校验并下载 Android、Windows、macOS、Linux、iOS 等平台的软件包。">
   <style>
     :root {
-      --ink: #12100c;
-      --paper: #f7f1e4;
-      --paper-2: #ede0ca;
-      --line: #2c2518;
-      --muted: #6b604f;
-      --green: #166b4f;
-      --blue: #235e88;
-      --red: #ad3f32;
-      --gold: #d59e38;
-      --shadow: 0 26px 70px rgba(31, 24, 12, .22);
+      color-scheme: dark;
+      --bg: #0b0f14;
+      --panel: #111820;
+      --line: #24313f;
+      --text: #eef4f7;
+      --muted: #9badb8;
+      --blue: #4aa3ff;
+      --green: #63d297;
+      --amber: #e7c76a;
+      --ink: #071018;
     }
-
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
     body {
       margin: 0;
-      color: var(--ink);
       background:
-        radial-gradient(circle at 12% 10%, rgba(213, 158, 56, .34), transparent 28rem),
-        radial-gradient(circle at 88% 12%, rgba(35, 94, 136, .18), transparent 30rem),
-        linear-gradient(135deg, #f9f4e9 0%, #efe2cc 48%, #f8f0de 100%);
-      font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, "Noto Serif SC", serif;
-      line-height: 1.55;
+        radial-gradient(circle at 20% 0%, rgba(74, 163, 255, .22), transparent 32rem),
+        radial-gradient(circle at 90% 20%, rgba(99, 210, 151, .16), transparent 28rem),
+        var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
     }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      opacity: .19;
-      background-image:
-        linear-gradient(rgba(18,16,12,.08) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(18,16,12,.08) 1px, transparent 1px);
-      background-size: 34px 34px;
-      mask-image: linear-gradient(to bottom, #000, transparent 80%);
-    }
-
-    a { color: inherit; }
-    .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
-
+    a { color: inherit; text-decoration: none; }
     header {
       position: sticky;
       top: 0;
       z-index: 10;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: rgba(11, 15, 20, .82);
       backdrop-filter: blur(18px);
-      background: rgba(247, 241, 228, .76);
-      border-bottom: 1px solid rgba(44, 37, 24, .18);
     }
-
     nav {
-      height: 66px;
+      max-width: 1180px;
+      margin: 0 auto;
+      height: 64px;
+      padding: 0 22px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 20px;
     }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
-      font-weight: 800;
-      letter-spacing: .02em;
-    }
-
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; }
     .mark {
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
+      border: 1px solid rgba(255,255,255,.18);
       display: grid;
       place-items: center;
-      color: #f8f0de;
-      background: var(--ink);
+      background: linear-gradient(135deg, var(--blue), var(--green));
+      color: var(--ink);
+      font-weight: 900;
       border-radius: 8px;
-      box-shadow: 5px 5px 0 var(--gold);
     }
-
-    .links {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
-      font-size: 14px;
-    }
-
-    .links a, .button {
-      border: 1px solid rgba(44, 37, 24, .24);
-      border-radius: 999px;
-      padding: 9px 14px;
-      text-decoration: none;
-      background: rgba(255,255,255,.28);
-      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
-    }
-
-    .links a:hover, .button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 9px 24px rgba(31, 24, 12, .12);
-      background: rgba(255,255,255,.48);
-    }
-
+    .nav-links { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; }
+    .nav-links a { padding: 9px 11px; border-radius: 8px; }
+    .nav-links a:hover { background: rgba(255,255,255,.08); color: var(--text); }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 0 22px; }
     .hero {
-      min-height: calc(100vh - 66px);
+      min-height: calc(100vh - 64px);
       display: grid;
-      grid-template-columns: 1.05fr .95fr;
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 500px);
+      gap: 48px;
       align-items: center;
-      gap: 42px;
-      padding: 58px 0 34px;
+      padding: 70px 22px 54px;
     }
-
-    .kicker {
-      display: inline-flex;
-      gap: 10px;
-      align-items: center;
-      padding: 8px 12px;
-      border: 1px solid rgba(44, 37, 24, .24);
-      border-radius: 999px;
-      background: rgba(255,255,255,.28);
-      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
+    .kicker { color: var(--green); font-size: 13px; font-weight: 800; text-transform: uppercase; }
     h1 {
-      margin: 26px 0 18px;
-      font-size: clamp(54px, 8vw, 116px);
-      line-height: .88;
-      letter-spacing: -0.04em;
-      max-width: 820px;
+      max-width: 760px;
+      margin: 16px 0 20px;
+      font-size: clamp(46px, 7vw, 88px);
+      line-height: .94;
+      letter-spacing: 0;
     }
-
-    .lede {
-      max-width: 690px;
-      font-size: clamp(18px, 2.1vw, 25px);
-      color: #3e3526;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 34px;
-      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
-    }
-
-    .button.primary {
-      color: #fff7e8;
-      background: var(--ink);
-      border-color: var(--ink);
-      box-shadow: 8px 8px 0 var(--gold);
-    }
-
-    .button.primary:hover { box-shadow: 5px 5px 0 var(--gold); }
-
-    .product-shot {
-      position: relative;
-      min-height: 540px;
-      border: 2px solid var(--line);
-      border-radius: 18px;
-      background:
-        linear-gradient(135deg, rgba(22,107,79,.12), transparent 42%),
-        #151411;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      transform: rotate(1.5deg);
-    }
-
-    .product-shot::before {
-      content: "Release assets";
-      position: absolute;
-      inset: 18px 18px auto;
-      height: 42px;
-      color: #e8ddc7;
-      border-bottom: 1px solid rgba(232,221,199,.22);
-      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-    }
-
-    .terminal {
-      position: absolute;
-      inset: 86px 22px 22px;
-      display: grid;
-      gap: 12px;
-    }
-
-    .row {
-      padding: 16px;
-      border: 1px solid rgba(232,221,199,.18);
-      border-radius: 12px;
-      background: rgba(255,255,255,.05);
-      color: #e8ddc7;
-      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
-    }
-
-    .row strong { color: #fff8e8; }
-    .row small { display: block; color: #b8aa91; margin-top: 6px; }
-
-    section { padding: 76px 0; }
-
-    .section-title {
-      display: flex;
-      justify-content: space-between;
-      gap: 24px;
-      align-items: end;
-      margin-bottom: 28px;
-      border-bottom: 2px solid rgba(44, 37, 24, .18);
-      padding-bottom: 18px;
-    }
-
-    h2 {
-      margin: 0;
-      font-size: clamp(34px, 5vw, 66px);
-      line-height: .95;
-      letter-spacing: -0.035em;
-    }
-
-    .section-title p {
-      max-width: 440px;
-      margin: 0;
+    .lead {
+      max-width: 680px;
       color: var(--muted);
-      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 19px;
+      line-height: 1.8;
     }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-
-    .tile {
-      min-height: 230px;
-      padding: 24px;
-      border: 1px solid rgba(44, 37, 24, .2);
-      border-radius: 14px;
-      background: rgba(255,255,255,.32);
-      box-shadow: 0 18px 44px rgba(31, 24, 12, .08);
-    }
-
-    .tile b {
-      display: block;
-      font-size: 42px;
-      line-height: 1;
-      margin-bottom: 20px;
-      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
-    }
-
-    .tile h3 {
-      margin: 0 0 10px;
-      font-size: 24px;
-      letter-spacing: -0.02em;
-    }
-
-    .tile p {
-      margin: 0;
-      color: var(--muted);
-      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
-    }
-
-    .wide {
-      display: grid;
-      grid-template-columns: .92fr 1.08fr;
-      gap: 24px;
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+    .button {
+      min-height: 44px;
+      padding: 0 18px;
+      border-radius: 8px;
+      display: inline-flex;
       align-items: center;
+      border: 1px solid rgba(255,255,255,.16);
+      color: var(--text);
+      font-weight: 700;
     }
-
-    figure {
-      margin: 0;
-      border: 2px solid var(--line);
-      border-radius: 16px;
-      background: #fff9ec;
+    .button.primary {
+      border-color: transparent;
+      background: var(--green);
+      color: var(--ink);
+    }
+    .product {
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(17, 24, 32, .78);
+      border-radius: 8px;
       overflow: hidden;
-      box-shadow: var(--shadow);
+      box-shadow: 0 28px 80px rgba(0,0,0,.42);
     }
-
-    figure img {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-
-    .callout {
-      padding: 32px;
-      border: 2px solid var(--line);
-      border-radius: 18px;
-      background: #fff7e8;
-      box-shadow: 10px 10px 0 rgba(35, 94, 136, .2);
-    }
-
-    .callout ul {
-      margin: 18px 0 0;
-      padding-left: 20px;
-      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
-      color: #3e3526;
-    }
-
-    footer {
-      padding: 34px 0 46px;
-      border-top: 1px solid rgba(44, 37, 24, .18);
-      color: var(--muted);
-      font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
-      font-size: 14px;
-    }
-
-    @media (max-width: 880px) {
-      .hero, .wide { grid-template-columns: 1fr; }
-      .product-shot { min-height: 430px; transform: none; }
-      .grid { grid-template-columns: 1fr; }
-      .links a:not(.keep) { display: none; }
-      .section-title { align-items: start; flex-direction: column; }
+    .bar { height: 42px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-bottom: 1px solid var(--line); }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); }
+    .dot:nth-child(2) { background: var(--green); }
+    .dot:nth-child(3) { background: var(--amber); }
+    .screen { padding: 18px; display: grid; gap: 12px; }
+    .row { padding: 14px; border: 1px solid rgba(255,255,255,.08); border-radius: 8px; background: rgba(255,255,255,.04); }
+    .row strong { display: block; margin-bottom: 5px; }
+    .row small { color: var(--muted); }
+    section { padding: 54px 0; border-top: 1px solid rgba(255,255,255,.08); }
+    .section-title { max-width: 720px; margin-bottom: 24px; }
+    h2 { font-size: clamp(28px, 4vw, 48px); margin: 0 0 12px; letter-spacing: 0; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .card { border: 1px solid rgba(255,255,255,.1); border-radius: 8px; padding: 18px; background: rgba(255,255,255,.035); }
+    .card h3 { margin: 0 0 8px; }
+    .card p, li { color: var(--muted); line-height: 1.7; }
+    .media-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .media-grid img { width: 100%; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: #0f151c; }
+    footer { padding: 34px 22px; color: var(--muted); text-align: center; }
+    @media (max-width: 840px) {
+      .hero { grid-template-columns: 1fr; padding-top: 44px; }
+      .nav-links a:not(.keep) { display: none; }
+      .grid, .media-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 48px; }
     }
   </style>
 </head>
 <body>
   <header>
-    <nav class="shell">
-      <a class="brand" href="#">
-        <span class="mark">AG</span>
-        <span>ApkGit</span>
+    <nav>
+      <a class="brand" href="./">
+        <span class="mark">R</span>
+        <span>ReleaseMarket</span>
       </a>
-      <div class="links">
+      <div class="nav-links">
+        <a href="./app.html">在线体验</a>
         <a href="#safety">安全边界</a>
-        <a href="#roadmap">路线</a>
-        <a class="keep" href="https://github.com/harzva/ApkGit/releases/latest">下载</a>
-        <a class="keep" href="https://github.com/harzva/ApkGit">GitHub</a>
+        <a class="keep" href="https://github.com/harzva/GitRelease-Market/releases/latest">下载</a>
+        <a class="keep" href="https://github.com/harzva/GitRelease-Market">GitHub</a>
       </div>
     </nav>
   </header>
 
   <main>
-    <section class="hero shell">
+    <div class="wrap hero">
       <div>
-        <span class="kicker">GitHub/Gitee Release APK discovery</span>
-        <h1>GitHub 上的开源 APK，一眼找到。</h1>
-        <p class="lede">
-          ApkGit 是一个桌面优先的开源工具，帮助开源爱好者从上游 Release 中发现 APK、查看元数据、下载原始文件，并把安全校验放到用户看得见的位置。
+        <span class="kicker">Open-source release marketplace</span>
+        <h1>从 Release 里找到可信的软件包。</h1>
+        <p class="lead">
+          ReleaseMarket 面向开源软件分发：从 GitHub/Gitee Release 发现 Android APK、Windows EXE、macOS DMG、Linux AppImage/DEB/RPM、iOS IPA 等资产，保留上游链接，并把许可证、哈希与签名信息放到下载前。
         </p>
         <div class="actions">
-          <a class="button primary" href="https://github.com/harzva/ApkGit/releases/latest">下载最新版</a>
-          <a class="button" href="https://github.com/harzva/ApkGit">查看源码</a>
-          <a class="button" href="#safety">了解安全模型</a>
+          <a class="button primary" href="./app.html">打开 Web 版</a>
+          <a class="button" href="https://github.com/harzva/GitRelease-Market/releases/latest">下载最新版</a>
+          <a class="button" href="https://github.com/harzva/GitRelease-Market">查看源码</a>
         </div>
       </div>
+      <div class="product" aria-label="ReleaseMarket preview">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="screen">
+          <div class="row"><strong>termux/termux-app</strong><small>APK assets, SHA256, upstream release link</small></div>
+          <div class="row"><strong>obsproject/obs-studio</strong><small>Windows, macOS and Linux release packages</small></div>
+          <div class="row"><strong>No binary hosting</strong><small>Every package points back to the original Release asset</small></div>
+        </div>
+      </div>
+    </div>
 
-      <div class="product-shot" aria-label="ApkGit product preview">
-        <div class="terminal">
-          <div class="row"><strong>termux/termux-app</strong><small>Stars, forks, release version and APK assets</small></div>
-          <div class="row"><strong>v0.119.0 / app-universal-release.apk</strong><small>Size, download count, upstream URL</small></div>
-          <div class="row"><strong>SHA256 after download</strong><small>Verification belongs in the main workflow, not hidden in docs</small></div>
-          <div class="row"><strong>No APK hosting</strong><small>Every download points back to the original release asset</small></div>
+    <section>
+      <div class="wrap">
+        <div class="section-title">
+          <h2>先把分发链路做可信。</h2>
+          <p class="lead">它不是另一个封闭应用商店，而是补齐开源仓库、Release 资产、下载验证和本地安装之间缺失的展示层。</p>
+        </div>
+        <div class="grid">
+          <div class="card"><h3>发现</h3><p>按平台和类别浏览，也可以输入仓库地址直接检查 Release 资产。</p></div>
+          <div class="card"><h3>校验</h3><p>展示上游仓库、许可证、源代码地址、SHA256、下载量和签名指纹规划位。</p></div>
+          <div class="card"><h3>下载</h3><p>不托管、不重签、不修改第三方二进制，只链接官方 Release 文件。</p></div>
         </div>
       </div>
     </section>
 
-    <section class="shell">
-      <div class="section-title">
-        <h2>先做可信的链路。</h2>
-        <p>产品不试图变成另一个封闭应用商店，而是把 GitHub Release 到本地下载之间的断层补齐。</p>
-      </div>
-      <div class="grid">
-        <article class="tile">
-          <b>01</b>
-          <h3>发现</h3>
-          <p>输入仓库或从策展列表进入，直接查看可下载的 APK Release 资产。</p>
-        </article>
-        <article class="tile">
-          <b>02</b>
-          <h3>检查</h3>
-          <p>展示上游仓库、Release、文件大小、下载量、预发布状态和校验信息。</p>
-        </article>
-        <article class="tile">
-          <b>03</b>
-          <h3>下载</h3>
-          <p>只从上游 Release URL 下载，不托管、不重签、不修改第三方 APK。</p>
-        </article>
+    <section id="safety">
+      <div class="wrap">
+        <div class="section-title">
+          <h2>合规底线写在前面。</h2>
+        </div>
+        <ul>
+          <li>ReleaseMarket 不是安全审核机构，也不保证第三方软件绝对安全。</li>
+          <li>下载链接来自上游 GitHub/Gitee Release，不托管 APK、EXE、IPA 等文件。</li>
+          <li>后续版本会前置展示 SHA256、签名指纹、许可证、源码地址和签名变更警告。</li>
+          <li>GitHub Token 是可选项，只用于提高 API 频率限制，桌面端应改用系统凭据存储。</li>
+        </ul>
       </div>
     </section>
 
-    <section id="safety" class="shell wide">
-      <div class="callout">
-        <h2>安全边界写在前面。</h2>
-        <ul>
-          <li>ApkGit 不是 APK 审核机构，也不保证第三方 APK 安全。</li>
-          <li>下载链接来自上游 GitHub/Gitee Release。</li>
-          <li>后续版本会把 SHA256、签名指纹、许可证和签名变更警告前置展示。</li>
-          <li>GitHub Token 是可选项，只用于提高 API 频率限制。</li>
-        </ul>
-      </div>
-      <figure>
-        <img src="assets/architecture_diagram.png" alt="ApkGit architecture diagram">
-      </figure>
-    </section>
-
-    <section id="roadmap" class="shell wide">
-      <figure>
-        <img src="assets/phase_comparison_chart.png" alt="ApkGit phase comparison chart">
-      </figure>
-      <div class="callout">
-        <h2>路线清楚，节奏克制。</h2>
-        <ul>
-          <li>0.1：桌面 MVP，跑通仓库解析、APK 列表、下载和 SHA256。</li>
-          <li>0.2：许可证、签名指纹、下载历史和风险提示。</li>
-          <li>0.3：多仓库管理、策展目录、基础热榜。</li>
-          <li>Android 原生 MVP：单独用 Kotlin + Jetpack Compose 推进。</li>
-        </ul>
+    <section>
+      <div class="wrap media-grid">
+        <img src="assets/architecture_diagram.png" alt="ReleaseMarket architecture diagram">
+        <img src="assets/phase_comparison_chart.png" alt="ReleaseMarket roadmap chart">
       </div>
     </section>
   </main>
 
   <footer>
-    <div class="shell">
-      ApkGit is free software under GPL-3.0-or-later. It links to upstream Release assets and does not host third-party APK files.
-    </div>
+    ReleaseMarket is GPL-3.0-or-later free software. Repository: Harzva/GitRelease-Market.
   </footer>
 </body>
 </html>

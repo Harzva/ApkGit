@@ -48,17 +48,17 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             name: linux-x86_64
-            binary: apkgit
+            binary: release-market
             archive: tar.gz
           - os: macos-latest
             target: aarch64-apple-darwin
             name: macos-aarch64
-            binary: apkgit
+            binary: release-market
             archive: tar.gz
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             name: windows-x86_64
-            binary: apkgit.exe
+            binary: release-market.exe
             archive: zip
 
     runs-on: ${{ matrix.os }}
@@ -89,17 +89,17 @@ jobs:
         shell: bash
         run: |
           cd dist
-          tar czf "apkgit-${{ matrix.name }}.tar.gz" package
+          tar czf "release-market-${{ matrix.name }}.tar.gz" package
 
       - name: Package zip
         if: matrix.archive == 'zip'
         shell: pwsh
-        run: Compress-Archive -Path dist/package/* -DestinationPath dist/apkgit-${{ matrix.name }}.zip
+        run: Compress-Archive -Path dist/package/* -DestinationPath dist/release-market-${{ matrix.name }}.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: apkgit-${{ matrix.name }}
+          name: release-market-${{ matrix.name }}
           path: |
             dist/*.tar.gz
             dist/*.zip
@@ -135,12 +135,12 @@ jobs:
       - name: Stage APK
         run: |
           mkdir -p dist
-          cp target/release/apk/apkgit.apk dist/apkgit-android-experimental.apk
+          cp target/release/apk/release-market.apk dist/release-market-android-experimental.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: apkgit-android-experimental
+          name: release-market-android-experimental
           path: dist/*.apk
 
   build-android-preview:
@@ -161,34 +161,34 @@ jobs:
       - name: Create release signing key
         run: |
           keytool -genkeypair \
-            -keystore android-preview/apkgit-preview.jks \
-            -storepass apkgitpreview \
-            -keypass apkgitpreview \
-            -alias apkgit \
+            -keystore android-preview/releasemarket-preview.jks \
+            -storepass release-marketpreview \
+            -keypass release-marketpreview \
+            -alias release-market \
             -keyalg RSA \
             -keysize 2048 \
             -validity 10000 \
-            -dname "CN=ApkGit Preview,O=ApkGit,C=US"
+            -dname "CN=ReleaseMarket Preview,O=ReleaseMarket,C=US"
 
       - name: Build signed preview APK
         run: |
           cd android-preview
           ./gradlew :app:assembleRelease \
-            -PreleaseStoreFile="$(pwd)/apkgit-preview.jks" \
-            -PreleaseStorePassword=apkgitpreview \
-            -PreleaseKeyAlias=apkgit \
-            -PreleaseKeyPassword=apkgitpreview
+            -PreleaseStoreFile="$(pwd)/releasemarket-preview.jks" \
+            -PreleaseStorePassword=release-marketpreview \
+            -PreleaseKeyAlias=release-market \
+            -PreleaseKeyPassword=release-marketpreview
 
       - name: Stage APK
         run: |
           mkdir -p dist
-          cp android-preview/app/build/outputs/apk/release/app-release.apk dist/apkgit-android-preview-v0.1.0.apk
-          sha256sum dist/apkgit-android-preview-v0.1.0.apk > dist/apkgit-android-preview-v0.1.0.apk.sha256
+          cp android-preview/app/build/outputs/apk/release/app-release.apk dist/release-market-android-preview-v0.1.0.apk
+          sha256sum dist/release-market-android-preview-v0.1.0.apk > dist/release-market-android-preview-v0.1.0.apk.sha256
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: apkgit-android-preview
+          name: release-market-android-preview
           path: dist/*
 
   release:
@@ -203,7 +203,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: apkgit-*
+          pattern: release-market-*
           merge-multiple: true
 
       - name: Create Release

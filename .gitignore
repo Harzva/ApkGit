@@ -9,7 +9,7 @@ Cargo.lock.tmp
 *.key
 *.log
 dist/
-ApkGit_Downloads/
+ReleaseMarket_Downloads/
 android-preview/.gradle/
 android-preview/**/build/
 android-preview/local.properties

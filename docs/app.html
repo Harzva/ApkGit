@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ReleaseMarket Web</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d1117;
+      --panel: #161b22;
+      --panel-2: #1f2630;
+      --line: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --blue: #2f81f7;
+      --green: #3fb950;
+      --amber: #d29922;
+      --red: #f85149;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    button, input { font: inherit; }
+    a { color: var(--blue); text-decoration: none; }
+    header { position: sticky; top: 0; z-index: 20; border-bottom: 1px solid #21262d; background: rgba(13,17,23,.92); backdrop-filter: blur(14px); }
+    .header-inner { max-width: 1120px; height: 58px; margin: 0 auto; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+    .mark { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; background: linear-gradient(135deg, var(--blue), var(--green)); color: #071018; font-weight: 900; }
+    .actions { display: flex; align-items: center; gap: 8px; }
+    .btn { min-height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--text); cursor: pointer; }
+    .btn:hover { background: var(--panel-2); }
+    .btn.primary { background: var(--blue); border-color: var(--blue); color: white; }
+    .btn.ghost { background: transparent; }
+    .token { color: var(--muted); font-size: 12px; }
+    .token.ok { color: var(--green); }
+    .tabs { position: sticky; top: 58px; z-index: 15; border-bottom: 1px solid #21262d; background: rgba(13,17,23,.96); }
+    .tabs-inner { max-width: 1120px; margin: 0 auto; padding: 8px 16px; display: flex; gap: 6px; overflow-x: auto; }
+    .tab { white-space: nowrap; border: 1px solid transparent; border-radius: 8px; padding: 7px 12px; color: var(--muted); background: transparent; cursor: pointer; }
+    .tab.active { color: var(--text); background: var(--panel); border-color: var(--line); }
+    main { max-width: 1120px; margin: 0 auto; padding: 18px 16px 48px; }
+    .search { display: none; grid-template-columns: 1fr auto; gap: 8px; padding: 12px; margin-bottom: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+    .search.active { display: grid; }
+    input { width: 100%; min-height: 40px; padding: 0 12px; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; outline: none; }
+    input:focus { border-color: var(--blue); }
+    .filters { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .filter { border: 1px solid #21262d; border-radius: 999px; padding: 6px 11px; color: var(--muted); background: transparent; cursor: pointer; }
+    .filter.active { color: var(--blue); border-color: rgba(47,129,247,.5); background: rgba(47,129,247,.12); }
+    .count { margin-left: auto; color: var(--muted); font-size: 12px; }
+    .notice { margin-bottom: 12px; padding: 10px 12px; border: 1px solid rgba(210,153,34,.32); border-radius: 8px; background: rgba(210,153,34,.09); color: #f0d58a; font-size: 13px; }
+    .progress { display: none; margin-bottom: 14px; }
+    .progress.active { display: block; }
+    .bar { height: 3px; border-radius: 2px; background: #21262d; overflow: hidden; }
+    .fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--blue), var(--green)); transition: width .3s ease; }
+    .feed { display: grid; gap: 8px; }
+    .item { border: 1px solid #21262d; border-radius: 8px; padding: 14px; background: var(--panel); cursor: pointer; }
+    .item:hover { border-color: var(--line); background: #1a2029; }
+    .top { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+    .name { font-weight: 800; color: var(--blue); }
+    .desc { color: var(--muted); font-size: 13px; line-height: 1.55; margin-top: 4px; }
+    .time { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .meta { display: flex; flex-wrap: wrap; gap: 10px; color: var(--muted); font-size: 12px; margin-top: 10px; }
+    .tag { padding: 2px 8px; border-radius: 999px; background: var(--bg); border: 1px solid #21262d; color: var(--text); }
+    .tag.warn { color: var(--amber); border-color: rgba(210,153,34,.34); background: rgba(210,153,34,.08); }
+    .assets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .asset { display: inline-flex; gap: 8px; align-items: center; padding: 6px 10px; border-radius: 8px; background: rgba(47,129,247,.08); border: 1px solid rgba(47,129,247,.18); font-size: 12px; }
+    .asset small { color: var(--muted); }
+    .empty, .loading { padding: 54px 18px; text-align: center; color: var(--muted); }
+    .error { padding: 12px; border: 1px solid rgba(248,81,73,.32); border-radius: 8px; color: #ffb3af; background: rgba(248,81,73,.08); }
+    .modal { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; padding: 18px; background: rgba(0,0,0,.62); }
+    .modal.show { display: flex; }
+    .modal-box { width: min(460px, 100%); border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 18px; }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .help { color: var(--muted); font-size: 12px; line-height: 1.65; margin: 8px 0 14px; }
+    @media (max-width: 680px) {
+      .header-inner { height: auto; min-height: 58px; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; }
+      .tabs { top: 70px; }
+      .search { grid-template-columns: 1fr; }
+      .count { flex-basis: 100%; }
+      .top { display: block; }
+      .time { margin-top: 4px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <a class="brand" href="./">
+        <span class="mark">R</span>
+        <span>ReleaseMarket</span>
+      </a>
+      <div class="actions">
+        <span id="tokenPill" class="token">Token off</span>
+        <button class="btn ghost" onclick="toggleSearch()" id="searchToggle">Search</button>
+        <button class="btn primary" onclick="showSettings()">Settings</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <div class="tabs-inner" id="platformTabs"></div>
+  </div>
+
+  <main>
+    <div class="notice">Preview Web app: all downloads remain upstream GitHub Release links. Verify license, SHA256 and signatures before installing.</div>
+    <div class="search" id="searchPanel">
+      <input id="searchInput" placeholder="Search GitHub repositories, for example obs studio or termux" onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="btn primary" onclick="doSearch()">Search</button>
+    </div>
+    <div class="filters" id="filters"></div>
+    <div class="progress" id="progress"><div class="bar"><div class="fill" id="fill"></div></div></div>
+    <div id="content" class="loading">Loading curated releases...</div>
+  </main>
+
+  <div class="modal" id="settingsModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <strong>GitHub Token</strong>
+        <button class="btn" onclick="hideSettings()">Close</button>
+      </div>
+      <input id="githubToken" type="password" placeholder="github_pat_... or ghp_..." autocomplete="off">
+      <div class="help">Optional. Stored only in this browser session and used to raise GitHub API limits. Do not paste tokens on shared devices.</div>
+      <button class="btn primary" onclick="saveToken()">Save token</button>
+    </div>
+  </div>
+
+  <script>
+    let token = sessionStorage.getItem("github_token") || "";
+    let platform = "android";
+    let category = "all";
+    let feed = [];
+    let searchMode = false;
+
+    const platforms = [
+      ["android", "Android"],
+      ["windows", "Windows"],
+      ["macos", "macOS"],
+      ["linux", "Linux"],
+      ["ios", "iOS"],
+      ["cross", "Cross-platform"]
+    ];
+    const categories = [
+      ["all", "All"],
+      ["popular", "Popular"],
+      ["tools", "Tools"],
+      ["dev", "Developer"],
+      ["media", "Media"],
+      ["network", "Network"],
+      ["utils", "Utilities"]
+    ];
+    const repoDb = {
+      android: {
+        all: ["termux/termux-app","2dust/v2rayNG","MatsuriDayo/NekoBoxForAndroid","zhanghai/MaterialFiles","TeamNewPipe/NewPipe","Kunzisoft/KeePassDX","FossifyOrg/Gallery","breezy-weather/breezy-weather","z-huang/InnerTune","RikkaApps/Shizuku","LSPosed/LSPosed","iamr0s/InstallerX"],
+        popular: ["termux/termux-app","2dust/v2rayNG","TeamNewPipe/NewPipe","zhanghai/MaterialFiles","Kunzisoft/KeePassDX","FossifyOrg/Gallery"],
+        tools: ["RikkaApps/Shizuku","iamr0s/InstallerX","LSPosed/LSPosed"],
+        dev: ["termux/termux-app","skylot/jadx"],
+        media: ["TeamNewPipe/NewPipe","z-huang/InnerTune","FossifyOrg/Gallery"],
+        network: ["2dust/v2rayNG","MatsuriDayo/NekoBoxForAndroid"],
+        utils: ["zhanghai/MaterialFiles","Kunzisoft/KeePassDX","breezy-weather/breezy-weather"]
+      },
+      windows: {
+        all: ["2dust/v2rayN","MatsuriDayo/NekoBox","pbatard/rufus","Notepad-Plus-Plus/notepad-plus-plus","KeePassXC/KeePassXC","laurent22/joplin","obsproject/obs-studio","Files-Community/Files","PowerShell/PowerShell","ShareX/ShareX","qbittorrent/qBittorrent","ventoy/Ventoy","HandBrake/HandBrake"],
+        popular: ["2dust/v2rayN","pbatard/rufus","Notepad-Plus-Plus/notepad-plus-plus","KeePassXC/KeePassXC","obsproject/obs-studio","ShareX/ShareX"],
+        tools: ["pbatard/rufus","ShareX/ShareX","ventoy/Ventoy"],
+        dev: ["Notepad-Plus-Plus/notepad-plus-plus","PowerShell/PowerShell","Git-for-Windows/Git"],
+        media: ["obsproject/obs-studio","HandBrake/HandBrake"],
+        network: ["2dust/v2rayN","MatsuriDayo/NekoBox","qbittorrent/qBittorrent"],
+        utils: ["KeePassXC/KeePassXC","laurent22/joplin","Files-Community/Files"]
+      },
+      macos: {
+        all: ["iina/iina","exelban/stats","MonitorControl/MonitorControl","alt-tab-macos/alt-tab-macos","Keka/Keka","raycast/extensions"],
+        popular: ["iina/iina","exelban/stats","MonitorControl/MonitorControl","Keka/Keka"],
+        tools: ["exelban/stats","MonitorControl/MonitorControl","alt-tab-macos/alt-tab-macos","Keka/Keka"],
+        dev: ["raycast/extensions","twpayne/chezmoi","fish-shell/fish-shell"],
+        media: ["iina/iina"],
+        network: [],
+        utils: []
+      },
+      linux: {
+        all: ["sharkdp/fd","BurntSushi/ripgrep","sharkdp/bat","eza-community/eza","ajeetdsouza/zoxide","ClementTsang/bottom","Peltoche/lsd","Canop/broot","fish-shell/fish-shell","twpayne/chezmoi"],
+        popular: ["sharkdp/fd","BurntSushi/ripgrep","sharkdp/bat","fish-shell/fish-shell","ajeetdsouza/zoxide"],
+        tools: ["sharkdp/fd","BurntSushi/ripgrep","sharkdp/bat","eza-community/eza","Peltoche/lsd"],
+        dev: ["twpayne/chezmoi","dandavison/delta"],
+        media: [],
+        network: [],
+        utils: ["fish-shell/fish-shell","ajeetdsouza/zoxide","ClementTsang/bottom","Canop/broot"]
+      },
+      ios: {
+        all: ["altstoreio/AltStore","ish-app/ish"],
+        popular: ["altstoreio/AltStore","ish-app/ish"],
+        tools: ["altstoreio/AltStore"],
+        dev: ["ish-app/ish"],
+        media: [],
+        network: [],
+        utils: []
+      },
+      cross: {
+        all: ["obsproject/obs-studio","videolan/vlc","qbittorrent/qBittorrent","transmission/transmission","KeePassXC/KeePassXC","laurent22/joplin","HandBrake/HandBrake","krita/Krita","blender/blender","rust-lang/rust"],
+        popular: ["obsproject/obs-studio","videolan/vlc","laurent22/joplin","HandBrake/HandBrake"],
+        tools: ["qbittorrent/qBittorrent","transmission/transmission"],
+        dev: ["rust-lang/rust"],
+        media: ["obsproject/obs-studio","videolan/vlc","HandBrake/HandBrake","krita/Krita","blender/blender"],
+        network: ["qbittorrent/qBittorrent","transmission/transmission"],
+        utils: ["KeePassXC/KeePassXC","laurent22/joplin"]
+      }
+    };
+
+    function headers() {
+      const h = { Accept: "application/vnd.github+json" };
+      if (token) h.Authorization = "Bearer " + token;
+      return h;
+    }
+    async function github(url) {
+      const res = await fetch(url, { headers: headers() });
+      if (res.status === 403) throw new Error("GitHub API rate limit reached. Add a token in Settings.");
+      if (res.status === 404) throw new Error("Not found.");
+      if (!res.ok) throw new Error("GitHub API error: HTTP " + res.status);
+      return res.json();
+    }
+    function initTabs() {
+      document.getElementById("platformTabs").innerHTML = platforms.map(([id, label]) =>
+        `<button class="tab ${id === platform ? "active" : ""}" onclick="switchPlatform('${id}')">${label}</button>`
+      ).join("");
+      renderFilters();
+      updateTokenPill();
+    }
+    function renderFilters() {
+      document.getElementById("filters").innerHTML = categories.map(([id, label]) =>
+        `<button class="filter ${id === category ? "active" : ""}" onclick="switchCategory('${id}')">${label}</button>`
+      ).join("") + `<span class="count" id="count"></span>`;
+    }
+    function switchPlatform(id) {
+      platform = id;
+      category = "all";
+      initTabs();
+      loadFeed();
+    }
+    function switchCategory(id) {
+      category = id;
+      renderFilters();
+      loadFeed();
+    }
+    function toggleSearch() {
+      searchMode = !searchMode;
+      document.getElementById("searchPanel").classList.toggle("active", searchMode);
+      document.getElementById("searchToggle").textContent = searchMode ? "Close" : "Search";
+      if (searchMode) setTimeout(() => document.getElementById("searchInput").focus(), 50);
+    }
+    function updateTokenPill() {
+      const el = document.getElementById("tokenPill");
+      el.classList.toggle("ok", Boolean(token));
+      el.textContent = token ? "Token on" : "Token off";
+    }
+    function showSettings() {
+      document.getElementById("githubToken").value = token;
+      document.getElementById("settingsModal").classList.add("show");
+    }
+    function hideSettings() {
+      document.getElementById("settingsModal").classList.remove("show");
+    }
+    function saveToken() {
+      token = document.getElementById("githubToken").value.trim();
+      if (token) sessionStorage.setItem("github_token", token);
+      else sessionStorage.removeItem("github_token");
+      updateTokenPill();
+      hideSettings();
+    }
+    function platformAssets(assets) {
+      return assets.filter(asset => {
+        const name = asset.name.toLowerCase();
+        if (platform === "android") return name.endsWith(".apk");
+        if (platform === "windows") return /\.(exe|msi|zip|7z)$/.test(name);
+        if (platform === "macos") return /\.(dmg|pkg)$/.test(name) || name.endsWith(".app.zip");
+        if (platform === "linux") return /\.(appimage|deb|rpm|tar.gz|zip)$/.test(name);
+        if (platform === "ios") return /\.(ipa|deb)$/.test(name);
+        return /\.(apk|exe|msi|dmg|pkg|appimage|deb|rpm|ipa|zip|tar.gz|7z)$/.test(name);
+      });
+    }
+    async function loadFeed() {
+      const repos = repoDb[platform]?.[category] || [];
+      const content = document.getElementById("content");
+      const progress = document.getElementById("progress");
+      const fill = document.getElementById("fill");
+      const count = document.getElementById("count");
+      feed = [];
+      content.className = "loading";
+      content.textContent = repos.length ? "Loading curated releases..." : "No curated repositories in this category yet.";
+      if (!repos.length) return;
+      progress.classList.add("active");
+      for (let i = 0; i < repos.length; i += 3) {
+        const batch = repos.slice(i, i + 3);
+        const results = await Promise.all(batch.map(loadRepo).map(p => p.catch(() => null)));
+        feed.push(...results.filter(Boolean));
+        fill.style.width = Math.min(100, ((i + batch.length) / repos.length) * 100) + "%";
+        count.textContent = `${feed.length} releases`;
+        renderFeed();
+      }
+      progress.classList.remove("active");
+      if (!feed.length) content.innerHTML = `<div class="empty">No matching Release assets found for this platform yet.</div>`;
+    }
+    async function loadRepo(fullName) {
+      const [owner, repo] = fullName.trim().split("/");
+      if (!owner || !repo) return null;
+      const [info, releases] = await Promise.all([
+        github(`https://api.github.com/repos/${owner}/${repo}`),
+        github(`https://api.github.com/repos/${owner}/${repo}/releases?per_page=10`)
+      ]);
+      for (const release of releases) {
+        const assets = platformAssets(release.assets || []);
+        if (assets.length) return { info, release, assets };
+      }
+      return null;
+    }
+    function renderFeed() {
+      const content = document.getElementById("content");
+      content.className = "feed";
+      feed.sort((a, b) => new Date(b.release.published_at || 0) - new Date(a.release.published_at || 0));
+      content.innerHTML = feed.map(item => {
+        const info = item.info;
+        const rel = item.release;
+        const assets = item.assets.map(asset =>
+          `<span class="asset"><a href="${asset.browser_download_url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${escapeHtml(asset.name)}</a><small>${formatSize(asset.size)} · ${asset.download_count.toLocaleString()} downloads</small></span>`
+        ).join("");
+        return `<article class="item" onclick="openDetail('${info.owner.login}','${info.name}')">
+          <div class="top">
+            <div><div class="name">${escapeHtml(info.full_name)}</div><div class="desc">${escapeHtml(info.description || "No description")}</div></div>
+            <div class="time">${rel.published_at ? rel.published_at.slice(0, 10) : ""}</div>
+          </div>
+          <div class="meta">
+            <span>${info.stargazers_count.toLocaleString()} stars</span>
+            <span>${info.forks_count.toLocaleString()} forks</span>
+            <span class="tag">${escapeHtml(rel.tag_name)}</span>
+            ${rel.prerelease ? `<span class="tag warn">pre-release</span>` : ""}
+          </div>
+          <div class="assets">${assets}</div>
+        </article>`;
+      }).join("");
+    }
+    async function doSearch() {
+      const q = document.getElementById("searchInput").value.trim();
+      if (!q) return;
+      const content = document.getElementById("content");
+      content.className = "loading";
+      content.textContent = "Searching...";
+      try {
+        const data = await github(`https://api.github.com/search/repositories?q=${encodeURIComponent(q)}&sort=stars&order=desc&per_page=20`);
+        content.className = "feed";
+        content.innerHTML = data.items.map(repo => `<article class="item" onclick="openDetail('${repo.owner.login}','${repo.name}')">
+          <div class="name">${escapeHtml(repo.full_name)}</div>
+          <div class="desc">${escapeHtml(repo.description || "No description")}</div>
+          <div class="meta"><span>${repo.stargazers_count.toLocaleString()} stars</span><span>${escapeHtml(repo.language || "Unknown")}</span></div>
+        </article>`).join("");
+      } catch (err) {
+        content.className = "error";
+        content.textContent = err.message;
+      }
+    }
+    async function openDetail(owner, repo) {
+      const content = document.getElementById("content");
+      content.className = "loading";
+      content.textContent = "Loading repository details...";
+      try {
+        const [info, releases] = await Promise.all([
+          github(`https://api.github.com/repos/${owner}/${repo}`),
+          github(`https://api.github.com/repos/${owner}/${repo}/releases?per_page=10`)
+        ]);
+        const releaseHtml = releases.filter(r => r.assets?.length).slice(0, 8).map(rel => {
+          const assets = rel.assets.map(asset =>
+            `<span class="asset"><a href="${asset.browser_download_url}" target="_blank" rel="noopener">${escapeHtml(asset.name)}</a><small>${formatSize(asset.size)} · ${asset.download_count.toLocaleString()}</small></span>`
+          ).join("");
+          return `<article class="item"><div class="top"><strong>${escapeHtml(rel.tag_name)}</strong><span class="time">${rel.published_at ? rel.published_at.slice(0, 10) : ""}</span></div><div class="assets">${assets}</div></article>`;
+        }).join("");
+        content.className = "feed";
+        content.innerHTML = `<button class="btn" onclick="loadFeed()">Back</button>
+          <article class="item"><div class="name">${escapeHtml(info.full_name)}</div><div class="desc">${escapeHtml(info.description || "No description")}</div><div class="meta"><span>${info.stargazers_count.toLocaleString()} stars</span><span>${info.forks_count.toLocaleString()} forks</span><a href="${info.html_url}" target="_blank" rel="noopener">Open source</a></div></article>
+          ${releaseHtml || `<div class="empty">No releases with assets found.</div>`}`;
+      } catch (err) {
+        content.className = "error";
+        content.textContent = err.message;
+      }
+    }
+    function formatSize(bytes) {
+      if (!bytes) return "unknown size";
+      if (bytes < 1024) return bytes + " B";
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+      return (bytes / 1024 / 1024).toFixed(1) + " MB";
+    }
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text || "";
+      return div.innerHTML;
+    }
+    window.addEventListener("click", event => {
+      if (event.target.id === "settingsModal") hideSettings();
+    });
+    initTabs();
+    loadFeed();
+  </script>
+</body>
+</html>

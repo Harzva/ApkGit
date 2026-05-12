@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping make ApkGit safer and more useful.
+Thanks for helping make ReleaseMarket safer and more useful.
 
 ## Development Checks
 

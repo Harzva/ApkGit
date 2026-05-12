@@ -15,9 +15,9 @@ fn main() -> eframe::Result<()> {
     };
 
     eframe::run_native(
-        "ApkGit v0.1.0",
+        "ReleaseMarket v0.1.0",
         options,
-        Box::new(|_cc| Ok(Box::new(app::ApkGitApp::default()))),
+        Box::new(|_cc| Ok(Box::new(app::ReleaseMarketApp::default()))),
     )
 }
 
@@ -36,9 +36,9 @@ fn android_main(app: android_activity::AndroidApp) {
     };
 
     eframe::run_native(
-        "ApkGit",
+        "ReleaseMarket",
         options,
-        Box::new(|_cc| Ok(Box::new(app::ApkGitApp::default()))),
+        Box::new(|_cc| Ok(Box::new(app::ReleaseMarketApp::default()))),
     )
     .unwrap();
 }

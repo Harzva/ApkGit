@@ -1,6 +1,6 @@
-# ApkGit
+# ReleaseMarket
 
-ApkGit is a desktop-first open-source tool for discovering APK assets published in GitHub and Gitee Releases. It helps technical Android users inspect a repository, list release APKs, and download the original files from the upstream release page.
+ReleaseMarket is a desktop-first open-source tool for discovering software packages published in GitHub and Gitee Releases. It helps users inspect repositories, list release assets for Android, Windows, macOS, Linux, and future iOS packages, then download the original files from the upstream release page.
 
 > Current product route: this Rust/egui codebase is positioned as the **desktop utility**. The Android-native MVP described in the planning documents should be built separately with Kotlin + Jetpack Compose when mobile installation, permissions, PackageManager integration, and Material 3 UX become the main goal.
 
@@ -10,11 +10,11 @@ This repository is an early `0.1.0` MVP. It is intended for testing the core cha
 
 1. Parse a GitHub/Gitee repository URL.
 2. Fetch repository metadata and releases.
-3. Detect APK assets in releases.
-4. Download selected APK files.
+3. Detect installable release assets.
+4. Download selected upstream files.
 5. Show release metadata, file size, download count, and upstream links.
 
-The project does **not** host APK files, re-sign packages, mirror binaries, or audit third-party code. Every APK link points to the original upstream Release asset.
+The project does **not** host binaries, re-sign packages, mirror files, or audit third-party code. Every download link points to the original upstream Release asset.
 
 ## Features
 
@@ -22,8 +22,8 @@ The project does **not** host APK files, re-sign packages, mirror binaries, or a
 | --- | --- |
 | GitHub repository parsing | Implemented |
 | Gitee repository parsing | Implemented |
-| Release APK listing | Implemented |
-| APK download | Implemented |
+| Release asset listing | Implemented for APK in desktop MVP; Web preview covers more extensions |
+| Upstream download | Implemented |
 | GitHub token support | Implemented |
 | SHA256 helper | Implemented, integration pending |
 | Desktop UI | Implemented MVP |
@@ -34,11 +34,11 @@ The project does **not** host APK files, re-sign packages, mirror binaries, or a
 
 ## Safety Model
 
-ApkGit is a discovery and download helper, not an app store with review guarantees.
+ReleaseMarket is a discovery and download helper, not an app store with review guarantees.
 
-- APK files are downloaded from upstream GitHub/Gitee Release URLs.
+- Release assets are downloaded from upstream GitHub/Gitee Release URLs.
 - Users should verify the upstream project, release notes, license, signatures, and hashes before installing.
-- Future versions should display APK SHA256, signing certificate fingerprints, package metadata, source license, and historical signature changes before install actions.
+- Future versions should display SHA256, signing certificate fingerprints, package metadata, source license, and historical signature changes before install actions.
 - A GitHub token is optional and is only used to raise API rate limits.
 
 See [SECURITY.md](SECURITY.md), [PRIVACY.md](PRIVACY.md), and [DISCLAIMER.md](DISCLAIMER.md) before distributing public builds.
@@ -56,7 +56,7 @@ cargo run --release
 
 ### Android preview APK
 
-The Android preview app is a small WebView shell for the GitHub Pages product page. It is not the planned Kotlin + Jetpack Compose MVP yet, but it gives the repository a reproducible Android package while the native mobile product is designed.
+The Android preview app is a small WebView shell for the GitHub Pages Web app. It is not the planned Kotlin + Jetpack Compose MVP yet, but it gives the repository a reproducible Android package while the native mobile product is designed.
 
 Requirements:
 
@@ -79,7 +79,16 @@ The signed APK is written to `android-preview/app/build/outputs/apk/release/app-
 
 ## Release Builds
 
-The GitHub Actions workflow builds desktop artifacts for Linux, macOS, and Windows on every push and pull request. It also builds the Android preview APK through `android-preview/gradlew`. Android cargo-apk output is kept as an experimental artifact only; the product route for a polished Android MVP is Kotlin + Jetpack Compose.
+The GitHub Actions workflow builds desktop artifacts for Linux, macOS, and Windows on every push and pull request. It also builds the Android preview APK through `android-preview/gradlew`.
+
+Current CI artifacts:
+
+- `release-market-windows-x86_64.zip`, containing `release-market.exe`
+- `release-market-linux-x86_64.tar.gz`
+- `release-market-macos-aarch64.tar.gz`
+- `release-market-android-preview-v0.1.0.apk`
+
+Android cargo-apk output is kept as an experimental, non-blocking job only; the product route for a polished Android MVP is Kotlin + Jetpack Compose. iOS packaging is not enabled yet because there is no native iOS project or Apple Developer signing setup in this repository. The correct next step is a SwiftUI/WebKit preview target first, then signed IPA/TestFlight automation after certificates are available.
 
 Tag a release with `v*`, for example:
 
@@ -103,8 +112,8 @@ src/
 
 ## Screenshots
 
-Screenshots and short demo GIFs should be placed in `docs/screenshots/` before the first public release. Use real Release data and avoid showing private GitHub tokens.
+The GitHub Pages site lives in `docs/`. `docs/index.html` is the product landing page, and `docs/app.html` is the Web preview for browsing upstream Release assets. Screenshots and short demo GIFs should be placed in `docs/screenshots/` before the first public release. Use real Release data and avoid showing private GitHub tokens.
 
 ## License
 
-ApkGit is licensed under GPL-3.0-or-later. See [LICENSE](LICENSE).
+ReleaseMarket is licensed under GPL-3.0-or-later. See [LICENSE](LICENSE).

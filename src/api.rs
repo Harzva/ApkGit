@@ -1,7 +1,6 @@
 use crate::data::{ApkAsset, Platform, ReleaseInfo, RepoInfo};
 use reqwest::blocking::Client;
 
-/// GitHub/Gitee API 客户端
 pub struct ApiClient {
     client: Client,
     github_token: Option<String>,
@@ -11,7 +10,7 @@ impl ApiClient {
     pub fn new() -> Self {
         Self {
             client: Client::builder()
-                .user_agent("ApkGit/0.1.0")
+                .user_agent("ReleaseMarket/0.1.0")
                 .timeout(std::time::Duration::from_secs(30))
                 .build()
                 .unwrap_or_default(),
@@ -24,7 +23,6 @@ impl ApiClient {
         self
     }
 
-    /// 获取仓库信息
     pub fn fetch_repo_info(
         &self,
         platform: Platform,
@@ -40,24 +38,27 @@ impl ApiClient {
             }
         }
 
-        let response = request.send().map_err(|e| format!("网络请求失败: {}", e))?;
+        let response = request
+            .send()
+            .map_err(|e| format!("Network request failed: {}", e))?;
 
         if response.status() == 403 {
-            return Err("API 限流，请配置 GitHub Token（设置页面）".to_string());
+            return Err(
+                "API rate limit reached. Configure a GitHub token in Settings.".to_string(),
+            );
         }
         if response.status() == 404 {
-            return Err("仓库不存在或没有访问权限".to_string());
+            return Err("Repository does not exist or is not accessible.".to_string());
         }
         if !response.status().is_success() {
-            return Err(format!("HTTP 错误: {}", response.status()));
+            return Err(format!("HTTP error: {}", response.status()));
         }
 
         response
             .json::<RepoInfo>()
-            .map_err(|e| format!("JSON 解析失败: {}", e))
+            .map_err(|e| format!("Failed to parse JSON: {}", e))
     }
 
-    /// 获取 Release 列表
     pub fn fetch_releases(
         &self,
         platform: Platform,
@@ -78,21 +79,23 @@ impl ApiClient {
             }
         }
 
-        let response = request.send().map_err(|e| format!("网络请求失败: {}", e))?;
+        let response = request
+            .send()
+            .map_err(|e| format!("Network request failed: {}", e))?;
 
         if response.status() == 404 {
-            return Err("该仓库没有 Release".to_string());
+            return Err("This repository has no releases.".to_string());
         }
         if response.status() == 403 {
-            return Err("API 限流，请配置 GitHub Token".to_string());
+            return Err("API rate limit reached. Configure a GitHub token.".to_string());
         }
         if !response.status().is_success() {
-            return Err(format!("HTTP 错误: {}", response.status()));
+            return Err(format!("HTTP error: {}", response.status()));
         }
 
         let raw_releases: Vec<serde_json::Value> = response
             .json()
-            .map_err(|e| format!("JSON 解析失败: {}", e))?;
+            .map_err(|e| format!("Failed to parse JSON: {}", e))?;
 
         let mut releases = Vec::new();
         for raw in raw_releases {
@@ -105,7 +108,6 @@ impl ApiClient {
                 assets: Vec::new(),
             };
 
-            // 提取 APK assets
             if let Some(assets) = raw["assets"].as_array() {
                 for asset in assets {
                     let name = asset["name"].as_str().unwrap_or("");
@@ -124,7 +126,6 @@ impl ApiClient {
                 }
             }
 
-            // 仅保留包含 APK 的 Release
             if !release.assets.is_empty() {
                 releases.push(release);
             }

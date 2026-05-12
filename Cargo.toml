@@ -1,13 +1,13 @@
 [package]
-name = "apkgit"
+name = "release-market"
 version = "0.1.0"
 edition = "2021"
-description = "GitHub/Gitee APK 发现与下载工具"
-authors = ["ApkGit Team"]
+description = "GitHub/Gitee Release software discovery tool"
+authors = ["ReleaseMarket Team"]
 license = "GPL-3.0-or-later"
 readme = "README.md"
-repository = "https://github.com/harzva/ApkGit"
-keywords = ["github", "apk", "release", "downloader", "foss"]
+repository = "https://github.com/harzva/GitRelease-Market"
+keywords = ["github", "release", "downloader", "foss", "market"]
 categories = ["gui", "network-programming"]
 
 [dependencies]
@@ -19,20 +19,21 @@ sha2 = "0.10"
 hex = "0.4"
 dirs = "5.0"
 
-# Android 平台依赖
+# Android platform dependencies for the experimental cargo-apk target.
 [target.'cfg(target_os = "android")'.dependencies]
 android-activity = { version = "0.6", features = ["native-activity"] }
 android_logger = "0.14"
 log = "0.4"
 
 [[bin]]
-name = "apkgit"
+name = "release-market"
 path = "src/main.rs"
 
-# ===== Android 打包配置（cargo-apk）=====
+# Experimental Rust Android packaging. The primary Android route is the
+# android-preview Gradle project, and the polished mobile MVP should be native.
 [package.metadata.android]
-application_id = "com.apkgit.app"
-label = "ApkGit"
+application_id = "com.releasemarket.app"
+label = "ReleaseMarket"
 version_code = 1
 version_name = "0.1.0"
 min_sdk_version = 26

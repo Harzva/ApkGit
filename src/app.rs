@@ -5,7 +5,7 @@ use eframe::egui;
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 
-pub struct ApkGitApp {
+pub struct ReleaseMarketApp {
     repo_input: String,
     github_token: String,
     repo_info: Option<RepoInfo>,
@@ -39,10 +39,9 @@ enum AppMessage {
     InstallComplete(String),
 }
 
-impl Default for ApkGitApp {
+impl Default for ReleaseMarketApp {
     fn default() -> Self {
         let (tx, rx) = mpsc::channel();
-        // 检测是否在 Android 上
         let is_android = cfg!(target_os = "android");
 
         Self {
@@ -64,7 +63,7 @@ impl Default for ApkGitApp {
     }
 }
 
-impl ApkGitApp {
+impl ReleaseMarketApp {
     fn text_size(&self) -> f32 {
         if self.is_android {
             18.0
@@ -88,7 +87,7 @@ impl ApkGitApp {
 
         let input = self.repo_input.trim().to_string();
         if input.is_empty() {
-            self.error_message = Some("请输入仓库地址".to_string());
+            self.error_message = Some("Enter a repository URL or owner/repo.".to_string());
             return;
         }
 
@@ -96,7 +95,7 @@ impl ApkGitApp {
             Some(v) => v,
             None => {
                 self.error_message = Some(
-                    "格式错误，请使用:\n• https://github.com/owner/repo\n• https://gitee.com/owner/repo\n• owner/repo（默认GitHub）"
+                    "Invalid format. Use https://github.com/owner/repo, https://gitee.com/owner/repo, or owner/repo."
                         .to_string(),
                 );
                 return;
@@ -149,7 +148,7 @@ impl ApkGitApp {
         } else {
             filename
         };
-        *self.download_status.lock().unwrap() = format!("正在下载 {}...", filename);
+        *self.download_status.lock().unwrap() = format!("Downloading {}...", filename);
 
         let tx = self.tx.clone();
         thread::spawn(move || {
@@ -158,10 +157,14 @@ impl ApkGitApp {
             let result = download::download_file(&url, &path);
             let message = match result {
                 Ok(_) => match download::calc_sha256(&path) {
-                    Ok(hash) => format!("下载完成: {}\nSHA256: {}", path.display(), hash),
-                    Err(e) => format!("下载完成: {}\nSHA256 计算失败: {}", path.display(), e),
+                    Ok(hash) => format!("Download complete: {}\nSHA256: {}", path.display(), hash),
+                    Err(e) => format!(
+                        "Download complete: {}\nSHA256 calculation failed: {}",
+                        path.display(),
+                        e
+                    ),
                 },
-                Err(e) => format!("下载失败: {}", e),
+                Err(e) => format!("Download failed: {}", e),
             };
             let ok_path = path.exists().then_some(path);
             let _ = tx.send(AppMessage::DownloadComplete {
@@ -173,12 +176,12 @@ impl ApkGitApp {
 
     fn install_last_download(&mut self) {
         let Some(path) = self.last_download_path.clone() else {
-            *self.download_status.lock().unwrap() = "没有可安装的下载文件".to_string();
+            *self.download_status.lock().unwrap() = "No downloaded APK is available.".to_string();
             return;
         };
 
         let tx = self.tx.clone();
-        *self.download_status.lock().unwrap() = format!("正在安装 {}...", path.display());
+        *self.download_status.lock().unwrap() = format!("Installing {}...", path.display());
         thread::spawn(move || {
             let msg = match download::install_apk_native(&path) {
                 Ok(msg) => msg,
@@ -216,11 +219,10 @@ impl ApkGitApp {
     }
 }
 
-impl eframe::App for ApkGitApp {
+impl eframe::App for ReleaseMarketApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.check_messages();
 
-        // Android 触摸优化：更大的字体
         if self.is_android {
             ctx.style_mut(|style| {
                 style
@@ -236,14 +238,14 @@ impl eframe::App for ApkGitApp {
         egui::TopBottomPanel::top("header").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.label(
-                    egui::RichText::new("ApkGit")
+                    egui::RichText::new("ReleaseMarket")
                         .size(self.text_size() + 6.0)
                         .strong(),
                 );
-                ui.label("GitHub/Gitee APK 发现");
+                ui.label("GitHub/Gitee Release discovery");
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ui
-                        .button(egui::RichText::new("设置").size(self.text_size()))
+                        .button(egui::RichText::new("Settings").size(self.text_size()))
                         .clicked()
                     {
                         self.show_settings = !self.show_settings;
@@ -258,26 +260,24 @@ impl eframe::App for ApkGitApp {
                 ui.selectable_value(
                     &mut self.current_tab,
                     Tab::Repo,
-                    egui::RichText::new("仓库").size(text_size),
+                    egui::RichText::new("Repository").size(text_size),
                 );
                 ui.selectable_value(
                     &mut self.current_tab,
                     Tab::Hot,
-                    egui::RichText::new("热榜").size(text_size),
+                    egui::RichText::new("Hot list").size(text_size),
                 );
             });
         });
 
         if self.show_settings {
-            egui::Window::new("设置").show(ctx, |ui| {
+            egui::Window::new("Settings").show(ctx, |ui| {
                 ui.horizontal(|ui| {
                     ui.label("GitHub Token:");
                     ui.text_edit_singleline(&mut self.github_token);
                 });
-                ui.small(
-                    "在 GitHub Settings → Developer settings → Personal access tokens 获取（可选，提升限流）",
-                );
-                if ui.button("保存").clicked() {
+                ui.small("Optional. Use a GitHub personal access token to raise API rate limits.");
+                if ui.button("Save").clicked() {
                     self.show_settings = false;
                 }
             });
@@ -289,26 +289,26 @@ impl eframe::App for ApkGitApp {
                 Tab::Hot => self.show_hot_tab(ui),
             }
 
-            // 下载状态
             let status = self.download_status.lock().unwrap().clone();
             if !status.is_empty() {
                 ui.add_space(10.0);
                 ui.group(|ui| {
                     ui.label(&status);
                     ui.horizontal(|ui| {
-                        if ui.button("打开下载目录").clicked() {
+                        if ui.button("Open downloads").clicked() {
                             download::open_download_dir();
                         }
-                        if self.last_download_path.is_some() && ui.button("安装/ADB 安装").clicked()
+                        if self.last_download_path.is_some()
+                            && ui.button("Install with ADB").clicked()
                         {
                             self.install_last_download();
                         }
                     });
                     #[cfg(target_os = "android")]
-                    if status.contains("下载完成") {
+                    if status.contains("Download complete") {
                         ui.colored_label(
                             egui::Color32::YELLOW,
-                            "Android 上请手动点击安装，或使用 ADB",
+                            "On Android, install manually or use ADB.",
                         );
                     }
                 });
@@ -319,25 +319,26 @@ impl eframe::App for ApkGitApp {
     }
 }
 
-impl ApkGitApp {
+impl ReleaseMarketApp {
     fn show_repo_tab(&mut self, ui: &mut egui::Ui) {
         ui.vertical(|ui| {
-            // 输入区
             ui.group(|ui| {
                 ui.horizontal(|ui| {
-                    ui.label(egui::RichText::new("仓库:").size(self.text_size()));
+                    ui.label(egui::RichText::new("Repository:").size(self.text_size()));
                     let edit = ui.text_edit_singleline(&mut self.repo_input);
                     if ui
                         .add(
-                            egui::Button::new(egui::RichText::new("解析").size(self.text_size()))
-                                .min_size(egui::vec2(60.0, self.button_height())),
+                            egui::Button::new(
+                                egui::RichText::new("Inspect").size(self.text_size()),
+                            )
+                            .min_size(egui::vec2(60.0, self.button_height())),
                         )
                         .clicked()
                         || (edit.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)))
                     {
                         self.fetch_repo();
                     }
-                    ui.menu_button("示例", |ui| {
+                    ui.menu_button("Examples", |ui| {
                         let examples = [
                             "termux/termux-app",
                             "2dust/v2rayNG",
@@ -362,7 +363,7 @@ impl ApkGitApp {
             if self.is_loading {
                 ui.horizontal(|ui| {
                     ui.spinner();
-                    ui.label("解析中...");
+                    ui.label("Loading...");
                 });
                 return;
             }
@@ -395,7 +396,7 @@ impl ApkGitApp {
                         .strong(),
                 );
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    ui.hyperlink_to("在 GitHub 打开", &repo.html_url);
+                    ui.hyperlink_to("Open on GitHub", &repo.html_url);
                 });
             });
 
@@ -417,7 +418,7 @@ impl ApkGitApp {
         egui::CollapsingHeader::new(format!(
             "{} {} ({} APKs)",
             if release.prerelease {
-                "[预发布] "
+                "[pre-release] "
             } else {
                 ""
             },
@@ -426,7 +427,7 @@ impl ApkGitApp {
         ))
         .show(ui, |ui| {
             if let Some(date) = &release.published_at {
-                ui.small(format!("发布: {}", &date[..10.min(date.len())]));
+                ui.small(format!("Published: {}", &date[..10.min(date.len())]));
             }
 
             for asset in &release.assets {
@@ -434,13 +435,13 @@ impl ApkGitApp {
                     ui.label(asset.name.as_str());
                     ui.label(asset.size_display());
                     if asset.download_count > 0 {
-                        ui.small(format!("{} 次下载", asset.download_count));
+                        ui.small(format!("{} downloads", asset.download_count));
                     }
 
                     let btn_label = if self.is_downloading {
-                        "下载中..."
+                        "Downloading..."
                     } else {
-                        "下载"
+                        "Download"
                     };
                     if ui
                         .add(
@@ -464,17 +465,17 @@ impl ApkGitApp {
     }
 
     fn show_hot_tab(&mut self, ui: &mut egui::Ui) {
-        ui.heading("GitHub Android 热榜");
-        ui.small("基于 GitHub Search API 实时获取");
+        ui.heading("GitHub Release hot list");
+        ui.small("Live discovery through the GitHub Search API");
         ui.add_space(10.0);
 
         let topics = [
-            "Android 工具",
-            "隐私工具",
-            "AI 工具",
-            "网络工具",
-            "娱乐",
-            "文件管理",
+            "Android tools",
+            "Privacy tools",
+            "AI tools",
+            "Network tools",
+            "Media",
+            "File managers",
         ];
         ui.horizontal_wrapped(|ui| {
             for label in topics {
@@ -482,7 +483,10 @@ impl ApkGitApp {
                     .button(egui::RichText::new(label).size(self.text_size()))
                     .clicked()
                 {
-                    self.error_message = Some(format!("搜索: {}（热榜增强版后续推出）", label));
+                    self.error_message = Some(format!(
+                        "Search preset: {}. Enhanced hot lists are planned.",
+                        label
+                    ));
                 }
             }
         });
@@ -490,11 +494,11 @@ impl ApkGitApp {
         ui.add_space(20.0);
         ui.colored_label(
             egui::Color32::GRAY,
-            "提示: 在「仓库」页面输入 GitHub 仓库即可解析 APK",
+            "Tip: enter a GitHub repository in the Repository tab to inspect Release assets.",
         );
         ui.colored_label(
             egui::Color32::GRAY,
-            "热榜增强版（Star 趋势/下载排行/安全评分）将在后续更新推出",
+            "Enhanced ranking by stars, downloads, recency, and safety signals is planned.",
         );
     }
 }
