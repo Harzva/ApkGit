@@ -3,7 +3,7 @@ mod app;
 mod data;
 mod download;
 
-use eframe::NativeOptions;
+use eframe::{egui, NativeOptions};
 
 #[cfg(not(target_os = "android"))]
 fn main() -> eframe::Result<()> {

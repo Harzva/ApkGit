@@ -229,7 +229,6 @@ impl eframe::App for ApkGitApp {
                 style
                     .text_styles
                     .insert(egui::TextStyle::Button, egui::FontId::proportional(18.0));
-                style.spacing.touch_extra = egui::vec2(8.0, 8.0);
                 style.spacing.interact_size.y = 44.0;
             });
         }
