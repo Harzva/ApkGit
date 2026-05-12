@@ -117,6 +117,12 @@ jobs:
         with:
           targets: aarch64-linux-android
 
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
       - name: Install cargo-apk
         run: cargo install cargo-apk --locked
 
@@ -127,9 +133,23 @@ jobs:
           ndk-version: r26d
           link-to-sdk: true
 
+      - name: Create experimental signing key
+        run: |
+          keytool -genkeypair \
+            -keystore gitmarket-experimental.jks \
+            -storepass gitmarketexperimental \
+            -keypass gitmarketexperimental \
+            -alias gitmarket \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=GitMarket Experimental,O=GitMarket,C=US"
+
       - name: Build Android APK
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          CARGO_APK_RELEASE_KEYSTORE: ${{ github.workspace }}/gitmarket-experimental.jks
+          CARGO_APK_RELEASE_KEYSTORE_PASSWORD: gitmarketexperimental
         run: cargo apk build --release
 
       - name: Stage APK
