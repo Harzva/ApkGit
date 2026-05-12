@@ -39,7 +39,6 @@ crate-type = ["cdylib", "rlib"]
 [package.metadata.android]
 package = "com.gitmarket.app"
 version_code = 3
-version_name = "0.1.2"
 build_targets = ["aarch64-linux-android"]
 
 [package.metadata.android.sdk]
