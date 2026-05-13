@@ -1,6 +1,6 @@
 [package]
 name = "gitmarket"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 description = "GitHub/Gitee Release software discovery tool"
 authors = ["GitMarket Team"]
@@ -26,6 +26,9 @@ android_logger = "0.14"
 log = "0.4"
 winit = "0.30"
 
+[target.'cfg(windows)'.build-dependencies]
+winresource = "0.1"
+
 [[bin]]
 name = "gitmarket"
 path = "src/main.rs"
@@ -40,6 +43,7 @@ crate-type = ["cdylib", "rlib"]
 [package.metadata.android]
 package = "com.gitmarket.app"
 build_targets = ["aarch64-linux-android"]
+resources = "android-res"
 
 [package.metadata.android.sdk]
 min_sdk_version = 26
@@ -54,3 +58,4 @@ name = "android.permission.REQUEST_INSTALL_PACKAGES"
 [package.metadata.android.application]
 label = "GitMarket"
 debuggable = false
+icon = "@mipmap/ic_launcher"

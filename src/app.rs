@@ -140,28 +140,12 @@ impl eframe::App for GitMarketApp {
             .frame(egui::Frame::none().fill(palette.bg))
             .show(ctx, |ui| {
                 let available = ui.available_size();
-                let mobile = self.is_android || available.x < 560.0;
-                let content_height = if mobile {
-                    available.y - 78.0
-                } else {
-                    available.y
-                };
-
-                ui.allocate_ui_with_layout(
-                    egui::vec2(available.x, content_height.max(0.0)),
-                    egui::Layout::top_down(egui::Align::Min),
-                    |ui| {
-                        egui::ScrollArea::vertical()
-                            .auto_shrink([false, false])
-                            .show(ui, |ui| self.show_page(ui));
-                    },
-                );
+                let mobile = self.is_android || available.x < 760.0;
 
                 if mobile {
-                    self.bottom_nav(ui);
+                    self.mobile_shell(ui, available);
                 } else {
-                    ui.add_space(8.0);
-                    self.bottom_nav(ui);
+                    self.desktop_shell(ui, available);
                 }
             });
 
@@ -196,11 +180,74 @@ impl GitMarketApp {
         self.fonts_ready = true;
     }
 
+    fn mobile_shell(&mut self, ui: &mut egui::Ui, available: egui::Vec2) {
+        let content_height = (available.y - 82.0).max(0.0);
+        ui.allocate_ui_with_layout(
+            egui::vec2(available.x, content_height),
+            egui::Layout::top_down(egui::Align::Min),
+            |ui| {
+                egui::ScrollArea::vertical()
+                    .auto_shrink([false, false])
+                    .show(ui, |ui| self.show_page(ui));
+            },
+        );
+        self.bottom_nav(ui);
+    }
+
+    fn desktop_shell(&mut self, ui: &mut egui::Ui, available: egui::Vec2) {
+        let p = self.palette();
+        let side_w = 228.0;
+        let show_inspector = available.x >= 1180.0;
+        let inspector_w = if show_inspector { 292.0 } else { 0.0 };
+        let gaps = if show_inspector { 28.0 } else { 14.0 };
+        let main_w = (available.x - side_w - inspector_w - gaps).max(520.0);
+
+        ui.allocate_ui_with_layout(
+            available,
+            egui::Layout::left_to_right(egui::Align::Min),
+            |ui| {
+                ui.allocate_ui_with_layout(
+                    egui::vec2(side_w, available.y),
+                    egui::Layout::top_down(egui::Align::Min),
+                    |ui| self.desktop_sidebar(ui),
+                );
+                ui.add_space(8.0);
+
+                egui::Frame::none()
+                    .fill(p.panel)
+                    .stroke(Stroke::new(1.0, p.stroke))
+                    .rounding(Rounding::same(22.0))
+                    .inner_margin(Margin::same(18.0))
+                    .show(ui, |ui| {
+                        ui.set_width(main_w);
+                        ui.set_min_height((available.y - 24.0).max(0.0));
+                        self.desktop_topbar(ui);
+                        ui.add_space(14.0);
+                        egui::ScrollArea::vertical()
+                            .auto_shrink([false, false])
+                            .show(ui, |ui| self.show_active_tab(ui));
+                    });
+
+                if show_inspector {
+                    ui.add_space(8.0);
+                    ui.allocate_ui_with_layout(
+                        egui::vec2(inspector_w, available.y),
+                        egui::Layout::top_down(egui::Align::Min),
+                        |ui| self.insight_panel(ui),
+                    );
+                }
+            },
+        );
+    }
+
     fn show_page(&mut self, ui: &mut egui::Ui) {
         ui.add_space(self.top_padding());
         self.header(ui);
         ui.add_space(16.0);
+        self.show_active_tab(ui);
+    }
 
+    fn show_active_tab(&mut self, ui: &mut egui::Ui) {
         match self.current_tab {
             Tab::Home => self.show_home(ui),
             Tab::Discover => self.show_discover(ui),
@@ -209,6 +256,154 @@ impl GitMarketApp {
             Tab::Security => self.show_security(ui),
             Tab::Settings => self.show_settings(ui),
         }
+    }
+
+    fn desktop_sidebar(&mut self, ui: &mut egui::Ui) {
+        let p = self.palette();
+        egui::Frame::none()
+            .fill(p.panel)
+            .stroke(Stroke::new(1.0, p.stroke))
+            .rounding(Rounding::same(22.0))
+            .inner_margin(Margin::symmetric(16.0, 16.0))
+            .show(ui, |ui| {
+                ui.set_min_height(ui.available_height() - 4.0);
+                ui.horizontal(|ui| {
+                    self.logo_tile_sized(ui, 46.0);
+                    ui.vertical(|ui| {
+                        ui.label(RichText::new("GitMarket").size(20.0).strong().color(p.text));
+                        ui.label(RichText::new("Release OS").size(12.0).color(p.muted));
+                    });
+                });
+
+                ui.add_space(24.0);
+                for (tab, label, badge) in [
+                    (Tab::Home, self.t("home"), "H"),
+                    (Tab::Discover, self.t("discover"), "D"),
+                    (Tab::Repository, self.t("repos"), "R"),
+                    (Tab::Downloads, self.t("downloads"), "DL"),
+                    (Tab::Security, self.t("security"), "S"),
+                    (Tab::Settings, self.t("settings_short"), "ST"),
+                ] {
+                    if self.sidebar_nav_item(ui, tab, label, badge).clicked() {
+                        self.current_tab = tab;
+                    }
+                    ui.add_space(5.0);
+                }
+
+                ui.with_layout(egui::Layout::bottom_up(egui::Align::Min), |ui| {
+                    self.sidebar_status(ui);
+                    ui.add_space(10.0);
+                    ui.horizontal_wrapped(|ui| {
+                        if self.pill_button(ui, self.language_label()).clicked() {
+                            self.language = match self.language {
+                                Language::Zh => Language::En,
+                                Language::En => Language::Zh,
+                            };
+                        }
+                        if self.pill_button(ui, self.t("theme")).clicked() {
+                            self.theme = self.next_theme();
+                        }
+                    });
+                });
+            });
+    }
+
+    fn desktop_topbar(&mut self, ui: &mut egui::Ui) {
+        let p = self.palette();
+        egui::Frame::none()
+            .fill(p.panel_alt)
+            .stroke(Stroke::new(1.0, p.stroke))
+            .rounding(Rounding::same(18.0))
+            .inner_margin(Margin::symmetric(14.0, 10.0))
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label(RichText::new(self.t("search")).strong().color(p.muted));
+                    let response = ui.add(
+                        egui::TextEdit::singleline(&mut self.search_input)
+                            .hint_text(self.t("search_hint"))
+                            .desired_width((ui.available_width() - 280.0).max(220.0)),
+                    );
+                    if self.primary_button(ui, self.t("go")).clicked()
+                        || (response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)))
+                    {
+                        self.current_tab = Tab::Discover;
+                        self.start_discovery();
+                    }
+                    if self.text_button(ui, self.t("inspect_repo")).clicked() {
+                        self.current_tab = Tab::Repository;
+                    }
+                });
+                ui.add_space(8.0);
+                ui.horizontal_wrapped(|ui| {
+                    for source in [
+                        SourceChoice::All,
+                        SourceChoice::GitHub,
+                        SourceChoice::Gitee,
+                        SourceChoice::GitCode,
+                    ] {
+                        let selected = self.active_source == source;
+                        if self
+                            .compact_segment(ui, self.source_name(source), selected)
+                            .clicked()
+                        {
+                            self.active_source = source;
+                            self.current_tab = Tab::Discover;
+                            self.start_discovery();
+                        }
+                    }
+                });
+            });
+    }
+
+    fn insight_panel(&mut self, ui: &mut egui::Ui) {
+        let p = self.palette();
+        egui::Frame::none()
+            .fill(p.panel)
+            .stroke(Stroke::new(1.0, p.stroke))
+            .rounding(Rounding::same(22.0))
+            .inner_margin(Margin::same(16.0))
+            .show(ui, |ui| {
+                ui.set_min_height(ui.available_height() - 4.0);
+                ui.label(
+                    RichText::new(self.t("insight_title"))
+                        .size(18.0)
+                        .strong()
+                        .color(p.text),
+                );
+                ui.label(RichText::new(self.t("insight_sub")).color(p.muted));
+                ui.add_space(14.0);
+
+                self.insight_metric(
+                    ui,
+                    self.t("source_coverage"),
+                    "3",
+                    "GitHub / Gitee / GitCode",
+                );
+                self.insight_metric(
+                    ui,
+                    self.t("release_assets"),
+                    "APK EXE DMG",
+                    self.t("upstream_only"),
+                );
+                self.insight_metric(ui, "SHA256", self.t("verified"), self.t("hashes_desc"));
+
+                ui.add_space(12.0);
+                egui::Frame::none()
+                    .fill(p.chip)
+                    .rounding(Rounding::same(16.0))
+                    .inner_margin(Margin::same(12.0))
+                    .show(ui, |ui| {
+                        ui.label(RichText::new(self.t("next_focus")).strong().color(p.text));
+                        ui.add_space(8.0);
+                        for item in [
+                            self.t("focus_ui"),
+                            self.t("focus_lazy"),
+                            self.t("focus_signatures"),
+                        ] {
+                            ui.label(RichText::new(format!("• {}", item)).color(p.muted));
+                        }
+                    });
+            });
     }
 
     fn header(&mut self, ui: &mut egui::Ui) {
@@ -280,12 +475,19 @@ impl GitMarketApp {
     }
 
     fn show_home(&mut self, ui: &mut egui::Ui) {
-        self.search_box(ui);
-        ui.add_space(12.0);
+        if self.compact_layout(ui) {
+            self.search_box(ui);
+            ui.add_space(12.0);
+        }
         self.category_row(ui);
         ui.add_space(14.0);
         self.hero_card(ui);
         ui.add_space(18.0);
+
+        if !self.compact_layout(ui) {
+            self.home_metric_strip(ui);
+            ui.add_space(18.0);
+        }
 
         ui.horizontal(|ui| {
             ui.label(
@@ -302,9 +504,13 @@ impl GitMarketApp {
         });
         ui.add_space(8.0);
 
-        for repo in self.sample_repos() {
-            self.repo_row(ui, &repo);
-            ui.add_space(8.0);
+        if self.compact_layout(ui) {
+            for repo in self.sample_repos() {
+                self.repo_row(ui, &repo);
+                ui.add_space(8.0);
+            }
+        } else {
+            self.popular_repo_table(ui);
         }
     }
 
@@ -671,61 +877,137 @@ impl GitMarketApp {
 
     fn me_agent_hero_card(&mut self, ui: &mut egui::Ui) {
         let p = self.palette();
+        let wide = ui.available_width() > 720.0;
         egui::Frame::none()
             .fill(p.panel)
             .stroke(Stroke::new(1.0, p.stroke))
             .rounding(Rounding::same(22.0))
-            .inner_margin(Margin::same(18.0))
+            .inner_margin(Margin::same(20.0))
             .show(ui, |ui| {
-                ui.horizontal_wrapped(|ui| {
-                    self.tag(ui, self.t("today"));
-                    self.tag(ui, "GitHub");
-                    self.tag(ui, "Gitee");
-                    self.tag(ui, "GitCode");
-                });
-                ui.add_space(10.0);
-                ui.label(
-                    RichText::new(self.t("me_hero_title"))
-                        .size(self.title_size())
-                        .strong()
-                        .color(p.text),
-                );
-                ui.add(
-                    egui::Label::new(RichText::new(self.t("me_hero_sub")).color(p.muted)).wrap(),
-                );
-                ui.add_space(14.0);
+                if wide {
+                    let first_col_width = (ui.available_width() * 0.52).max(360.0);
+                    ui.columns(2, |columns| {
+                        columns[0].set_width(first_col_width);
+                        self.hero_copy(&mut columns[0]);
+                        self.release_stack_visual(&mut columns[1]);
+                    });
+                } else {
+                    self.hero_copy(ui);
+                    ui.add_space(14.0);
+                    self.release_stack_visual(ui);
+                }
+            });
+    }
 
-                ui.columns(3, |columns| {
-                    self.mini_feature_card(
-                        &mut columns[0],
-                        self.t("collections"),
-                        "12",
-                        "APK/EXE/DMG",
-                    );
-                    self.mini_feature_card(
-                        &mut columns[1],
-                        self.t("memory"),
-                        "20",
-                        self.t("results"),
-                    );
-                    self.mini_feature_card(
-                        &mut columns[2],
-                        self.t("security"),
-                        "SHA",
-                        self.t("verified"),
-                    );
-                });
+    fn hero_copy(&mut self, ui: &mut egui::Ui) {
+        let p = self.palette();
+        ui.horizontal_wrapped(|ui| {
+            self.tag(ui, self.t("today"));
+            self.tag(ui, "GitHub");
+            self.tag(ui, "Gitee");
+            self.tag(ui, "GitCode");
+        });
+        ui.add_space(14.0);
+        ui.label(
+            RichText::new(self.t("me_hero_title"))
+                .size(self.title_size() + 4.0)
+                .strong()
+                .color(p.text),
+        );
+        ui.add(egui::Label::new(RichText::new(self.t("me_hero_sub")).color(p.muted)).wrap());
+        ui.add_space(18.0);
 
-                ui.add_space(14.0);
-                ui.horizontal_wrapped(|ui| {
-                    if self.primary_button(ui, self.t("start_discover")).clicked() {
-                        self.current_tab = Tab::Discover;
-                        self.start_discovery();
-                    }
-                    if self.text_button(ui, self.t("inspect_repo")).clicked() {
-                        self.current_tab = Tab::Repository;
-                    }
+        ui.horizontal_wrapped(|ui| {
+            if self.primary_button(ui, self.t("start_discover")).clicked() {
+                self.current_tab = Tab::Discover;
+                self.start_discovery();
+            }
+            if self.text_button(ui, self.t("inspect_repo")).clicked() {
+                self.current_tab = Tab::Repository;
+            }
+        });
+    }
+
+    fn release_stack_visual(&self, ui: &mut egui::Ui) {
+        let p = self.palette();
+        egui::Frame::none()
+            .fill(p.panel_alt)
+            .stroke(Stroke::new(1.0, p.stroke))
+            .rounding(Rounding::same(20.0))
+            .inner_margin(Margin::same(14.0))
+            .show(ui, |ui| {
+                ui.set_min_width(260.0);
+                ui.horizontal(|ui| {
+                    self.logo_tile_sized(ui, 38.0);
+                    ui.vertical(|ui| {
+                        ui.label(RichText::new("Release Radar").strong().color(p.text));
+                        ui.label(
+                            RichText::new("assets, hashes, source")
+                                .size(12.0)
+                                .color(p.muted),
+                        );
+                    });
                 });
+                ui.add_space(12.0);
+                for (name, platform, score, color) in [
+                    ("termux/termux-app", "Android · GitHub", 0.84, p.accent),
+                    ("2dust/v2rayNG", "Kotlin · GitHub", 0.76, p.accent_alt),
+                    ("dromara/hutool", "Java · Gitee", 0.58, p.warning),
+                ] {
+                    self.release_visual_row(ui, name, platform, score, color);
+                    ui.add_space(8.0);
+                }
+            });
+    }
+
+    fn release_visual_row(
+        &self,
+        ui: &mut egui::Ui,
+        name: &str,
+        platform: &str,
+        score: f32,
+        color: Color32,
+    ) {
+        let p = self.palette();
+        egui::Frame::none()
+            .fill(p.panel)
+            .stroke(Stroke::new(1.0, p.stroke))
+            .rounding(Rounding::same(14.0))
+            .inner_margin(Margin::same(10.0))
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    let (icon_rect, _) =
+                        ui.allocate_exact_size(egui::vec2(34.0, 34.0), egui::Sense::hover());
+                    ui.painter()
+                        .rect_filled(icon_rect, Rounding::same(10.0), color);
+                    ui.painter().text(
+                        icon_rect.center(),
+                        egui::Align2::CENTER_CENTER,
+                        name.chars()
+                            .next()
+                            .unwrap_or('G')
+                            .to_uppercase()
+                            .to_string(),
+                        egui::FontId::proportional(16.0),
+                        Color32::WHITE,
+                    );
+                    ui.vertical(|ui| {
+                        ui.label(RichText::new(name).strong().color(p.text));
+                        ui.label(RichText::new(platform).size(12.0).color(p.muted));
+                    });
+                });
+                ui.add_space(8.0);
+                let width = ui.available_width();
+                let (bar_rect, _) =
+                    ui.allocate_exact_size(egui::vec2(width, 7.0), egui::Sense::hover());
+                ui.painter()
+                    .rect_filled(bar_rect, Rounding::same(999.0), p.stroke);
+                let filled = egui::Rect::from_min_size(
+                    bar_rect.min,
+                    egui::vec2(bar_rect.width() * score.clamp(0.0, 1.0), bar_rect.height()),
+                );
+                ui.painter()
+                    .rect_filled(filled, Rounding::same(999.0), color);
             });
     }
 
@@ -750,6 +1032,58 @@ impl GitMarketApp {
                         .color(p.muted),
                 );
             });
+    }
+
+    fn home_metric_strip(&self, ui: &mut egui::Ui) {
+        ui.columns(4, |columns| {
+            self.metric_card(&mut columns[0], self.t("collections"), "12");
+            self.metric_card(&mut columns[1], self.t("results"), "20");
+            self.metric_card(&mut columns[2], self.t("source_coverage"), "3");
+            self.metric_card(&mut columns[3], "SHA256", self.t("verified"));
+        });
+    }
+
+    fn popular_repo_table(&mut self, ui: &mut egui::Ui) {
+        let p = self.palette();
+        card(ui, p, |ui| {
+            egui::Grid::new("popular_repo_table")
+                .num_columns(5)
+                .striped(true)
+                .spacing(egui::vec2(14.0, 10.0))
+                .show(ui, |ui| {
+                    ui.label(RichText::new(self.t("repository")).strong().color(p.muted));
+                    ui.label(RichText::new(self.t("source")).strong().color(p.muted));
+                    ui.label(RichText::new(self.t("language")).strong().color(p.muted));
+                    ui.label(RichText::new("Stars").strong().color(p.muted));
+                    ui.label("");
+                    ui.end_row();
+
+                    for repo in self.sample_repos() {
+                        ui.horizontal(|ui| {
+                            self.app_icon(ui, &repo);
+                            ui.vertical(|ui| {
+                                ui.label(RichText::new(&repo.full_name).strong().color(p.text));
+                                if let Some(desc) = &repo.description {
+                                    ui.label(RichText::new(desc).size(12.0).color(p.muted));
+                                }
+                            });
+                        });
+                        self.tag(ui, &repo.source);
+                        self.tag(ui, repo.language.as_deref().unwrap_or("Code"));
+                        ui.label(
+                            RichText::new(format_count(repo.stargazers_count))
+                                .strong()
+                                .color(p.text),
+                        );
+                        if self.text_button(ui, self.t("inspect")).clicked() {
+                            self.repo_input = repo.full_name.clone();
+                            self.current_tab = Tab::Repository;
+                            self.fetch_repo();
+                        }
+                        ui.end_row();
+                    }
+                });
+        });
     }
 
     fn terminal_preview(&self, ui: &mut egui::Ui) {
@@ -1023,15 +1357,52 @@ impl GitMarketApp {
     }
 
     fn logo_tile(&self, ui: &mut egui::Ui) {
+        self.logo_tile_sized(ui, 54.0);
+    }
+
+    fn logo_tile_sized(&self, ui: &mut egui::Ui, size: f32) {
         let p = self.palette();
-        let (rect, _) = ui.allocate_exact_size(egui::vec2(54.0, 54.0), egui::Sense::hover());
+        let (rect, _) = ui.allocate_exact_size(egui::vec2(size, size), egui::Sense::hover());
+        let round = (size * 0.26).round();
         ui.painter()
-            .rect_filled(rect, Rounding::same(14.0), p.accent);
+            .rect_filled(rect, Rounding::same(round), p.accent);
+
+        let glow = egui::Rect::from_center_size(
+            rect.center() + egui::vec2(size * 0.16, -size * 0.16),
+            egui::vec2(size * 0.42, size * 0.42),
+        );
+        ui.painter().circle_filled(
+            glow.center(),
+            size * 0.22,
+            Color32::from_rgba_unmultiplied(
+                p.accent_alt.r(),
+                p.accent_alt.g(),
+                p.accent_alt.b(),
+                180,
+            ),
+        );
+
+        let stack_a = egui::Rect::from_min_size(
+            rect.left_top() + egui::vec2(size * 0.18, size * 0.22),
+            egui::vec2(size * 0.42, size * 0.12),
+        );
+        let stack_b = stack_a.translate(egui::vec2(size * 0.10, size * 0.14));
+        ui.painter().rect_filled(
+            stack_a,
+            Rounding::same(size * 0.04),
+            Color32::from_rgba_unmultiplied(255, 255, 255, 225),
+        );
+        ui.painter().rect_filled(
+            stack_b,
+            Rounding::same(size * 0.04),
+            Color32::from_rgba_unmultiplied(255, 255, 255, 170),
+        );
+
         ui.painter().text(
-            rect.center(),
+            rect.center() + egui::vec2(size * 0.03, size * 0.10),
             egui::Align2::CENTER_CENTER,
             "G",
-            egui::FontId::proportional(28.0),
+            egui::FontId::proportional(size * 0.43),
             Color32::WHITE,
         );
     }
@@ -1084,9 +1455,10 @@ impl GitMarketApp {
 
     fn primary_button(&self, ui: &mut egui::Ui, label: &str) -> egui::Response {
         ui.add(
-            egui::Button::new(RichText::new(label).strong())
+            egui::Button::new(RichText::new(label).strong().color(Color32::WHITE))
                 .fill(self.palette().accent)
-                .rounding(Rounding::same(10.0))
+                .stroke(Stroke::new(1.0, self.palette().accent))
+                .rounding(Rounding::same(12.0))
                 .min_size(egui::vec2(72.0, self.button_height())),
         )
     }
@@ -1095,7 +1467,8 @@ impl GitMarketApp {
         ui.add(
             egui::Button::new(label)
                 .fill(self.palette().panel_alt)
-                .rounding(Rounding::same(10.0))
+                .stroke(Stroke::new(1.0, self.palette().stroke))
+                .rounding(Rounding::same(12.0))
                 .min_size(egui::vec2(52.0, self.button_height())),
         )
     }
@@ -1104,6 +1477,7 @@ impl GitMarketApp {
         ui.add(
             egui::Button::new(label)
                 .fill(self.palette().panel)
+                .stroke(Stroke::new(1.0, self.palette().stroke))
                 .rounding(Rounding::same(999.0))
                 .min_size(egui::vec2(44.0, self.button_height())),
         )
@@ -1118,9 +1492,86 @@ impl GitMarketApp {
                 p.text
             }))
             .fill(if selected { p.accent } else { p.panel })
+            .stroke(Stroke::new(1.0, if selected { p.accent } else { p.stroke }))
             .rounding(Rounding::same(999.0))
             .min_size(egui::vec2(70.0, self.button_height())),
         )
+    }
+
+    fn compact_segment(&self, ui: &mut egui::Ui, label: &str, selected: bool) -> egui::Response {
+        let p = self.palette();
+        ui.add(
+            egui::Button::new(
+                RichText::new(label)
+                    .size(self.body_size() - 1.0)
+                    .color(if selected { Color32::WHITE } else { p.text }),
+            )
+            .fill(if selected { p.accent } else { p.panel })
+            .stroke(Stroke::new(1.0, if selected { p.accent } else { p.stroke }))
+            .rounding(Rounding::same(999.0))
+            .min_size(egui::vec2(58.0, 30.0)),
+        )
+    }
+
+    fn sidebar_nav_item(
+        &self,
+        ui: &mut egui::Ui,
+        tab: Tab,
+        label: &str,
+        badge: &str,
+    ) -> egui::Response {
+        let p = self.palette();
+        let selected = self.current_tab == tab;
+        let fill = if selected { p.accent } else { p.panel_alt };
+        let text = if selected { Color32::WHITE } else { p.text };
+
+        ui.add(
+            egui::Button::new(
+                RichText::new(format!("{badge:<2}  {label}"))
+                    .size(self.body_size())
+                    .strong()
+                    .color(text),
+            )
+            .fill(fill)
+            .stroke(Stroke::new(1.0, if selected { p.accent } else { p.stroke }))
+            .rounding(Rounding::same(14.0))
+            .min_size(egui::vec2(ui.available_width(), 42.0)),
+        )
+    }
+
+    fn sidebar_status(&self, ui: &mut egui::Ui) {
+        let p = self.palette();
+        egui::Frame::none()
+            .fill(p.chip)
+            .stroke(Stroke::new(1.0, p.stroke))
+            .rounding(Rounding::same(16.0))
+            .inner_margin(Margin::same(12.0))
+            .show(ui, |ui| {
+                ui.label(
+                    RichText::new(self.t("upstream_first"))
+                        .strong()
+                        .color(p.text),
+                );
+                ui.add(
+                    egui::Label::new(RichText::new(self.t("upstream_first_desc")).color(p.muted))
+                        .wrap(),
+                );
+            });
+    }
+
+    fn insight_metric(&self, ui: &mut egui::Ui, title: &str, value: &str, desc: &str) {
+        let p = self.palette();
+        egui::Frame::none()
+            .fill(p.panel_alt)
+            .stroke(Stroke::new(1.0, p.stroke))
+            .rounding(Rounding::same(16.0))
+            .inner_margin(Margin::same(12.0))
+            .show(ui, |ui| {
+                ui.label(RichText::new(title).color(p.muted));
+                ui.label(RichText::new(value).size(22.0).strong().color(p.text));
+                ui.add(egui::Label::new(RichText::new(desc).size(12.0).color(p.muted)).wrap());
+            });
+        ui.add_space(10.0);
     }
 
     fn fetch_repo(&mut self) {
@@ -1349,26 +1800,26 @@ impl GitMarketApp {
     fn palette(&self) -> ThemePalette {
         match self.theme {
             ThemeChoice::MeAgent => ThemePalette {
-                bg: Color32::from_rgb(250, 251, 255),
+                bg: Color32::from_rgb(244, 247, 252),
                 panel: Color32::from_rgb(255, 255, 255),
-                panel_alt: Color32::from_rgb(242, 245, 255),
-                text: Color32::from_rgb(21, 24, 34),
-                muted: Color32::from_rgb(118, 124, 140),
-                accent: Color32::from_rgb(48, 62, 104),
-                accent_alt: Color32::from_rgb(108, 132, 232),
-                warning: Color32::from_rgb(236, 78, 86),
-                danger: Color32::from_rgb(211, 63, 72),
-                stroke: Color32::from_rgb(232, 235, 244),
-                chip: Color32::from_rgb(246, 248, 253),
+                panel_alt: Color32::from_rgb(239, 244, 253),
+                text: Color32::from_rgb(12, 20, 35),
+                muted: Color32::from_rgb(103, 113, 134),
+                accent: Color32::from_rgb(39, 80, 186),
+                accent_alt: Color32::from_rgb(74, 203, 164),
+                warning: Color32::from_rgb(244, 156, 63),
+                danger: Color32::from_rgb(224, 68, 82),
+                stroke: Color32::from_rgb(222, 230, 243),
+                chip: Color32::from_rgb(247, 249, 253),
             },
             ThemeChoice::Warm => ThemePalette {
-                bg: Color32::from_rgb(255, 248, 235),
-                panel: Color32::from_rgb(255, 253, 248),
-                panel_alt: Color32::from_rgb(255, 226, 209),
-                text: Color32::from_rgb(48, 18, 12),
-                muted: Color32::from_rgb(130, 92, 79),
-                accent: Color32::from_rgb(255, 104, 47),
-                accent_alt: Color32::from_rgb(248, 178, 70),
+                bg: Color32::from_rgb(255, 247, 236),
+                panel: Color32::from_rgb(255, 252, 246),
+                panel_alt: Color32::from_rgb(255, 232, 214),
+                text: Color32::from_rgb(55, 27, 15),
+                muted: Color32::from_rgb(135, 92, 72),
+                accent: Color32::from_rgb(238, 92, 42),
+                accent_alt: Color32::from_rgb(247, 184, 72),
                 warning: Color32::from_rgb(219, 143, 32),
                 danger: Color32::from_rgb(218, 68, 61),
                 stroke: Color32::from_rgb(244, 214, 194),
@@ -1388,17 +1839,17 @@ impl GitMarketApp {
                 chip: Color32::from_rgb(242, 246, 252),
             },
             ThemeChoice::Launch => ThemePalette {
-                bg: Color32::from_rgb(20, 16, 13),
-                panel: Color32::from_rgb(32, 25, 20),
-                panel_alt: Color32::from_rgb(58, 40, 28),
-                text: Color32::from_rgb(255, 240, 220),
-                muted: Color32::from_rgb(196, 165, 137),
-                accent: Color32::from_rgb(255, 127, 58),
-                accent_alt: Color32::from_rgb(255, 202, 86),
-                warning: Color32::from_rgb(255, 195, 93),
-                danger: Color32::from_rgb(255, 105, 92),
-                stroke: Color32::from_rgb(82, 58, 44),
-                chip: Color32::from_rgb(47, 35, 29),
+                bg: Color32::from_rgb(8, 13, 26),
+                panel: Color32::from_rgb(15, 23, 43),
+                panel_alt: Color32::from_rgb(24, 34, 66),
+                text: Color32::from_rgb(237, 244, 255),
+                muted: Color32::from_rgb(139, 154, 189),
+                accent: Color32::from_rgb(100, 80, 255),
+                accent_alt: Color32::from_rgb(40, 217, 188),
+                warning: Color32::from_rgb(255, 178, 78),
+                danger: Color32::from_rgb(255, 90, 112),
+                stroke: Color32::from_rgb(42, 55, 92),
+                chip: Color32::from_rgb(18, 28, 54),
             },
         }
     }
@@ -1418,6 +1869,10 @@ impl GitMarketApp {
         } else {
             10.0
         }
+    }
+
+    fn compact_layout(&self, ui: &egui::Ui) -> bool {
+        self.is_android || ui.available_width() < 760.0
     }
 
     fn title_size(&self) -> f32 {
@@ -1559,8 +2014,8 @@ fn card<R>(ui: &mut egui::Ui, p: ThemePalette, add_contents: impl FnOnce(&mut eg
     egui::Frame::none()
         .fill(p.panel)
         .stroke(Stroke::new(1.0, p.stroke))
-        .rounding(Rounding::same(14.0))
-        .inner_margin(Margin::same(14.0))
+        .rounding(Rounding::same(16.0))
+        .inner_margin(Margin::same(16.0))
         .show(ui, add_contents)
         .inner
 }
@@ -1579,6 +2034,7 @@ fn nav_button(ui: &mut egui::Ui, label: &str, selected: bool, p: ThemePalette) -
             p.muted
         }))
         .fill(if selected { p.accent } else { p.panel })
+        .stroke(Stroke::new(1.0, if selected { p.accent } else { p.stroke }))
         .rounding(Rounding::same(12.0))
         .min_size(egui::vec2(56.0, 42.0)),
     )
@@ -1655,6 +2111,17 @@ fn zh(key: &str) -> &'static str {
         "settings_short" => "设置",
         "theme" => "主题",
         "language" => "语言",
+        "repository" => "仓库",
+        "source" => "来源",
+        "insight_title" => "发布洞察",
+        "insight_sub" => "把 Release、来源与安全信号放到一屏。",
+        "source_coverage" => "来源覆盖",
+        "next_focus" => "下一步重点",
+        "focus_ui" => "移动端真实界面继续向原生体验靠拢",
+        "focus_lazy" => "搜索结果分页与懒加载，避免卡顿",
+        "focus_signatures" => "签名指纹、许可证和校验链补齐",
+        "upstream_first" => "上游优先",
+        "upstream_first_desc" => "只链接官方 Release，不托管、不重签二进制。",
         "home" => "首页",
         "discover" => "发现",
         "repos" => "仓库",
@@ -1727,6 +2194,17 @@ fn en(key: &str) -> &'static str {
         "settings_short" => "Settings",
         "theme" => "Theme",
         "language" => "Language",
+        "repository" => "Repository",
+        "source" => "Source",
+        "insight_title" => "Release Insight",
+        "insight_sub" => "Source, assets, and safety signals in one working view.",
+        "source_coverage" => "Sources",
+        "next_focus" => "Next Focus",
+        "focus_ui" => "Move mobile UI closer to native product quality",
+        "focus_lazy" => "Paginate and lazy-load search results",
+        "focus_signatures" => "Add certificate fingerprints, licenses, and checksum chains",
+        "upstream_first" => "Upstream first",
+        "upstream_first_desc" => "Link official Releases only. No hosting, mirroring, or re-signing.",
         "home" => "Home",
         "discover" => "Discover",
         "repos" => "Repos",
