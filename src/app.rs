@@ -28,6 +28,7 @@ pub struct GitMarketApp {
     tx: mpsc::Sender<AppMessage>,
     rx: mpsc::Receiver<AppMessage>,
     is_android: bool,
+    fonts_ready: bool,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -123,6 +124,7 @@ impl Default for GitMarketApp {
             tx,
             rx,
             is_android: cfg!(target_os = "android"),
+            fonts_ready: false,
         }
     }
 }
@@ -130,6 +132,7 @@ impl Default for GitMarketApp {
 impl eframe::App for GitMarketApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.check_messages();
+        self.ensure_fonts(ctx);
         self.apply_style(ctx);
 
         let palette = self.palette();
@@ -167,6 +170,32 @@ impl eframe::App for GitMarketApp {
 }
 
 impl GitMarketApp {
+    fn ensure_fonts(&mut self, ctx: &egui::Context) {
+        if self.fonts_ready {
+            return;
+        }
+
+        let mut fonts = egui::FontDefinitions::default();
+        fonts.font_data.insert(
+            "gitmarket_cjk_subset".to_string(),
+            egui::FontData::from_static(include_bytes!("../assets/fonts/NotoSansSC-GitMarket.ttf")),
+        );
+        register_font_family(&mut fonts, "gitmarket_cjk_subset", 0);
+
+        for (name, path) in cjk_system_font_candidates() {
+            if let Ok(bytes) = std::fs::read(path) {
+                fonts
+                    .font_data
+                    .insert(name.to_string(), egui::FontData::from_owned(bytes));
+                register_font_family(&mut fonts, name, 1);
+                break;
+            }
+        }
+
+        ctx.set_fonts(fonts);
+        self.fonts_ready = true;
+    }
+
     fn show_page(&mut self, ui: &mut egui::Ui) {
         ui.add_space(self.top_padding());
         self.header(ui);
@@ -485,7 +514,7 @@ impl GitMarketApp {
             ui.label(RichText::new(self.t("language")).strong());
             ui.horizontal_wrapped(|ui| {
                 if self
-                    .segment(ui, "??", self.language == Language::Zh)
+                    .segment(ui, "中文", self.language == Language::Zh)
                     .clicked()
                 {
                     self.language = Language::Zh;
@@ -1475,11 +1504,11 @@ impl GitMarketApp {
 
     fn category_name(&self, category: Category) -> &'static str {
         match (self.language, category) {
-            (Language::Zh, Category::Trending) => "??",
-            (Language::Zh, Category::Editors) => "???",
-            (Language::Zh, Category::DevTools) => "????",
+            (Language::Zh, Category::Trending) => "趋势",
+            (Language::Zh, Category::Editors) => "编辑器",
+            (Language::Zh, Category::DevTools) => "开发工具",
             (Language::Zh, Category::Android) => "Android",
-            (Language::Zh, Category::Utilities) => "????",
+            (Language::Zh, Category::Utilities) => "实用工具",
             (Language::En, Category::Trending) => "Trending",
             (Language::En, Category::Editors) => "Editors",
             (Language::En, Category::DevTools) => "Dev Tools",
@@ -1490,7 +1519,7 @@ impl GitMarketApp {
 
     fn source_name(&self, source: SourceChoice) -> &'static str {
         match (self.language, source) {
-            (Language::Zh, SourceChoice::All) => "????",
+            (Language::Zh, SourceChoice::All) => "全部来源",
             (_, SourceChoice::GitHub) => "GitHub",
             (_, SourceChoice::Gitee) => "Gitee",
             (_, SourceChoice::GitCode) => "GitCode",
@@ -1501,9 +1530,9 @@ impl GitMarketApp {
     fn theme_name(&self, choice: ThemeChoice) -> &'static str {
         match (self.language, choice) {
             (Language::Zh, ThemeChoice::MeAgent) => "ME Agent",
-            (Language::Zh, ThemeChoice::Warm) => "????",
-            (Language::Zh, ThemeChoice::Clean) => "????",
-            (Language::Zh, ThemeChoice::Launch) => "????",
+            (Language::Zh, ThemeChoice::Warm) => "暖色卡片",
+            (Language::Zh, ThemeChoice::Clean) => "清爽蓝白",
+            (Language::Zh, ThemeChoice::Launch) => "橙色发布",
             (Language::En, ThemeChoice::MeAgent) => "ME Agent",
             (Language::En, ThemeChoice::Warm) => "Warm",
             (Language::En, ThemeChoice::Clean) => "Clean",
@@ -1513,7 +1542,7 @@ impl GitMarketApp {
 
     fn language_label(&self) -> &'static str {
         match self.language {
-            Language::Zh => "??",
+            Language::Zh => "中文",
             Language::En => "EN",
         }
     }
@@ -1581,74 +1610,103 @@ fn format_count(value: u64) -> String {
     }
 }
 
+fn register_font_family(fonts: &mut egui::FontDefinitions, name: &str, index: usize) {
+    for family in [egui::FontFamily::Proportional, egui::FontFamily::Monospace] {
+        let entries = fonts.families.entry(family).or_default();
+        if entries.iter().any(|entry| entry == name) {
+            continue;
+        }
+        entries.insert(index.min(entries.len()), name.to_string());
+    }
+}
+
+fn cjk_system_font_candidates() -> &'static [(&'static str, &'static str)] {
+    &[
+        ("noto_sans_sc_windows", "C:/Windows/Fonts/NotoSansSC-VF.ttf"),
+        ("noto_sans_sc_android_vf", "/system/fonts/NotoSansSC-VF.ttf"),
+        (
+            "noto_sans_sc_android_regular",
+            "/system/fonts/NotoSansSC-Regular.otf",
+        ),
+        (
+            "android_droid_fallback",
+            "/system/fonts/DroidSansFallback.ttf",
+        ),
+        (
+            "source_han_sans_cn",
+            "/system/fonts/SourceHanSansCN-Regular.otf",
+        ),
+    ]
+}
+
 fn zh(key: &str) -> &'static str {
     match key {
-        "today" => "????",
-        "me_hero_title" => "?? Release ????",
-        "me_hero_sub" => "ME Agent ????????????????????????????",
-        "collections" => "??",
-        "memory" => "??",
-        "results" => "????",
-        "verified" => "???",
-        "start_discover" => "????",
-        "inspect_repo" => "????",
-        "tagline" => "?? GitHub / Gitee / GitCode Release ??",
-        "settings" => "??",
-        "settings_short" => "??",
-        "theme" => "??",
-        "language" => "??",
-        "home" => "??",
-        "discover" => "??",
-        "repos" => "??",
-        "downloads" => "??",
-        "security" => "??",
-        "search" => "??",
-        "search_hint" => "??????????? Release ???",
-        "go" => "??",
-        "popular" => "????",
-        "view_all" => "????",
+        "today" => "今日看板",
+        "me_hero_title" => "你的 Release 智能看板",
+        "me_hero_sub" => "ME Agent 式移动工作台：聚合仓库、版本、资产、安全信号和下载进度。",
+        "collections" => "合集",
+        "memory" => "记忆",
+        "results" => "搜索结果",
+        "verified" => "待校验",
+        "start_discover" => "开始发现",
+        "inspect_repo" => "检查仓库",
+        "tagline" => "发现 GitHub / Gitee / GitCode Release 资产",
+        "settings" => "设置",
+        "settings_short" => "设置",
+        "theme" => "主题",
+        "language" => "语言",
+        "home" => "首页",
+        "discover" => "发现",
+        "repos" => "仓库",
+        "downloads" => "下载",
+        "security" => "安全",
+        "search" => "搜索",
+        "search_hint" => "搜索仓库、工具、作者或 Release 关键词",
+        "go" => "搜索",
+        "popular" => "热门仓库",
+        "view_all" => "查看全部",
         "featured" => "Featured Release",
-        "featured_desc" => "????????????????????? Release ???",
-        "fast" => "??",
-        "secure" => "??",
-        "view_releases" => "?? Release",
-        "discover_title" => "?????",
-        "discover_sub" => "???? GitHub ? Gitee?GitCode ?????????",
-        "loading_sources" => "????????...",
-        "gitcode_fallback" => "GitCode ?????????????????????????? API?",
-        "open_gitcode" => "?? GitCode ??",
-        "repo_title" => "????",
-        "repo_sub" => "?? owner/repo ??? URL??? Release ???????SHA ??????",
-        "inspect" => "??",
-        "loading_repo" => "??????? Release...",
-        "release_assets" => "Release ??",
-        "download" => "??",
-        "downloading" => "???",
-        "open_source" => "???",
-        "downloads_sub" => "??????? SHA256??? Android ?????????",
-        "active" => "???",
-        "completed" => "???",
-        "verifying" => "???",
-        "no_downloads" => "?????",
-        "no_downloads_sub" => "?????? Release ?????????????????",
-        "latest_download" => "????",
-        "open_downloads" => "??????",
-        "install_apk" => "?? APK",
-        "security_sub" => "GitMarket ?????????????????????????",
-        "upstream_only" => "?????",
-        "upstream_only_desc" => "????????? Release ?????????????",
-        "hashes" => "SHA256 ??",
-        "hashes_desc" => "??????? SHA256??????????????",
-        "signatures" => "????",
-        "signatures_desc" => "Android ???????????????????",
-        "permissions" => "????",
-        "permissions_desc" => "Android ??????????????????????",
-        "token_storage" => "Token ??",
-        "token_storage_desc" => "GitHub Token ????? API ??????????????????",
-        "settings_sub" => "???????? GitHub API Token?",
-        "token_help" => "???????? GitHub API ?????????????????",
-        "empty_repo" => "????? URL ? owner/repo?",
-        "invalid_repo" => "??????? github.com?gitee.com?gitcode.com ? owner/repo?",
+        "featured_desc" => "更漂亮、更安全地发现开源软件包，并回到上游 Release 下载。",
+        "fast" => "快速",
+        "secure" => "安全",
+        "view_releases" => "查看 Release",
+        "discover_title" => "多来源发现",
+        "discover_sub" => "并发搜索 GitHub 与 Gitee，GitCode 提供源站跳转兜底。",
+        "loading_sources" => "正在加载来源结果...",
+        "gitcode_fallback" => "GitCode 当前作为源站搜索入口接入，后续可通过后端代理提供稳定 API。",
+        "open_gitcode" => "打开 GitCode 搜索",
+        "repo_title" => "仓库检查",
+        "repo_sub" => "输入 owner/repo 或上游 URL，检查 Release 资产、下载量、SHA 与源码地址。",
+        "inspect" => "检查",
+        "loading_repo" => "正在读取仓库和 Release...",
+        "release_assets" => "Release 资产",
+        "download" => "下载",
+        "downloading" => "下载中",
+        "open_source" => "源代码",
+        "downloads_sub" => "管理下载、校验 SHA256，并在 Android 或桌面上继续安装。",
+        "active" => "进行中",
+        "completed" => "已完成",
+        "verifying" => "待校验",
+        "no_downloads" => "还没有下载",
+        "no_downloads_sub" => "在仓库页选择 Release 资产后，这里会显示进度和校验信息。",
+        "latest_download" => "最近下载",
+        "open_downloads" => "打开下载目录",
+        "install_apk" => "安装 APK",
+        "security_sub" => "GitMarket 是发现和校验助手，不托管、不重签、不替代安全审计。",
+        "upstream_only" => "只链接上游",
+        "upstream_only_desc" => "所有下载都指向官方 Release 资产，不托管第三方二进制。",
+        "hashes" => "SHA256 校验",
+        "hashes_desc" => "下载后自动计算 SHA256，后续会与上游校验文件比对。",
+        "signatures" => "签名指纹",
+        "signatures_desc" => "Android 包需要展示签名证书指纹和历史变更警告。",
+        "permissions" => "权限透明",
+        "permissions_desc" => "Android 权限必须解释用途，特别是网络和安装相关权限。",
+        "token_storage" => "Token 边界",
+        "token_storage_desc" => "GitHub Token 仅用于提高 API 限额，正式移动端应使用系统凭据存储。",
+        "settings_sub" => "切换主题、语言与 GitHub API Token。",
+        "token_help" => "可选。仅用于提高 GitHub API 频率限制，不应在共享设备长期保存。",
+        "empty_repo" => "请输入仓库 URL 或 owner/repo。",
+        "invalid_repo" => "格式无效。支持 github.com、gitee.com、gitcode.com 或 owner/repo。",
         _ => "",
     }
 }

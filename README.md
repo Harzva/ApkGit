@@ -37,7 +37,7 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 | 模块 | 状态 | 说明 |
 | --- | --- | --- |
 | Web 首页 / Pages | 已上线 | `docs/index.html` 作为宣传页，`docs/app.html` 作为可交互预览，`docs/mobile-preview.html` 作为 APK / IPA 本地预览 |
-| Rust / egui 客户端 | `0.1.3` 开发中 | 已升级移动端布局、四套主题、中英双语、多源发现页 |
+| Rust / egui 客户端 | `0.1.4` 开发中 | 已升级移动端布局、四套主题、中英双语、多源发现页，并内置中文字体子集 |
 | Android preview APK | CI 构建 | WebView 壳，指向 GitHub Pages 预览地址 |
 | Android Rust experimental APK | CI 非阻塞构建 | 用于验证 egui 移动 UI，不作为最终 Android 原生路线 |
 | 桌面包 | CI 构建 | Windows / Linux / macOS release artifact |
@@ -57,7 +57,7 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 
 `docs/mobile-preview.html` 可以直接用浏览器本地打开，用来减少反复安装测试包的次数：
 
-- **APK WebView 模式**：直接嵌入 `docs/app.html`。当前 `gitmarket-android-preview-v0.1.3.apk` 也是打开同一个 Pages 地址，因此内容与 preview APK 保持一致。
+- **APK WebView 模式**：直接嵌入 `docs/app.html`。当前 `gitmarket-android-preview` 也是打开同一个 Pages 地址，因此内容与 preview APK 保持一致。
 - **Android Native / iOS Native 模式**：用同一套示例 Release 数据预演移动端原生界面，支持四套主题、中文 / English、底部导航、仓库检查、下载状态和安全页。
 - **验收方式**：日常先在 HTML 里检查布局、文案、主题和交互，最终发版前再用真实 Android / iOS 设备做关键路径验收。
 
@@ -125,8 +125,8 @@ cd android-preview
 发布新版本：
 
 ```bash
-git tag v0.1.3
-git push origin v0.1.3
+git tag v0.1.4
+git push origin v0.1.4
 ```
 
 Tag 构建通过后，GitHub Release 会自动上传桌面包、Android preview APK、实验 APK 和 SHA256 文件。
