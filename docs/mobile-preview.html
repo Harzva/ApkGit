@@ -1,0 +1,1816 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GitMarket Mobile Preview Lab</title>
+  <meta name="description" content="GitMarket APK / IPA local preview page. Open locally to inspect the Android WebView preview and native mobile product UI without reinstalling packages.">
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #eef1f6;
+      --page-2: #f8fafc;
+      --shell: #12141b;
+      --shell-line: rgba(255, 255, 255, .18);
+      --screen: #fafbff;
+      --surface: #ffffff;
+      --surface-2: #f3f6fd;
+      --ink: #151822;
+      --muted: #747b8d;
+      --line: #e4e8f2;
+      --primary: #303e68;
+      --primary-2: #6c84e8;
+      --accent: #ec4e56;
+      --good: #2da96d;
+      --warn: #d68d20;
+      --danger: #d34b55;
+      --shadow: 0 24px 70px rgba(25, 31, 48, .18);
+      --tight-shadow: 0 12px 28px rgba(25, 31, 48, .1);
+      --radius: 8px;
+    }
+
+    body[data-theme="warm"] {
+      --page: #fff4e7;
+      --page-2: #fffaf3;
+      --screen: #fff8eb;
+      --surface: #fffdf8;
+      --surface-2: #fff1e8;
+      --ink: #30120c;
+      --muted: #805d50;
+      --line: #f1d5c2;
+      --primary: #ff682f;
+      --primary-2: #f8b246;
+      --accent: #236eed;
+      --good: #2d9c6b;
+      --warn: #db8f20;
+      --danger: #da443d;
+      --shadow: 0 24px 70px rgba(163, 86, 28, .18);
+      --tight-shadow: 0 12px 28px rgba(163, 86, 28, .12);
+    }
+
+    body[data-theme="clean"] {
+      --page: #edf5ff;
+      --page-2: #f9fcff;
+      --screen: #f8faff;
+      --surface: #ffffff;
+      --surface-2: #e8f1ff;
+      --ink: #131b2c;
+      --muted: #687184;
+      --line: #dde4f0;
+      --primary: #236eed;
+      --primary-2: #45c69b;
+      --accent: #e6a440;
+      --good: #239c72;
+      --warn: #d28b24;
+      --danger: #dc5050;
+      --shadow: 0 24px 70px rgba(35, 110, 237, .14);
+      --tight-shadow: 0 12px 28px rgba(35, 110, 237, .1);
+    }
+
+    body[data-theme="launch"] {
+      color-scheme: dark;
+      --page: #14100d;
+      --page-2: #201914;
+      --shell: #080706;
+      --shell-line: rgba(255, 225, 190, .16);
+      --screen: #14100d;
+      --surface: #201914;
+      --surface-2: #3a281c;
+      --ink: #fff0dc;
+      --muted: #c4a589;
+      --line: #523a2c;
+      --primary: #ff7f3a;
+      --primary-2: #ffca56;
+      --accent: #69b7ff;
+      --good: #6dd18a;
+      --warn: #ffc35d;
+      --danger: #ff695c;
+      --shadow: 0 24px 70px rgba(0, 0, 0, .38);
+      --tight-shadow: 0 12px 28px rgba(0, 0, 0, .26);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background:
+        linear-gradient(120deg, var(--page) 0%, var(--page-2) 46%, var(--page) 100%);
+      color: var(--ink);
+      font-family: "Segoe UI", "Noto Sans SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
+      letter-spacing: 0;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .layout {
+      width: min(1280px, 100%);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: minmax(360px, 470px) minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .layout > * {
+      min-width: 0;
+    }
+
+    .phone-column {
+      position: sticky;
+      top: 18px;
+      display: grid;
+      place-items: center;
+    }
+
+    .phone {
+      width: min(430px, calc(100vw - 32px));
+      height: min(900px, calc(100vh - 36px));
+      min-height: 720px;
+      padding: 12px;
+      border: 1px solid var(--shell-line);
+      border-radius: 42px;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.16), transparent 22%),
+        var(--shell);
+      box-shadow: 0 26px 90px rgba(0, 0, 0, .32);
+    }
+
+    .screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 32px;
+      background: var(--screen);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+    }
+
+    .statusbar {
+      height: 34px;
+      padding: 9px 18px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 800;
+      background: var(--screen);
+      user-select: none;
+    }
+
+    .status-icons {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .signal {
+      width: 18px;
+      height: 12px;
+      display: inline-grid;
+      grid-template-columns: repeat(4, 3px);
+      align-items: end;
+      gap: 2px;
+    }
+
+    .signal i {
+      display: block;
+      width: 3px;
+      border-radius: 2px;
+      background: currentColor;
+    }
+
+    .signal i:nth-child(1) { height: 4px; opacity: .46; }
+    .signal i:nth-child(2) { height: 7px; opacity: .62; }
+    .signal i:nth-child(3) { height: 10px; opacity: .8; }
+    .signal i:nth-child(4) { height: 12px; }
+
+    .battery {
+      position: relative;
+      width: 24px;
+      height: 12px;
+      border: 1.5px solid currentColor;
+      border-radius: 4px;
+    }
+
+    .battery::before {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 15px;
+      height: 6px;
+      border-radius: 2px;
+      background: currentColor;
+    }
+
+    .battery::after {
+      content: "";
+      position: absolute;
+      right: -4px;
+      top: 3px;
+      width: 2px;
+      height: 6px;
+      border-radius: 0 2px 2px 0;
+      background: currentColor;
+    }
+
+    .webview-frame {
+      display: block;
+      width: 100%;
+      height: calc(100% - 34px);
+      border: 0;
+      background: #0b0e10;
+    }
+
+    body:not([data-mode="webview"]) .webview-frame {
+      display: none;
+    }
+
+    .native-app {
+      display: none;
+      height: calc(100% - 34px);
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 72%, transparent), transparent 46%),
+        var(--screen);
+    }
+
+    body:not([data-mode="webview"]) .native-app {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mobile-scroll {
+      flex: 1;
+      overflow: auto;
+      padding: 16px 18px 98px;
+      scrollbar-width: thin;
+    }
+
+    .mobile-scroll::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .mobile-scroll::-webkit-scrollbar-thumb {
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--muted) 34%, transparent);
+    }
+
+    .mobile-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .brand-mini {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .app-mark {
+      width: 42px;
+      height: 42px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      color: #fff;
+      background:
+        linear-gradient(145deg, var(--primary), var(--primary-2));
+      box-shadow: var(--tight-shadow);
+      font-weight: 950;
+    }
+
+    .brand-title {
+      min-width: 0;
+    }
+
+    .brand-title strong,
+    .hero-card h1,
+    .section-title {
+      overflow-wrap: anywhere;
+    }
+
+    .brand-title strong {
+      display: block;
+      font-size: 17px;
+      line-height: 1.1;
+    }
+
+    .brand-title span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .icon-button {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: var(--tight-shadow);
+      font-weight: 900;
+    }
+
+    .hero-card,
+    .card,
+    .metric,
+    .setting-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: color-mix(in srgb, var(--surface) 94%, transparent);
+      box-shadow: var(--tight-shadow);
+    }
+
+    .hero-card {
+      position: relative;
+      overflow: hidden;
+      padding: 22px;
+      min-height: 188px;
+    }
+
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      right: -34px;
+      bottom: -30px;
+      width: 150px;
+      height: 150px;
+      border: 18px solid color-mix(in srgb, var(--primary-2) 22%, transparent);
+      border-radius: 48px;
+      transform: rotate(18deg);
+      pointer-events: none;
+    }
+
+    body[data-theme="launch"] .hero-card::after {
+      border-color: color-mix(in srgb, var(--primary-2) 38%, transparent);
+    }
+
+    .kicker {
+      width: fit-content;
+      max-width: 100%;
+      padding: 6px 9px;
+      border-radius: 999px;
+      color: var(--primary);
+      background: color-mix(in srgb, var(--primary) 10%, transparent);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .hero-card h1 {
+      max-width: 270px;
+      margin: 16px 0 8px;
+      font-size: 30px;
+      line-height: 1.04;
+    }
+
+    .hero-card p,
+    .muted,
+    .repo-desc {
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .hero-card p {
+      position: relative;
+      max-width: 300px;
+      margin: 0;
+      z-index: 1;
+      font-size: 13px;
+    }
+
+    .hero-actions {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .primary-button,
+    .ghost-button,
+    .tiny-button {
+      min-height: 36px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .primary-button {
+      border-color: transparent;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    }
+
+    .ghost-button,
+    .tiny-button {
+      color: var(--ink);
+      background: var(--surface);
+    }
+
+    .tiny-button {
+      min-height: 30px;
+      padding: 0 9px;
+      border-radius: 9px;
+      font-size: 12px;
+    }
+
+    .primary-button:hover,
+    .ghost-button:hover,
+    .tiny-button:hover,
+    .icon-button:hover,
+    .control-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 14px 0 18px;
+    }
+
+    .metric {
+      min-height: 82px;
+      padding: 12px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.25;
+    }
+
+    .section-row {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 18px 0 10px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.18;
+    }
+
+    .source-strip,
+    .theme-strip,
+    .platform-strip,
+    .lang-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip,
+    .tab-chip {
+      min-height: 32px;
+      padding: 0 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .chip[aria-pressed="true"],
+    .tab-chip[aria-pressed="true"],
+    .control-button[aria-pressed="true"] {
+      border-color: color-mix(in srgb, var(--primary) 38%, var(--line));
+      color: var(--primary);
+      background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+    }
+
+    .search-box {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .search-box input {
+      min-width: 0;
+      height: 42px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--ink);
+      background: var(--surface);
+      outline: none;
+    }
+
+    .search-box input:focus {
+      border-color: var(--primary-2);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-2) 18%, transparent);
+    }
+
+    .repo-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .repo-card {
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--tight-shadow);
+    }
+
+    .repo-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .repo-name {
+      min-width: 0;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
+    .source-badge {
+      height: 24px;
+      padding: 0 8px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--primary-2) 14%, transparent);
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
+
+    .repo-desc {
+      margin: 0 0 10px;
+      font-size: 12px;
+    }
+
+    .repo-meta,
+    .asset-row,
+    .check-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .meta-pill {
+      min-height: 24px;
+      padding: 4px 7px;
+      border-radius: 7px;
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .detail-hero {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--primary) 10%, var(--surface)), var(--surface));
+      box-shadow: var(--tight-shadow);
+    }
+
+    .detail-hero h2 {
+      margin: 10px 0 6px;
+      font-size: 23px;
+      line-height: 1.12;
+      overflow-wrap: anywhere;
+    }
+
+    .asset-list,
+    .check-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .asset-card,
+    .check-card,
+    .download-card {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--tight-shadow);
+    }
+
+    .asset-card strong,
+    .download-card strong {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+
+    .asset-row {
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .progress {
+      width: 100%;
+      height: 8px;
+      margin-top: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--surface-2);
+    }
+
+    .progress span {
+      display: block;
+      width: var(--value, 66%);
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+    }
+
+    .check-card {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 10px;
+    }
+
+    .check-dot {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      color: #fff;
+      background: var(--good);
+      font-weight: 950;
+    }
+
+    .check-card strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .check-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .bottom-nav {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 12px;
+      height: 72px;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 4px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, .12);
+      backdrop-filter: blur(18px);
+    }
+
+    .nav-item {
+      min-width: 0;
+      border: 0;
+      border-radius: 16px;
+      background: transparent;
+      color: var(--muted);
+      display: grid;
+      place-items: center;
+      gap: 2px;
+      font-size: 10px;
+      font-weight: 850;
+    }
+
+    .nav-item strong {
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .nav-item[aria-current="page"] {
+      color: var(--primary);
+      background: color-mix(in srgb, var(--primary) 10%, transparent);
+    }
+
+    .nav-item[aria-current="page"] strong {
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    }
+
+    .panel {
+      padding: 4px 0 48px;
+    }
+
+    .intro {
+      margin: 0 0 22px;
+      padding: 24px;
+      border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line));
+      border-radius: var(--radius);
+      background: color-mix(in srgb, var(--surface) 76%, transparent);
+      box-shadow: var(--shadow);
+    }
+
+    .intro h1 {
+      max-width: 780px;
+      margin: 0 0 10px;
+      font-size: clamp(34px, 6vw, 72px);
+      line-height: .95;
+    }
+
+    .intro p {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.75;
+    }
+
+    .panel-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .control-card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: color-mix(in srgb, var(--surface) 86%, transparent);
+      box-shadow: var(--tight-shadow);
+    }
+
+    .control-card h2,
+    .control-card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .control-card p,
+    .note,
+    .preview-note {
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .control-card p {
+      margin: 0 0 14px;
+      font-size: 13px;
+    }
+
+    .control-group {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .control-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .control-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .control-button {
+      min-height: 36px;
+      padding: 0 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--ink);
+      font-weight: 850;
+    }
+
+    .open-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .preview-note {
+      padding: 14px;
+      border: 1px dashed color-mix(in srgb, var(--primary) 38%, var(--line));
+      border-radius: var(--radius);
+      background: color-mix(in srgb, var(--primary) 7%, transparent);
+      font-size: 13px;
+    }
+
+    .workflow-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .workflow-item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .workflow-number {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      color: #fff;
+      background: var(--primary);
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .workflow-item strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .workflow-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .setting-card {
+      padding: 13px;
+      margin-top: 10px;
+    }
+
+    .setting-card strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .setting-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .phone-column {
+        position: relative;
+        top: auto;
+      }
+
+      .panel-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .layout {
+        padding: 12px;
+      }
+
+      .phone {
+        width: min(360px, calc(100vw - 24px));
+        height: 820px;
+        min-height: 690px;
+        padding: 9px;
+        border-radius: 34px;
+      }
+
+      .screen {
+        border-radius: 27px;
+      }
+
+      .mobile-scroll {
+        padding: 14px 14px 94px;
+      }
+
+      .intro {
+        padding: 18px;
+      }
+
+      .intro h1 {
+        font-size: 34px;
+        overflow-wrap: anywhere;
+      }
+
+      .control-card {
+        min-width: 0;
+      }
+
+      .hero-card h1 {
+        font-size: 26px;
+      }
+
+      .metric-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .bottom-nav {
+        left: 10px;
+        right: 10px;
+      }
+    }
+  </style>
+</head>
+<body data-theme="me" data-mode="webview">
+  <main class="layout">
+    <section class="phone-column" aria-label="Mobile preview">
+      <div class="phone">
+        <div class="screen">
+          <div class="statusbar">
+            <span id="clock">21:24</span>
+            <span class="status-icons" aria-label="Signal and battery">
+              <span>5G</span>
+              <span class="signal" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+              <span class="battery" aria-hidden="true"></span>
+            </span>
+          </div>
+          <iframe class="webview-frame" src="./app.html" title="GitMarket Android WebView exact preview"></iframe>
+          <div class="native-app" id="nativeApp">
+            <div class="mobile-scroll" id="mobileScroll"></div>
+            <nav class="bottom-nav" id="bottomNav" aria-label="Mobile app navigation"></nav>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="intro">
+        <div class="kicker">APK / IPA Preview Lab</div>
+        <h1 data-i18n="pageTitle">GitMarket ???????</h1>
+        <p data-i18n="pageLead">?? HTML ?????????Android WebView ??????? app.html???? preview APK ???????????????????? Android / iOS ??????????</p>
+      </div>
+
+      <div class="panel-grid">
+        <div class="control-card">
+          <h2 data-i18n="howTitle">??????</h2>
+          <p data-i18n="howLead">????????????????? UI????????????????????? HTML ???????????? APK ? IPA ????</p>
+
+          <div class="workflow-list">
+            <div class="workflow-item">
+              <span class="workflow-number">1</span>
+              <div>
+                <strong data-i18n="stepOne">?? WebView ??</strong>
+                <span data-i18n="stepOneDesc">?? preview APK ?? GitHub Pages ? app.html?????? iframe ????????????????</span>
+              </div>
+            </div>
+            <div class="workflow-item">
+              <span class="workflow-number">2</span>
+              <div>
+                <strong data-i18n="stepTwo">??????</strong>
+                <span data-i18n="stepTwoDesc">????????????????????????????????????</span>
+              </div>
+            </div>
+            <div class="workflow-item">
+              <span class="workflow-number">3</span>
+              <div>
+                <strong data-i18n="stepThree">??????</strong>
+                <span data-i18n="stepThreeDesc">? HTML ????????? CI ???? Android ? iOS ?????????????</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="control-card">
+          <h2 data-i18n="controls">?????</h2>
+          <p id="modeNote" class="preview-note"></p>
+
+          <div class="control-group">
+            <div class="control-label" data-i18n="target">????</div>
+            <div class="control-buttons">
+              <button class="control-button" data-mode="webview">APK WebView</button>
+              <button class="control-button" data-mode="android">Android Native</button>
+              <button class="control-button" data-mode="ios">iOS Native</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label" data-i18n="theme">??</div>
+            <div class="control-buttons">
+              <button class="control-button" data-theme-option="me">ME Agent</button>
+              <button class="control-button" data-theme-option="warm" data-i18n="themeWarm">????</button>
+              <button class="control-button" data-theme-option="clean" data-i18n="themeClean">????</button>
+              <button class="control-button" data-theme-option="launch" data-i18n="themeLaunch">????</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label" data-i18n="language">??</div>
+            <div class="control-buttons">
+              <button class="control-button" data-lang="zh">??</button>
+              <button class="control-button" data-lang="en">English</button>
+            </div>
+          </div>
+
+          <div class="open-actions">
+            <a class="primary-button" href="./app.html" data-i18n="openExact">???? app.html</a>
+            <a class="ghost-button" href="https://github.com/Harzva/GitReleaseMarket/releases/latest" data-i18n="openRelease">?? Release</a>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const state = {
+      mode: "webview",
+      theme: "me",
+      lang: "zh",
+      tab: "home",
+      source: "all",
+      query: "",
+      expanded: false,
+      selectedRepo: "termux/termux-app",
+      downloadStarted: false
+    };
+    const initialParams = new URLSearchParams(window.location.search);
+    const initialMode = initialParams.get("mode");
+    const initialTheme = initialParams.get("theme");
+    const initialLang = initialParams.get("lang");
+    const initialTab = initialParams.get("tab");
+
+    if (["webview", "android", "ios"].includes(initialMode)) state.mode = initialMode;
+    if (["me", "warm", "clean", "launch"].includes(initialTheme)) state.theme = initialTheme;
+    if (["zh", "en"].includes(initialLang)) state.lang = initialLang;
+    if (["home", "discover", "repos", "downloads", "security", "settings"].includes(initialTab)) state.tab = initialTab;
+    document.body.dataset.mode = state.mode;
+    document.body.dataset.theme = state.theme;
+    document.documentElement.lang = state.lang === "zh" ? "zh-CN" : "en";
+    let searchTimer = 0;
+
+    const copy = {
+      zh: {
+        pageTitle: "GitMarket ???????",
+        pageLead: "?? HTML ?????????Android WebView ??????? app.html???? preview APK ???????????????????? Android / iOS ??????????",
+        howTitle: "??????",
+        howLead: "????????????????? UI????????????????????? HTML ???????????? APK ? IPA ????",
+        stepOne: "?? WebView ??",
+        stepOneDesc: "?? preview APK ?? GitHub Pages ? app.html?????? iframe ????????????????",
+        stepTwo: "??????",
+        stepTwoDesc: "????????????????????????????????????",
+        stepThree: "??????",
+        stepThreeDesc: "? HTML ????????? CI ???? Android ? iOS ?????????????",
+        controls: "?????",
+        target: "????",
+        theme: "??",
+        themeWarm: "????",
+        themeClean: "????",
+        themeLaunch: "????",
+        language: "??",
+        openExact: "???? app.html",
+        openRelease: "?? Release",
+        modeWebview: "???????? docs/app.html??? Android preview APK ? WebView ??????????????? preview APK ?????",
+        modeAndroid: "????? Android ??????????? Rust/egui ??? Compose ????????? HTML ??????",
+        modeIos: "????? iOS ???????????????????????????? SwiftUI ? WebKit ??",
+        appSub: "GitHub / Gitee / GitCode Release ??",
+        today: "????",
+        heroTitle: "?? Release ????",
+        heroSub: "????????????????????????????????? Release?",
+        startDiscover: "????",
+        inspectRepo: "????",
+        collections: "??",
+        releases: "Release",
+        verify: "???",
+        popular: "????",
+        viewAll: "????",
+        home: "??",
+        discover: "??",
+        repos: "??",
+        downloads: "??",
+        security: "??",
+        settings: "??",
+        discoverTitle: "?????",
+        discoverSub: "??????????????????????????????????????? Show more?",
+        searchPlaceholder: "??????????? Release ???",
+        search: "??",
+        allSources: "????",
+        showMore: "Show more",
+        collapse: "??",
+        resultCount: "??",
+        repoTitle: "????",
+        repoSub: "???????????Release ???SHA256 ????????",
+        releaseAssets: "Release ??",
+        download: "??",
+        sourceCode: "???",
+        downloadsSub: "?????????????????????????????",
+        active: "???",
+        completed: "???",
+        latestDownload: "????",
+        noDownload: "?????",
+        noDownloadDesc: "?????? Release ????????????SHA256 ??????",
+        installApk: "?? APK",
+        openDownloads: "??????",
+        securitySub: "GitMarket ???????????????????????????",
+        upstreamOnly: "?????",
+        upstreamOnlyDesc: "????????? Release asset??????????",
+        hashTitle: "SHA256 ??",
+        hashDesc: "??????? SHA256?????????????",
+        signatureTitle: "????",
+        signatureDesc: "Android ?????????????????",
+        permissionTitle: "????",
+        permissionDesc: "?????????????????????",
+        tokenTitle: "Token ??",
+        tokenDesc: "GitHub Token ????? API ??????????????????",
+        settingsSub: "????????????? GitHub API Token ???",
+        nativeHint: "????????????????????",
+        webviewHint: "WebView ???????????? API??????????????"
+      },
+      en: {
+        pageTitle: "GitMarket mobile local preview",
+        pageLead: "Open this HTML file locally. Android WebView mode loads the same app.html used by the preview APK, while native mode lets you inspect future Android and iOS product UI quickly.",
+        howTitle: "Why this exists",
+        howLead: "Final packages still need real device checks, but everyday UI, copy, themes, states, and list density can be iterated in local HTML before rebuilding APK or IPA files.",
+        stepOne: "Exact WebView preview",
+        stepOneDesc: "The current preview APK opens GitHub Pages app.html. This page loads that same file in a phone frame for content checks.",
+        stepTwo: "Native UI rehearsal",
+        stepTwoDesc: "Themes, bilingual text, bottom navigation, downloads, security, and multi-source search are clickable before native implementation catches up.",
+        stepThree: "Final device pass",
+        stepThreeDesc: "After the HTML preview is approved, trigger CI packages and do a smaller Android or iOS device acceptance pass.",
+        controls: "Preview console",
+        target: "Target",
+        theme: "Theme",
+        themeWarm: "Warm Cards",
+        themeClean: "Clean Blue",
+        themeLaunch: "Launch Orange",
+        language: "Language",
+        openExact: "Open app.html",
+        openRelease: "Open Release",
+        modeWebview: "This mode loads docs/app.html directly. The Android preview APK opens the same page in WebView, so the page content matches the preview APK.",
+        modeAndroid: "This mode previews the Android native product surface. Use it to review the Rust/egui or future Compose mobile UI before packaging.",
+        modeIos: "This mode previews the iOS product surface with the same product data and states, ready for a future SwiftUI or WebKit target.",
+        appSub: "GitHub / Gitee / GitCode release discovery",
+        today: "Today",
+        heroTitle: "Your release intelligence board",
+        heroSub: "Collect repositories, versions, assets, safety signals, and download progress while sending packages back to upstream Releases.",
+        startDiscover: "Discover",
+        inspectRepo: "Inspect Repo",
+        collections: "Collections",
+        releases: "Releases",
+        verify: "Verify",
+        popular: "Popular repositories",
+        viewAll: "View all",
+        home: "Home",
+        discover: "Discover",
+        repos: "Repos",
+        downloads: "Downloads",
+        security: "Security",
+        settings: "Settings",
+        discoverTitle: "Multi-source discover",
+        discoverSub: "Without a keyword each source stays light. With a keyword, sources search in parallel, reveal key results first, then expand on demand.",
+        searchPlaceholder: "Search repositories, tools, authors, or release keywords",
+        search: "Search",
+        allSources: "All sources",
+        showMore: "Show more",
+        collapse: "Collapse",
+        resultCount: "Results",
+        repoTitle: "Repository inspector",
+        repoSub: "Shows upstream URL, license, Release assets, SHA256, and signature fingerprint state.",
+        releaseAssets: "Release assets",
+        download: "Download",
+        sourceCode: "Source",
+        downloadsSub: "Downloads still point upstream. GitMarket tracks progress, hash state, and install prompts locally.",
+        active: "Active",
+        completed: "Completed",
+        latestDownload: "Latest download",
+        noDownload: "No downloads yet",
+        noDownloadDesc: "Choose a Release asset from the repo page to see progress, SHA256, and install state.",
+        installApk: "Install APK",
+        openDownloads: "Open downloads",
+        securitySub: "GitMarket is a discovery and verification helper. It does not host, mirror, or re-sign third-party binaries.",
+        upstreamOnly: "Upstream only",
+        upstreamOnlyDesc: "Every download points to an official Release asset and shows the source address.",
+        hashTitle: "SHA256 verification",
+        hashDesc: "Hash downloads locally, then compare with upstream checksum files when available.",
+        signatureTitle: "Signature fingerprint",
+        signatureDesc: "Android packages should show certificate fingerprints and signature-change warnings.",
+        permissionTitle: "Permission clarity",
+        permissionDesc: "Network, package install, and file access permissions must explain their purpose.",
+        tokenTitle: "Token boundary",
+        tokenDesc: "GitHub tokens only raise API limits. Production mobile builds should use OS credential storage.",
+        settingsSub: "Switch theme, language, preview target, and GitHub API token policy.",
+        nativeHint: "This native preview does not download files.",
+        webviewHint: "The WebView console may call public APIs. Offline, it still works for layout and copy checks."
+      }
+    };
+
+    const repos = [
+      {
+        name: "termux/termux-app",
+        source: "GitHub",
+        desc: { zh: "Android ?????? Linux ???", en: "Android terminal emulator and Linux environment." },
+        version: "v0.118.3",
+        language: "Java",
+        stars: "54.8k",
+        license: "GPL-3.0",
+        assets: ["termux-app_v0.118.3+github-debug_arm64-v8a.apk", "termux-app_v0.118.3+github-debug_universal.apk"]
+      },
+      {
+        name: "2dust/v2rayNG",
+        source: "GitHub",
+        desc: { zh: "Android ??????Release ??? APK ???", en: "Android proxy client with APK-focused release assets." },
+        version: "v1.10.5",
+        language: "Kotlin",
+        stars: "55.9k",
+        license: "GPL-3.0",
+        assets: ["v2rayNG_1.10.5.apk", "v2rayNG_1.10.5_arm64-v8a.apk"]
+      },
+      {
+        name: "obsproject/obs-studio",
+        source: "GitHub",
+        desc: { zh: "?????????? Windows?macOS ? Linux?", en: "Streaming and recording app for Windows, macOS, and Linux." },
+        version: "31.0.2",
+        language: "C",
+        stars: "72.3k",
+        license: "GPL-2.0",
+        assets: ["OBS-Studio-31.0.2-Windows-Installer.exe", "obs-studio-31.0.2-macos.dmg"]
+      },
+      {
+        name: "pbatard/rufus",
+        source: "GitHub",
+        desc: { zh: "Windows USB ????????", en: "Windows USB boot media utility." },
+        version: "v4.6",
+        language: "C",
+        stars: "36k",
+        license: "GPL-3.0",
+        assets: ["rufus-4.6.exe", "rufus-4.6p.exe"]
+      },
+      {
+        name: "KeePassXC/KeePassXC",
+        source: "GitHub",
+        desc: { zh: "???????????????????", en: "Cross-platform password manager, useful for desktop asset checks." },
+        version: "2.7.9",
+        language: "C++",
+        stars: "25.1k",
+        license: "GPL-3.0",
+        assets: ["KeePassXC-2.7.9-Win64.msi", "KeePassXC-2.7.9-x86_64.AppImage"]
+      },
+      {
+        name: "laurent22/joplin",
+        source: "GitHub",
+        desc: { zh: "?????????????", en: "Privacy-focused notes and sync app." },
+        version: "v3.2.12",
+        language: "TypeScript",
+        stars: "54.8k",
+        license: "AGPL-3.0",
+        assets: ["Joplin-Setup-3.2.12.exe", "Joplin-3.2.12.dmg", "Joplin-3.2.12.AppImage"]
+      },
+      {
+        name: "PowerShell/PowerShell",
+        source: "GitHub",
+        desc: { zh: "??? Shell ???????", en: "Cross-platform shell and automation framework." },
+        version: "v7.5.0",
+        language: "C#",
+        stars: "49.8k",
+        license: "MIT",
+        assets: ["PowerShell-7.5.0-win-x64.msi", "powershell-7.5.0-linux-x64.tar.gz"]
+      },
+      {
+        name: "dromara/hutool",
+        source: "Gitee",
+        desc: { zh: "Java ???????? Gitee ?????", en: "Java utility library, useful for Gitee source metadata." },
+        version: "v5.8.35",
+        language: "Java",
+        stars: "31k",
+        license: "MulanPSL-2.0",
+        assets: ["hutool-all-5.8.35.jar", "source-code.zip"]
+      },
+      {
+        name: "dromara/Jpom",
+        source: "Gitee",
+        desc: { zh: "?? DevOps ??????????", en: "Lightweight DevOps project management platform." },
+        version: "v2.11.5",
+        language: "Java",
+        stars: "12k",
+        license: "MIT",
+        assets: ["jpom-release-2.11.5.zip", "jpom-agent-2.11.5.zip"]
+      },
+      {
+        name: "jeecg/jeecg-boot",
+        source: "Gitee",
+        desc: { zh: "????????????? Release?", en: "Low-code platform for enterprise release discovery." },
+        version: "v3.7.2",
+        language: "Java",
+        stars: "42k",
+        license: "Apache-2.0",
+        assets: ["jeecg-boot-3.7.2.zip", "docker-compose.yml"]
+      },
+      {
+        name: "GitCode mirror",
+        source: "GitCode",
+        desc: { zh: "GitCode ???????????????????????????", en: "GitCode is currently connected as an upstream search entry, with stable API planned through a backend proxy." },
+        version: "search",
+        language: "Fallback",
+        stars: "-",
+        license: "Source",
+        assets: ["open-gitcode-search.url"]
+      },
+      {
+        name: "Release keyword",
+        source: "GitCode",
+        desc: { zh: "???????????? GitCode ?????", en: "Keyword fallback entry for GitCode project discovery." },
+        version: "release",
+        language: "Fallback",
+        stars: "-",
+        license: "Source",
+        assets: ["gitcode-release-search.url"]
+      }
+    ];
+
+    const nav = [
+      ["home", "H"],
+      ["discover", "D"],
+      ["repos", "R"],
+      ["downloads", "?"],
+      ["security", "S"]
+    ];
+
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+    function t(key) {
+      return copy[state.lang][key] || copy.zh[key] || key;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function setMode(mode) {
+      state.mode = mode;
+      document.body.dataset.mode = mode;
+      updateControls();
+      renderNative();
+    }
+
+    function setTheme(theme) {
+      state.theme = theme;
+      document.body.dataset.theme = theme;
+      updateControls();
+    }
+
+    function setLang(lang) {
+      state.lang = lang;
+      document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+      updateText();
+      updateControls();
+      renderNative();
+    }
+
+    function filteredRepos() {
+      const query = state.query.trim().toLowerCase();
+      return repos.filter((repo) => {
+        const sourceOk = state.source === "all" || repo.source === state.source;
+        const haystack = [
+          repo.name,
+          repo.source,
+          repo.language,
+          repo.license,
+          repo.version,
+          repo.desc.zh,
+          repo.desc.en,
+          ...repo.assets
+        ].join(" ").toLowerCase();
+        return sourceOk && (!query || haystack.includes(query));
+      });
+    }
+
+    function visibleRepos() {
+      const list = filteredRepos();
+      if (state.expanded) return list;
+      const defaultLimit = state.query.trim() ? 20 : 10;
+      return list.slice(0, defaultLimit);
+    }
+
+    function sourceButton(source) {
+      const label = source === "all" ? t("allSources") : source;
+      return `<button class="chip" data-source="${source}" aria-pressed="${state.source === source}">${label}</button>`;
+    }
+
+    function repoCard(repo) {
+      const desc = repo.desc[state.lang];
+      return `
+        <article class="repo-card">
+          <div class="repo-head">
+            <div class="repo-name">${escapeHtml(repo.name)}</div>
+            <span class="source-badge">${escapeHtml(repo.source)}</span>
+          </div>
+          <p class="repo-desc">${escapeHtml(desc)}</p>
+          <div class="repo-meta">
+            <span class="meta-pill">${escapeHtml(repo.version)}</span>
+            <span class="meta-pill">${escapeHtml(repo.language)}</span>
+            <span class="meta-pill">${escapeHtml(repo.license)}</span>
+            <span class="meta-pill">? ${escapeHtml(repo.stars)}</span>
+          </div>
+        </article>`;
+    }
+
+    function repoByName(name) {
+      return repos.find((repo) => repo.name === name) || repos[0];
+    }
+
+    function renderTop() {
+      return `
+        <div class="mobile-top">
+          <div class="brand-mini">
+            <div class="app-mark">G</div>
+            <div class="brand-title">
+              <strong>GitMarket</strong>
+              <span>${t("appSub")}</span>
+            </div>
+          </div>
+          <button class="icon-button" data-tab="settings" aria-label="${t("settings")}">?</button>
+        </div>`;
+    }
+
+    function renderHome() {
+      const list = repos.slice(0, 4).map(repoCard).join("");
+      return `
+        ${renderTop()}
+        <section class="hero-card">
+          <div class="kicker">${t("today")}</div>
+          <h1>${t("heroTitle")}</h1>
+          <p>${t("heroSub")}</p>
+          <div class="hero-actions">
+            <button class="primary-button" data-tab="discover">${t("startDiscover")}</button>
+            <button class="ghost-button" data-tab="repos">${t("inspectRepo")}</button>
+          </div>
+        </section>
+        <div class="metric-grid">
+          <div class="metric"><strong>3</strong><span>${t("collections")}</span></div>
+          <div class="metric"><strong>12</strong><span>${t("releases")}</span></div>
+          <div class="metric"><strong>8</strong><span>${t("verify")}</span></div>
+        </div>
+        <div class="section-row">
+          <h2 class="section-title">${t("popular")}</h2>
+          <button class="tiny-button" data-tab="discover">${t("viewAll")}</button>
+        </div>
+        <div class="repo-list">${list}</div>`;
+    }
+
+    function renderDiscover() {
+      const all = filteredRepos();
+      const shown = visibleRepos();
+      const moreAvailable = shown.length < all.length;
+      return `
+        ${renderTop()}
+        <section class="detail-hero">
+          <div class="kicker">${t("discover")}</div>
+          <h2>${t("discoverTitle")}</h2>
+          <p class="muted">${t("discoverSub")}</p>
+        </section>
+        <form class="search-box" id="searchForm">
+          <input id="searchInput" value="${escapeHtml(state.query)}" placeholder="${t("searchPlaceholder")}" autocomplete="off">
+          <button class="primary-button" type="submit">${t("search")}</button>
+        </form>
+        <div class="source-strip">
+          ${sourceButton("all")}
+          ${sourceButton("GitHub")}
+          ${sourceButton("Gitee")}
+          ${sourceButton("GitCode")}
+        </div>
+        <div class="section-row">
+          <h2 class="section-title">${t("resultCount")} ? ${all.length}</h2>
+          <span class="muted">${state.query.trim() ? "20" : "10"} / ${all.length}</span>
+        </div>
+        <div class="repo-list">${shown.map(repoCard).join("") || `<div class="card" style="padding:14px">${t("resultCount")} ? 0</div>`}</div>
+        ${moreAvailable || state.expanded ? `<button class="ghost-button" style="width:100%; margin-top:12px" data-expand="${state.expanded ? "0" : "1"}">${state.expanded ? t("collapse") : t("showMore")}</button>` : ""}`;
+    }
+
+    function renderRepo() {
+      const repo = repoByName(state.selectedRepo);
+      const assets = repo.assets.map((asset, index) => `
+        <article class="asset-card">
+          <strong>${escapeHtml(asset)}</strong>
+          <div class="asset-row">
+            <span class="meta-pill">SHA256 ${index === 0 ? "ready" : "pending"}</span>
+            <span class="meta-pill">${index === 0 ? "signature" : "source"}</span>
+            <button class="tiny-button" data-download>${t("download")}</button>
+          </div>
+        </article>
+      `).join("");
+      return `
+        ${renderTop()}
+        <section class="detail-hero">
+          <div class="kicker">${repo.source}</div>
+          <h2>${escapeHtml(repo.name)}</h2>
+          <p class="muted">${escapeHtml(repo.desc[state.lang])}</p>
+          <div class="repo-meta">
+            <span class="meta-pill">${escapeHtml(repo.version)}</span>
+            <span class="meta-pill">${escapeHtml(repo.language)}</span>
+            <span class="meta-pill">${escapeHtml(repo.license)}</span>
+          </div>
+        </section>
+        <div class="section-row">
+          <h2 class="section-title">${t("releaseAssets")}</h2>
+          <button class="tiny-button">${t("sourceCode")}</button>
+        </div>
+        <div class="asset-list">${assets}</div>
+        <p class="preview-note" style="margin-top:12px">${t("nativeHint")}</p>`;
+    }
+
+    function renderDownloads() {
+      if (!state.downloadStarted) {
+        return `
+          ${renderTop()}
+          <section class="detail-hero">
+            <div class="kicker">${t("downloads")}</div>
+            <h2>${t("noDownload")}</h2>
+            <p class="muted">${t("noDownloadDesc")}</p>
+            <div class="hero-actions">
+              <button class="primary-button" data-tab="repos">${t("inspectRepo")}</button>
+            </div>
+          </section>`;
+      }
+      return `
+        ${renderTop()}
+        <section class="detail-hero">
+          <div class="kicker">${t("downloads")}</div>
+          <h2>${t("latestDownload")}</h2>
+          <p class="muted">${t("downloadsSub")}</p>
+        </section>
+        <div class="asset-list">
+          <article class="download-card">
+            <strong>termux-app_v0.118.3+github-debug_arm64-v8a.apk</strong>
+            <div class="repo-meta" style="margin-top:9px">
+              <span class="meta-pill">${t("active")}</span>
+              <span class="meta-pill">SHA256 pending</span>
+              <span class="meta-pill">GitHub Release</span>
+            </div>
+            <div class="progress" style="--value:72%"><span></span></div>
+            <div class="asset-row">
+              <button class="tiny-button">${t("openDownloads")}</button>
+              <button class="tiny-button">${t("installApk")}</button>
+            </div>
+          </article>
+          <article class="download-card">
+            <strong>OBS-Studio-31.0.2-Windows-Installer.exe</strong>
+            <div class="repo-meta" style="margin-top:9px">
+              <span class="meta-pill">${t("completed")}</span>
+              <span class="meta-pill">SHA256 ready</span>
+              <span class="meta-pill">GPL-2.0</span>
+            </div>
+            <div class="progress" style="--value:100%"><span></span></div>
+          </article>
+        </div>`;
+    }
+
+    function renderSecurity() {
+      const checks = [
+        ["upstreamOnly", "upstreamOnlyDesc", "?"],
+        ["hashTitle", "hashDesc", "#"],
+        ["signatureTitle", "signatureDesc", "S"],
+        ["permissionTitle", "permissionDesc", "P"],
+        ["tokenTitle", "tokenDesc", "T"]
+      ];
+      return `
+        ${renderTop()}
+        <section class="detail-hero">
+          <div class="kicker">${t("security")}</div>
+          <h2>${t("security")}</h2>
+          <p class="muted">${t("securitySub")}</p>
+        </section>
+        <div class="check-list">
+          ${checks.map(([title, desc, icon]) => `
+            <article class="check-card">
+              <span class="check-dot">${icon}</span>
+              <div>
+                <strong>${t(title)}</strong>
+                <span>${t(desc)}</span>
+              </div>
+            </article>
+          `).join("")}
+        </div>`;
+    }
+
+    function renderSettings() {
+      return `
+        ${renderTop()}
+        <section class="detail-hero">
+          <div class="kicker">${t("settings")}</div>
+          <h2>${t("settings")}</h2>
+          <p class="muted">${t("settingsSub")}</p>
+        </section>
+        <div class="setting-card">
+          <strong>${t("theme")}</strong>
+          <div class="theme-strip">
+            <button class="tab-chip" data-theme-option="me" aria-pressed="${state.theme === "me"}">ME Agent</button>
+            <button class="tab-chip" data-theme-option="warm" aria-pressed="${state.theme === "warm"}">${t("themeWarm")}</button>
+            <button class="tab-chip" data-theme-option="clean" aria-pressed="${state.theme === "clean"}">${t("themeClean")}</button>
+            <button class="tab-chip" data-theme-option="launch" aria-pressed="${state.theme === "launch"}">${t("themeLaunch")}</button>
+          </div>
+        </div>
+        <div class="setting-card">
+          <strong>${t("language")}</strong>
+          <div class="lang-strip">
+            <button class="tab-chip" data-lang="zh" aria-pressed="${state.lang === "zh"}">??</button>
+            <button class="tab-chip" data-lang="en" aria-pressed="${state.lang === "en"}">English</button>
+          </div>
+        </div>
+        <div class="setting-card">
+          <strong>GitHub Token</strong>
+          <span>${t("tokenDesc")}</span>
+        </div>`;
+    }
+
+    function renderNative() {
+      if (state.mode === "webview") {
+        $("#modeNote").textContent = t("modeWebview");
+        return;
+      }
+
+      const scroll = $("#mobileScroll");
+      const pages = {
+        home: renderHome,
+        discover: renderDiscover,
+        repos: renderRepo,
+        downloads: renderDownloads,
+        security: renderSecurity,
+        settings: renderSettings
+      };
+      scroll.innerHTML = (pages[state.tab] || renderHome)();
+      $("#bottomNav").innerHTML = nav.map(([id, icon]) => `
+        <button class="nav-item" data-tab="${id}" aria-current="${state.tab === id ? "page" : "false"}">
+          <strong>${icon}</strong>
+          <span>${t(id)}</span>
+        </button>
+      `).join("");
+      $("#modeNote").textContent = state.mode === "ios" ? t("modeIos") : t("modeAndroid");
+      attachNativeEvents();
+    }
+
+    function attachNativeEvents() {
+      $$("[data-tab]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.tab = button.dataset.tab;
+          renderNative();
+        });
+      });
+
+      $$("[data-source]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.source = button.dataset.source;
+          state.expanded = false;
+          renderNative();
+        });
+      });
+
+      $$("[data-expand]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.expanded = button.dataset.expand === "1";
+          renderNative();
+        });
+      });
+
+      $$("[data-download]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.downloadStarted = true;
+          state.tab = "downloads";
+          renderNative();
+        });
+      });
+
+      const form = $("#searchForm");
+      const input = $("#searchInput");
+      if (form && input) {
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          state.query = input.value;
+          state.expanded = false;
+          renderNative();
+        });
+        input.addEventListener("input", () => {
+          state.query = input.value;
+          state.expanded = false;
+          window.clearTimeout(searchTimer);
+          searchTimer = window.setTimeout(() => {
+            const nextValue = state.query;
+            renderNative();
+            const nextInput = $("#searchInput");
+            if (nextInput) {
+              nextInput.focus();
+              nextInput.setSelectionRange(nextValue.length, nextValue.length);
+            }
+          }, 160);
+        });
+      }
+
+      $$("#nativeApp [data-theme-option]").forEach((button) => {
+        button.addEventListener("click", () => setTheme(button.dataset.themeOption));
+      });
+
+      $$("#nativeApp [data-lang]").forEach((button) => {
+        button.addEventListener("click", () => setLang(button.dataset.lang));
+      });
+    }
+
+    function updateText() {
+      $$("[data-i18n]").forEach((node) => {
+        node.textContent = t(node.dataset.i18n);
+      });
+    }
+
+    function updateControls() {
+      $$("[data-mode]").forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.mode === state.mode));
+      });
+      $$("[data-theme-option]").forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.themeOption === state.theme));
+      });
+      $$("[data-lang]").forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.lang === state.lang));
+      });
+      $("#modeNote").textContent = state.mode === "webview"
+        ? t("modeWebview")
+        : state.mode === "ios"
+          ? t("modeIos")
+          : t("modeAndroid");
+    }
+
+    function boot() {
+      updateText();
+      updateControls();
+      renderNative();
+
+      $$("[data-mode]").forEach((button) => {
+        button.addEventListener("click", () => setMode(button.dataset.mode));
+      });
+      $$("[data-theme-option]").forEach((button) => {
+        button.addEventListener("click", () => setTheme(button.dataset.themeOption));
+      });
+      $$("[data-lang]").forEach((button) => {
+        button.addEventListener("click", () => setLang(button.dataset.lang));
+      });
+    }
+
+    boot();
+  </script>
+</body>
+</html>
