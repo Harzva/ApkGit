@@ -265,8 +265,8 @@
       <a class="brand" href="./"><span class="mark">G</span><span>GitMarket</span></a>
       <div class="top-actions">
         <span id="tokenPill" class="token">GitHub Token off</span>
-        <button class="btn" onclick="showSettings()">??</button>
-        <a class="btn primary" href="https://github.com/Harzva/GitReleaseMarket/releases/latest">??</a>
+        <button class="btn" onclick="showSettings()">设置</button>
+        <a class="btn primary" href="https://github.com/Harzva/GitReleaseMarket/releases/latest">下载</a>
       </div>
     </div>
   </header>
@@ -274,37 +274,37 @@
   <main>
     <div class="console-head">
       <div>
-        <h1>Release ???</h1>
-        <p class="sub">???? GitHub?Gitee?GitCode?????????????????????????????????????????</p>
+        <h1>Release 搜索台</h1>
+        <p class="sub">同时搜索 GitHub、Gitee、GitCode。默认轻量浏览，输入关键词后并发查询；结果分来源返回，先展示关键数量，再按需展开。</p>
       </div>
       <div class="metrics">
-        <div class="metric"><strong id="metricSources">3</strong><span>??</span></div>
-        <div class="metric"><strong id="metricShown">0</strong><span>???</span></div>
-        <div class="metric"><strong id="metricLoaded">0</strong><span>???</span></div>
+        <div class="metric"><strong id="metricSources">3</strong><span>来源</span></div>
+        <div class="metric"><strong id="metricShown">0</strong><span>已展示</span></div>
+        <div class="metric"><strong id="metricLoaded">0</strong><span>已加载</span></div>
       </div>
     </div>
 
     <div class="searchbar">
-      <input id="queryInput" placeholder="???????? obs?termux?????????" onkeydown="if(event.key==='Enter')runSearch()">
-      <button class="btn primary" id="searchButton" onclick="runSearch()">??????</button>
-      <button class="btn" onclick="clearSearch()">??</button>
+      <input id="queryInput" placeholder="搜索关键词，例如 obs、termux、播放器、代理工具" onkeydown="if(event.key==='Enter')runSearch()">
+      <button class="btn primary" id="searchButton" onclick="runSearch()">搜索全部来源</button>
+      <button class="btn" onclick="clearSearch()">清空</button>
     </div>
 
     <div class="sources" id="sourceTabs"></div>
-    <div class="notice">GitMarket ??? APK?EXE?IPA ??????????????? Release???????SHA256????????????</div>
+    <div class="notice">GitMarket 不托管 APK、EXE、IPA 等二进制文件。下载前请回到上游 Release，核对许可证、SHA256、签名指纹和发布者信息。</div>
     <div class="board" id="board"></div>
-    <footer>GitMarket Console ? GitHub Pages static preview ? Harzva/GitReleaseMarket</footer>
+    <footer>GitMarket Console · GitHub Pages static preview · Harzva/GitReleaseMarket</footer>
   </main>
 
   <div class="modal" id="settingsModal">
     <div class="modal-box">
       <div class="modal-head">
         <strong>GitHub Token</strong>
-        <button class="btn" onclick="hideSettings()">??</button>
+        <button class="btn" onclick="hideSettings()">关闭</button>
       </div>
       <input id="githubToken" type="password" placeholder="github_pat_... or ghp_..." autocomplete="off">
-      <div class="help">???????????? sessionStorage????? GitHub API ???Gitee/GitCode ???????????????????</div>
-      <button class="btn primary" onclick="saveToken()">??</button>
+      <div class="help">可选。只保存在当前浏览器 sessionStorage，用于提升 GitHub API 限额。Gitee/GitCode 当前按公开接口或源站搜索链接降级处理。</div>
+      <button class="btn primary" onclick="saveToken()">保存</button>
     </div>
   </div>
 
@@ -359,15 +359,15 @@
     }
 
     function renderTabs() {
-      const tabs = [{ id: "all", label: "????" }, ...sources].map(src => {
+      const tabs = [{ id: "all", label: "全部来源" }, ...sources].map(src => {
         const label = src.label || src.id;
         return `<button class="source ${activeSource === src.id ? "active" : ""}" onclick="setSource('${src.id}')">${escapeHtml(label)}</button>`;
       }).join("");
       document.getElementById("sourceTabs").innerHTML = tabs;
       const button = document.getElementById("searchButton");
       if (button) {
-        const label = activeSource === "all" ? "????" : sources.find(src => src.id === activeSource).label;
-        button.textContent = `??${label}`;
+        const label = activeSource === "all" ? "全部来源" : sources.find(src => src.id === activeSource).label;
+        button.textContent = `搜索${label}`;
       }
     }
 
@@ -424,7 +424,7 @@
           status: "done",
           items,
           visible: query ? SEARCH_VISIBLE : DEFAULT_VISIBLE,
-          note: items.length ? "" : "????????"
+          note: items.length ? "" : "未找到可展示结果"
         };
       } catch (err) {
         if (id !== runId) return;
@@ -432,7 +432,7 @@
           status: "fallback",
           items: [fallbackItem(src, query, err.message)],
           visible: 1,
-          note: "?? API ????????????"
+          note: "公开 API 不可用，已降级为源站搜索"
         };
       }
       render();
@@ -524,7 +524,7 @@
       return {
         source: src.id,
         name: `${src.label} source search`,
-        description: `?????????????? API?${reason || "request failed"}`,
+        description: `浏览器无法直接读取该来源公开 API：${reason || "request failed"}`,
         url: src.searchUrl(query),
         stars: 0,
         forks: 0,
@@ -558,10 +558,10 @@
       const items = bucket.items || [];
       const visible = Math.min(bucket.visible || DEFAULT_VISIBLE, items.length);
       const body = bucket.status === "loading"
-        ? `<div class="loading">???? ${escapeHtml(src.label)}...</div>`
+        ? `<div class="loading">正在加载 ${escapeHtml(src.label)}...</div>`
         : items.length
           ? `<div class="items">${items.slice(0, visible).map(item => renderItem(src, item)).join("")}</div>${renderShowMore(src, bucket, visible)}`
-          : `<div class="empty">${escapeHtml(bucket.note || "????")}</div>`;
+          : `<div class="empty">${escapeHtml(bucket.note || "暂无结果")}</div>`;
       const status = bucket.status === "done" ? `${items.length} loaded` : bucket.status === "fallback" ? "fallback" : "loading";
       return `<section class="source-section">
         <div class="source-head">
@@ -575,7 +575,7 @@
     function renderItem(src, item) {
       const assets = item.assets && item.assets.length
         ? `<div class="assets">${item.assets.map(asset => `<span class="asset"><a href="${asset.url}" target="_blank" rel="noopener">${escapeHtml(asset.name)}</a><span>${formatSize(asset.size)}</span></span>`).join("")}</div>`
-        : `<div class="assets"><a class="asset" href="${src.releaseUrl(item)}" target="_blank" rel="noopener">?? Release</a><a class="asset" href="${item.url}" target="_blank" rel="noopener">???</a></div>`;
+        : `<div class="assets"><a class="asset" href="${src.releaseUrl(item)}" target="_blank" rel="noopener">打开 Release</a><a class="asset" href="${item.url}" target="_blank" rel="noopener">源代码</a></div>`;
       return `<article class="item">
         <div class="item-top">
           <div>
@@ -598,9 +598,9 @@
       const more = bucket.items.length - visible;
       if (more <= 0) {
         const query = currentQuery || "release";
-        return `<div class="show-row"><span>??? ${visible} ?</span><a class="btn" href="${src.searchUrl(query)}" target="_blank" rel="noopener">???????</a></div>`;
+        return `<div class="show-row"><span>已显示 ${visible} 条</span><a class="btn" href="${src.searchUrl(query)}" target="_blank" rel="noopener">去源站查看更多</a></div>`;
       }
-      return `<div class="show-row"><span>??? ${more} ????????</span><button class="btn" onclick="showMore('${src.id}')">Show more</button></div>`;
+      return `<div class="show-row"><span>已折叠 ${more} 条，避免首屏过重</span><button class="btn" onclick="showMore('${src.id}')">Show more</button></div>`;
     }
 
     function showMore(id) {

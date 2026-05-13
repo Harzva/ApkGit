@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GitMarket - ??? Release ????</title>
-  <meta name="description" content="GitMarket ????? GitHub?Gitee?GitCode ??????? Release ??????????????????????????">
+  <title>GitMarket - 多来源 Release 发现工具</title>
+  <meta name="description" content="GitMarket 帮助用户从 GitHub、Gitee、GitCode 等开源平台发现 Release 软件包，并优先展示上游来源、许可证、校验与下载边界。">
   <style>
     :root {
       color-scheme: dark;
@@ -190,11 +190,11 @@
     <nav>
       <a class="brand" href="./"><span class="mark">G</span><span>GitMarket</span></a>
       <div class="nav-links">
-        <a href="./app.html">????</a>
-        <a href="./mobile-preview.html">APK/IPA ??</a>
-        <a class="optional" href="#sources">??</a>
-        <a class="optional" href="#flow">??</a>
-        <a href="https://github.com/Harzva/GitReleaseMarket/releases/latest">??</a>
+        <a href="./app.html">在线体验</a>
+        <a href="./mobile-preview.html">APK/IPA 预览</a>
+        <a class="optional" href="#sources">来源</a>
+        <a class="optional" href="#flow">策略</a>
+        <a href="https://github.com/Harzva/GitReleaseMarket/releases/latest">下载</a>
         <a href="https://github.com/Harzva/GitReleaseMarket">GitHub</a>
       </div>
     </nav>
@@ -206,10 +206,10 @@
         <div class="hero-copy">
           <div class="eyebrow">GitHub / Gitee / GitCode release discovery</div>
           <h1>GitMarket</h1>
-          <p class="lead">?????????? Release ????????Explore ?????????????????? Release?????????????????</p>
+          <p class="lead">一个面向开源软件包的 Release 发现层：从趋势、Explore 和多代码平台搜索进入项目，再回到上游 Release、许可证、校验信息和官方下载链接。</p>
           <div class="actions">
-            <a class="button primary" href="./app.html">?????</a>
-            <a class="button" href="./mobile-preview.html">?????</a>
+            <a class="button primary" href="./app.html">打开搜索台</a>
+            <a class="button" href="./mobile-preview.html">移动端预览</a>
             <a class="button" href="https://github.com/trending">GitHub Trending</a>
             <a class="button" href="https://github.com/explore">GitHub Explore</a>
           </div>
@@ -220,33 +220,33 @@
     <section>
       <div class="wrap">
         <div class="section-head">
-          <h2>?????????????????</h2>
-          <p class="lead">????? GitHub Trending?GitHub Explore ? GitMarket ?????????????????????GitMarket ??????????????? Release ????</p>
+          <h2>把发现入口放在用户真正会去的地方。</h2>
+          <p class="lead">首页现在把 GitHub Trending、GitHub Explore 和 GitMarket 多来源搜索并列呈现。前两个负责灵感和热点，GitMarket 负责把项目落到可下载、可验证的 Release 资产上。</p>
         </div>
         <div class="lane-grid">
           <article class="lane">
             <div>
               <small>Trend</small>
               <h3>GitHub Trending</h3>
-              <p>?????????????????? Release ????????</p>
+              <p>快速查看当天或本周热门项目，适合作为 Release 市场的趋势入口。</p>
             </div>
-            <a class="button" href="https://github.com/trending">????</a>
+            <a class="button" href="https://github.com/trending">查看趋势</a>
           </article>
           <article class="lane">
             <div>
               <small>Explore</small>
               <h3>GitHub Explore</h3>
-              <p>?????????????????????????????</p>
+              <p>从主题、集合和精选仓库进入，适合发现新类别和长期维护项目。</p>
             </div>
-            <a class="button" href="https://github.com/explore">?? Explore</a>
+            <a class="button" href="https://github.com/explore">查看 Explore</a>
           </article>
           <article class="lane">
             <div>
               <small>Search</small>
               <h3>GitMarket Console</h3>
-              <p>??????? GitHub?Gitee?GitCode?????????????</p>
+              <p>按关键词同时搜 GitHub、Gitee、GitCode，也可以锁定单一来源搜索。</p>
             </div>
-            <a class="button primary" href="./app.html">?????</a>
+            <a class="button primary" href="./app.html">进入搜索台</a>
           </article>
         </div>
       </div>
@@ -255,13 +255,13 @@
     <section id="sources">
       <div class="wrap">
         <div class="section-head">
-          <h2>????????????</h2>
-          <p class="lead">??????????????????????????????????? 10 ????????? 20 ???????? Show more ??????</p>
+          <h2>三来源，不等于三倍等待。</h2>
+          <p class="lead">页面采用分来源并发请求、分段渲染和折叠展开。没有关键词时每个来源只展示 10 条，搜索时默认展示 20 条，更多内容交给 Show more 或跳转源站。</p>
         </div>
         <div class="source-strip">
-          <article class="source"><h3>GitHub</h3><p>?????? REST API??? Token ?????????????</p></article>
-          <article class="source"><h3>Gitee</h3><p>?????? API???????????????????</p></article>
-          <article class="source"><h3>GitCode</h3><p>????????????????????????????</p></article>
+          <article class="source"><h3>GitHub</h3><p>优先使用公开 REST API，支持 Token 提升额度，适合作为主来源。</p></article>
+          <article class="source"><h3>Gitee</h3><p>尝试公开搜索 API；遇到跨域或限制时降级为源站搜索链接。</p></article>
+          <article class="source"><h3>GitCode</h3><p>作为补充来源接入；若公开接口受限，保留无阻塞的跳转搜索。</p></article>
         </div>
       </div>
     </section>
@@ -269,13 +269,13 @@
     <section id="flow">
       <div class="wrap">
         <div class="section-head">
-          <h2>????????????</h2>
+          <h2>这就是懒加载和渐进增强。</h2>
         </div>
         <div class="flow">
-          <div class="step"><strong>????</strong><span>????????????????????</span></div>
-          <div class="step"><strong>????</strong><span>??????????????????</span></div>
-          <div class="step"><strong>????</strong><span>?? 10 ???? 20 ????????????</span></div>
-          <div class="step"><strong>????</strong><span>Show more ????????????????</span></div>
+          <div class="step"><strong>先画界面</strong><span>搜索触发后先显示来源状态，不让页面空等。</span></div>
+          <div class="step"><strong>并发请求</strong><span>每个来源独立加载，谁先返回谁先展示。</span></div>
+          <div class="step"><strong>限制首屏</strong><span>默认 10 条，搜索 20 条，降低网络和渲染压力。</span></div>
+          <div class="step"><strong>按需展开</strong><span>Show more 后才渲染更多卡片，保持滚动顺滑。</span></div>
         </div>
       </div>
     </section>
@@ -284,11 +284,11 @@
       <div class="wrap media-grid">
         <figure>
           <img src="assets/architecture_diagram.png" alt="GitMarket architecture diagram">
-          <figcaption>???????? Release??????????????????</figcaption>
+          <figcaption>多来源发现、上游 Release、校验展示和本地安装之间的产品结构。</figcaption>
         </figure>
         <figure>
           <img src="assets/phase_comparison_chart.png" alt="GitMarket roadmap chart">
-          <figcaption>??????????????????????????????</figcaption>
+          <figcaption>当前阶段先确保可跑、可下载、可说明边界，再逐步加强搜索质量。</figcaption>
         </figure>
       </div>
     </section>

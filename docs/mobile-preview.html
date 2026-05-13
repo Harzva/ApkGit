@@ -1001,46 +1001,46 @@
     <section class="panel">
       <div class="intro">
         <div class="kicker">APK / IPA Preview Lab</div>
-        <h1 data-i18n="pageTitle">GitMarket ???????</h1>
-        <p data-i18n="pageLead">?? HTML ?????????Android WebView ??????? app.html???? preview APK ???????????????????? Android / iOS ??????????</p>
+        <h1 data-i18n="pageTitle">GitMarket 移动端本地预览</h1>
+        <p data-i18n="pageLead">这个 HTML 可以直接本地打开。Android WebView 模式加载同一个 app.html，因此和 preview APK 的页面内容一致；原生模式用于快速检查后续 Android / iOS 的高保真界面和交互。</p>
       </div>
 
       <div class="panel-grid">
         <div class="control-card">
-          <h2 data-i18n="howTitle">??????</h2>
-          <p data-i18n="howLead">????????????????? UI????????????????????? HTML ???????????? APK ? IPA ????</p>
+          <h2 data-i18n="howTitle">为什么这样做</h2>
+          <p data-i18n="howLead">发布包最后仍然需要真机检查，但日常 UI、文案、主题、状态流和列表密度可以先在本地 HTML 里快速迭代，减少反复安装 APK 或 IPA 的时间。</p>
 
           <div class="workflow-list">
             <div class="workflow-item">
               <span class="workflow-number">1</span>
               <div>
-                <strong data-i18n="stepOne">?? WebView ??</strong>
-                <span data-i18n="stepOneDesc">?? preview APK ?? GitHub Pages ? app.html?????? iframe ????????????????</span>
+                <strong data-i18n="stepOne">真实 WebView 预览</strong>
+                <span data-i18n="stepOneDesc">当前 preview APK 指向 GitHub Pages 的 app.html。本页默认用 iframe 加载同一页面，适合核对真实内容。</span>
               </div>
             </div>
             <div class="workflow-item">
               <span class="workflow-number">2</span>
               <div>
-                <strong data-i18n="stepTwo">??????</strong>
-                <span data-i18n="stepTwoDesc">????????????????????????????????????</span>
+                <strong data-i18n="stepTwo">原生界面预演</strong>
+                <span data-i18n="stepTwoDesc">把移动端主题、双语、底部导航、下载、安全和多来源搜索先做成可点的产品稿。</span>
               </div>
             </div>
             <div class="workflow-item">
               <span class="workflow-number">3</span>
               <div>
-                <strong data-i18n="stepThree">??????</strong>
-                <span data-i18n="stepThreeDesc">? HTML ????????? CI ???? Android ? iOS ?????????????</span>
+                <strong data-i18n="stepThree">最终真机验收</strong>
+                <span data-i18n="stepThreeDesc">当 HTML 预览确认后，再触发 CI 打包，在 Android 或 iOS 设备上做少量关键路径验收。</span>
               </div>
             </div>
           </div>
         </div>
 
         <aside class="control-card">
-          <h2 data-i18n="controls">?????</h2>
+          <h2 data-i18n="controls">预览控制台</h2>
           <p id="modeNote" class="preview-note"></p>
 
           <div class="control-group">
-            <div class="control-label" data-i18n="target">????</div>
+            <div class="control-label" data-i18n="target">预览目标</div>
             <div class="control-buttons">
               <button class="control-button" data-mode="webview">APK WebView</button>
               <button class="control-button" data-mode="android">Android Native</button>
@@ -1049,26 +1049,26 @@
           </div>
 
           <div class="control-group">
-            <div class="control-label" data-i18n="theme">??</div>
+            <div class="control-label" data-i18n="theme">主题</div>
             <div class="control-buttons">
               <button class="control-button" data-theme-option="me">ME Agent</button>
-              <button class="control-button" data-theme-option="warm" data-i18n="themeWarm">????</button>
-              <button class="control-button" data-theme-option="clean" data-i18n="themeClean">????</button>
-              <button class="control-button" data-theme-option="launch" data-i18n="themeLaunch">????</button>
+              <button class="control-button" data-theme-option="warm" data-i18n="themeWarm">暖色卡片</button>
+              <button class="control-button" data-theme-option="clean" data-i18n="themeClean">清爽蓝白</button>
+              <button class="control-button" data-theme-option="launch" data-i18n="themeLaunch">橙色发布</button>
             </div>
           </div>
 
           <div class="control-group">
-            <div class="control-label" data-i18n="language">??</div>
+            <div class="control-label" data-i18n="language">语言</div>
             <div class="control-buttons">
-              <button class="control-button" data-lang="zh">??</button>
+              <button class="control-button" data-lang="zh">中文</button>
               <button class="control-button" data-lang="en">English</button>
             </div>
           </div>
 
           <div class="open-actions">
-            <a class="primary-button" href="./app.html" data-i18n="openExact">???? app.html</a>
-            <a class="ghost-button" href="https://github.com/Harzva/GitReleaseMarket/releases/latest" data-i18n="openRelease">?? Release</a>
+            <a class="primary-button" href="./app.html" data-i18n="openExact">打开真实 app.html</a>
+            <a class="ghost-button" href="https://github.com/Harzva/GitReleaseMarket/releases/latest" data-i18n="openRelease">打开 Release</a>
           </div>
         </aside>
       </div>
@@ -1104,80 +1104,80 @@
 
     const copy = {
       zh: {
-        pageTitle: "GitMarket ???????",
-        pageLead: "?? HTML ?????????Android WebView ??????? app.html???? preview APK ???????????????????? Android / iOS ??????????",
-        howTitle: "??????",
-        howLead: "????????????????? UI????????????????????? HTML ???????????? APK ? IPA ????",
-        stepOne: "?? WebView ??",
-        stepOneDesc: "?? preview APK ?? GitHub Pages ? app.html?????? iframe ????????????????",
-        stepTwo: "??????",
-        stepTwoDesc: "????????????????????????????????????",
-        stepThree: "??????",
-        stepThreeDesc: "? HTML ????????? CI ???? Android ? iOS ?????????????",
-        controls: "?????",
-        target: "????",
-        theme: "??",
-        themeWarm: "????",
-        themeClean: "????",
-        themeLaunch: "????",
-        language: "??",
-        openExact: "???? app.html",
-        openRelease: "?? Release",
-        modeWebview: "???????? docs/app.html??? Android preview APK ? WebView ??????????????? preview APK ?????",
-        modeAndroid: "????? Android ??????????? Rust/egui ??? Compose ????????? HTML ??????",
-        modeIos: "????? iOS ???????????????????????????? SwiftUI ? WebKit ??",
-        appSub: "GitHub / Gitee / GitCode Release ??",
-        today: "????",
-        heroTitle: "?? Release ????",
-        heroSub: "????????????????????????????????? Release?",
-        startDiscover: "????",
-        inspectRepo: "????",
-        collections: "??",
+        pageTitle: "GitMarket 移动端本地预览",
+        pageLead: "这个 HTML 可以直接本地打开。Android WebView 模式加载同一个 app.html，因此和 preview APK 的页面内容一致；原生模式用于快速检查后续 Android / iOS 的高保真界面和交互。",
+        howTitle: "为什么这样做",
+        howLead: "发布包最后仍然需要真机检查，但日常 UI、文案、主题、状态流和列表密度可以先在本地 HTML 里快速迭代，减少反复安装 APK 或 IPA 的时间。",
+        stepOne: "真实 WebView 预览",
+        stepOneDesc: "当前 preview APK 指向 GitHub Pages 的 app.html。本页默认用 iframe 加载同一页面，适合核对真实内容。",
+        stepTwo: "原生界面预演",
+        stepTwoDesc: "把移动端主题、双语、底部导航、下载、安全和多来源搜索先做成可点的产品稿。",
+        stepThree: "最终真机验收",
+        stepThreeDesc: "当 HTML 预览确认后，再触发 CI 打包，在 Android 或 iOS 设备上做少量关键路径验收。",
+        controls: "预览控制台",
+        target: "预览目标",
+        theme: "主题",
+        themeWarm: "暖色卡片",
+        themeClean: "清爽蓝白",
+        themeLaunch: "橙色发布",
+        language: "语言",
+        openExact: "打开真实 app.html",
+        openRelease: "打开 Release",
+        modeWebview: "当前模式直接加载 docs/app.html。因为 Android preview APK 的 WebView 也打开这个页面，所以页面内容与 preview APK 保持一致。",
+        modeAndroid: "当前模式是 Android 原生产品预演。它用于把 Rust/egui 或未来 Compose 版本的移动界面先在 HTML 里检查清楚。",
+        modeIos: "当前模式是 iOS 原生产品预演。它使用同一套产品数据和状态，方便以后迁移到 SwiftUI 或 WebKit 壳。",
+        appSub: "GitHub / Gitee / GitCode Release 发现",
+        today: "今日看板",
+        heroTitle: "你的 Release 智能看板",
+        heroSub: "聚合仓库、版本、资产、安全信号和下载进度，把开源软件包带回上游官方 Release。",
+        startDiscover: "开始发现",
+        inspectRepo: "检查仓库",
+        collections: "合集",
         releases: "Release",
-        verify: "???",
-        popular: "????",
-        viewAll: "????",
-        home: "??",
-        discover: "??",
-        repos: "??",
-        downloads: "??",
-        security: "??",
-        settings: "??",
-        discoverTitle: "?????",
-        discoverSub: "??????????????????????????????????????? Show more?",
-        searchPlaceholder: "??????????? Release ???",
-        search: "??",
-        allSources: "????",
+        verify: "待校验",
+        popular: "热门仓库",
+        viewAll: "查看全部",
+        home: "首页",
+        discover: "发现",
+        repos: "仓库",
+        downloads: "下载",
+        security: "安全",
+        settings: "设置",
+        discoverTitle: "多来源发现",
+        discoverSub: "没有关键词时每个来源默认轻量展示；输入关键词后并发搜索，先显示关键数量，再按需 Show more。",
+        searchPlaceholder: "搜索仓库、工具、作者或 Release 关键词",
+        search: "搜索",
+        allSources: "全部来源",
         showMore: "Show more",
-        collapse: "??",
-        resultCount: "??",
-        repoTitle: "????",
-        repoSub: "???????????Release ???SHA256 ????????",
-        releaseAssets: "Release ??",
-        download: "??",
-        sourceCode: "???",
-        downloadsSub: "?????????????????????????????",
-        active: "???",
-        completed: "???",
-        latestDownload: "????",
-        noDownload: "?????",
-        noDownloadDesc: "?????? Release ????????????SHA256 ??????",
-        installApk: "?? APK",
-        openDownloads: "??????",
-        securitySub: "GitMarket ???????????????????????????",
-        upstreamOnly: "?????",
-        upstreamOnlyDesc: "????????? Release asset??????????",
-        hashTitle: "SHA256 ??",
-        hashDesc: "??????? SHA256?????????????",
-        signatureTitle: "????",
-        signatureDesc: "Android ?????????????????",
-        permissionTitle: "????",
-        permissionDesc: "?????????????????????",
-        tokenTitle: "Token ??",
-        tokenDesc: "GitHub Token ????? API ??????????????????",
-        settingsSub: "????????????? GitHub API Token ???",
-        nativeHint: "????????????????????",
-        webviewHint: "WebView ???????????? API??????????????"
+        collapse: "收起",
+        resultCount: "结果",
+        repoTitle: "仓库检查",
+        repoSub: "展示上游地址、许可证、Release 资产、SHA256 和签名指纹状态。",
+        releaseAssets: "Release 资产",
+        download: "下载",
+        sourceCode: "源代码",
+        downloadsSub: "下载动作仍回到上游资产。本地只记录进度、哈希和安装前提示。",
+        active: "进行中",
+        completed: "已完成",
+        latestDownload: "最近下载",
+        noDownload: "还没有下载",
+        noDownloadDesc: "在仓库页选择 Release 资产后，这里会显示进度、SHA256 与安装状态。",
+        installApk: "安装 APK",
+        openDownloads: "打开下载目录",
+        securitySub: "GitMarket 是发现和校验助手，不托管、不镜像、不重签第三方二进制。",
+        upstreamOnly: "只链接上游",
+        upstreamOnlyDesc: "所有下载都指向官方 Release asset，并展示源代码地址。",
+        hashTitle: "SHA256 校验",
+        hashDesc: "下载后计算本地 SHA256，后续与上游校验文件比对。",
+        signatureTitle: "签名指纹",
+        signatureDesc: "Android 包需要展示证书指纹和签名变化提醒。",
+        permissionTitle: "权限透明",
+        permissionDesc: "网络、安装包、文件访问等权限必须解释用途。",
+        tokenTitle: "Token 边界",
+        tokenDesc: "GitHub Token 只用于提高 API 限额，正式移动端应使用系统凭据存储。",
+        settingsSub: "切换主题、语言、预览目标和 GitHub API Token 策略。",
+        nativeHint: "此处是原生移动端预览，不会真的下载文件。",
+        webviewHint: "WebView 模式中的搜索台会访问公开 API，离线时仍可检查布局和文案。"
       },
       en: {
         pageTitle: "GitMarket mobile local preview",
@@ -1261,7 +1261,7 @@
       {
         name: "termux/termux-app",
         source: "GitHub",
-        desc: { zh: "Android ?????? Linux ???", en: "Android terminal emulator and Linux environment." },
+        desc: { zh: "Android 终端模拟器与 Linux 环境。", en: "Android terminal emulator and Linux environment." },
         version: "v0.118.3",
         language: "Java",
         stars: "54.8k",
@@ -1271,7 +1271,7 @@
       {
         name: "2dust/v2rayNG",
         source: "GitHub",
-        desc: { zh: "Android ??????Release ??? APK ???", en: "Android proxy client with APK-focused release assets." },
+        desc: { zh: "Android 代理客户端，Release 资产以 APK 为主。", en: "Android proxy client with APK-focused release assets." },
         version: "v1.10.5",
         language: "Kotlin",
         stars: "55.9k",
@@ -1281,7 +1281,7 @@
       {
         name: "obsproject/obs-studio",
         source: "GitHub",
-        desc: { zh: "?????????? Windows?macOS ? Linux?", en: "Streaming and recording app for Windows, macOS, and Linux." },
+        desc: { zh: "直播与录屏工具，覆盖 Windows、macOS 与 Linux。", en: "Streaming and recording app for Windows, macOS, and Linux." },
         version: "31.0.2",
         language: "C",
         stars: "72.3k",
@@ -1291,7 +1291,7 @@
       {
         name: "pbatard/rufus",
         source: "GitHub",
-        desc: { zh: "Windows USB ????????", en: "Windows USB boot media utility." },
+        desc: { zh: "Windows USB 启动盘制作工具。", en: "Windows USB boot media utility." },
         version: "v4.6",
         language: "C",
         stars: "36k",
@@ -1301,7 +1301,7 @@
       {
         name: "KeePassXC/KeePassXC",
         source: "GitHub",
-        desc: { zh: "???????????????????", en: "Cross-platform password manager, useful for desktop asset checks." },
+        desc: { zh: "跨平台密码管理器，适合桌面包校验演示。", en: "Cross-platform password manager, useful for desktop asset checks." },
         version: "2.7.9",
         language: "C++",
         stars: "25.1k",
@@ -1311,7 +1311,7 @@
       {
         name: "laurent22/joplin",
         source: "GitHub",
-        desc: { zh: "?????????????", en: "Privacy-focused notes and sync app." },
+        desc: { zh: "隐私优先的笔记与同步工具。", en: "Privacy-focused notes and sync app." },
         version: "v3.2.12",
         language: "TypeScript",
         stars: "54.8k",
@@ -1321,7 +1321,7 @@
       {
         name: "PowerShell/PowerShell",
         source: "GitHub",
-        desc: { zh: "??? Shell ???????", en: "Cross-platform shell and automation framework." },
+        desc: { zh: "跨平台 Shell 与自动化框架。", en: "Cross-platform shell and automation framework." },
         version: "v7.5.0",
         language: "C#",
         stars: "49.8k",
@@ -1331,7 +1331,7 @@
       {
         name: "dromara/hutool",
         source: "Gitee",
-        desc: { zh: "Java ???????? Gitee ?????", en: "Java utility library, useful for Gitee source metadata." },
+        desc: { zh: "Java 工具库，适合展示 Gitee 源站信息。", en: "Java utility library, useful for Gitee source metadata." },
         version: "v5.8.35",
         language: "Java",
         stars: "31k",
@@ -1341,7 +1341,7 @@
       {
         name: "dromara/Jpom",
         source: "Gitee",
-        desc: { zh: "?? DevOps ??????????", en: "Lightweight DevOps project management platform." },
+        desc: { zh: "轻量 DevOps 项目管理与运维平台。", en: "Lightweight DevOps project management platform." },
         version: "v2.11.5",
         language: "Java",
         stars: "12k",
@@ -1351,7 +1351,7 @@
       {
         name: "jeecg/jeecg-boot",
         source: "Gitee",
-        desc: { zh: "????????????? Release?", en: "Low-code platform for enterprise release discovery." },
+        desc: { zh: "低代码平台，展示企业工具类 Release。", en: "Low-code platform for enterprise release discovery." },
         version: "v3.7.2",
         language: "Java",
         stars: "42k",
@@ -1361,7 +1361,7 @@
       {
         name: "GitCode mirror",
         source: "GitCode",
-        desc: { zh: "GitCode ???????????????????????????", en: "GitCode is currently connected as an upstream search entry, with stable API planned through a backend proxy." },
+        desc: { zh: "GitCode 当前作为源站搜索入口接入，后续可通过后端代理稳定读取。", en: "GitCode is currently connected as an upstream search entry, with stable API planned through a backend proxy." },
         version: "search",
         language: "Fallback",
         stars: "-",
@@ -1371,7 +1371,7 @@
       {
         name: "Release keyword",
         source: "GitCode",
-        desc: { zh: "???????????? GitCode ?????", en: "Keyword fallback entry for GitCode project discovery." },
+        desc: { zh: "关键词兜底入口，用于覆盖 GitCode 项目发现。", en: "Keyword fallback entry for GitCode project discovery." },
         version: "release",
         language: "Fallback",
         stars: "-",
@@ -1384,7 +1384,7 @@
       ["home", "H"],
       ["discover", "D"],
       ["repos", "R"],
-      ["downloads", "?"],
+      ["downloads", "↓"],
       ["security", "S"]
     ];
 
@@ -1467,7 +1467,7 @@
             <span class="meta-pill">${escapeHtml(repo.version)}</span>
             <span class="meta-pill">${escapeHtml(repo.language)}</span>
             <span class="meta-pill">${escapeHtml(repo.license)}</span>
-            <span class="meta-pill">? ${escapeHtml(repo.stars)}</span>
+            <span class="meta-pill">★ ${escapeHtml(repo.stars)}</span>
           </div>
         </article>`;
     }
@@ -1486,7 +1486,7 @@
               <span>${t("appSub")}</span>
             </div>
           </div>
-          <button class="icon-button" data-tab="settings" aria-label="${t("settings")}">?</button>
+          <button class="icon-button" data-tab="settings" aria-label="${t("settings")}">≡</button>
         </div>`;
     }
 
@@ -1537,10 +1537,10 @@
           ${sourceButton("GitCode")}
         </div>
         <div class="section-row">
-          <h2 class="section-title">${t("resultCount")} ? ${all.length}</h2>
+          <h2 class="section-title">${t("resultCount")} · ${all.length}</h2>
           <span class="muted">${state.query.trim() ? "20" : "10"} / ${all.length}</span>
         </div>
-        <div class="repo-list">${shown.map(repoCard).join("") || `<div class="card" style="padding:14px">${t("resultCount")} ? 0</div>`}</div>
+        <div class="repo-list">${shown.map(repoCard).join("") || `<div class="card" style="padding:14px">${t("resultCount")} · 0</div>`}</div>
         ${moreAvailable || state.expanded ? `<button class="ghost-button" style="width:100%; margin-top:12px" data-expand="${state.expanded ? "0" : "1"}">${state.expanded ? t("collapse") : t("showMore")}</button>` : ""}`;
     }
 
@@ -1624,7 +1624,7 @@
 
     function renderSecurity() {
       const checks = [
-        ["upstreamOnly", "upstreamOnlyDesc", "?"],
+        ["upstreamOnly", "upstreamOnlyDesc", "✓"],
         ["hashTitle", "hashDesc", "#"],
         ["signatureTitle", "signatureDesc", "S"],
         ["permissionTitle", "permissionDesc", "P"],
@@ -1670,7 +1670,7 @@
         <div class="setting-card">
           <strong>${t("language")}</strong>
           <div class="lang-strip">
-            <button class="tab-chip" data-lang="zh" aria-pressed="${state.lang === "zh"}">??</button>
+            <button class="tab-chip" data-lang="zh" aria-pressed="${state.lang === "zh"}">中文</button>
             <button class="tab-chip" data-lang="en" aria-pressed="${state.lang === "en"}">English</button>
           </div>
         </div>
