@@ -1015,29 +1015,6 @@ impl GitMarketApp {
             });
     }
 
-    fn mini_feature_card(&self, ui: &mut egui::Ui, title: &str, value: &str, desc: &str) {
-        let p = self.palette();
-        egui::Frame::none()
-            .fill(p.chip)
-            .stroke(Stroke::new(1.0, p.stroke))
-            .rounding(Rounding::same(16.0))
-            .inner_margin(Margin::same(10.0))
-            .show(ui, |ui| {
-                ui.label(RichText::new(title).size(self.body_size()).color(p.muted));
-                ui.label(
-                    RichText::new(value)
-                        .size(self.section_size() + 4.0)
-                        .strong()
-                        .color(p.text),
-                );
-                ui.label(
-                    RichText::new(desc)
-                        .size(self.body_size() - 1.0)
-                        .color(p.muted),
-                );
-            });
-    }
-
     fn home_metric_strip(&self, ui: &mut egui::Ui) {
         ui.columns(4, |columns| {
             self.metric_card(&mut columns[0], self.t("collections"), "12");
