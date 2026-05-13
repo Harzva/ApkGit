@@ -310,6 +310,10 @@ impl GitMarketApp {
 
     fn desktop_topbar(&mut self, ui: &mut egui::Ui) {
         let p = self.palette();
+        let search_label = self.t("search");
+        let search_hint = self.t("search_hint");
+        let go_label = self.t("go");
+        let inspect_label = self.t("inspect_repo");
         egui::Frame::none()
             .fill(p.panel_alt)
             .stroke(Stroke::new(1.0, p.stroke))
@@ -317,19 +321,19 @@ impl GitMarketApp {
             .inner_margin(Margin::symmetric(14.0, 10.0))
             .show(ui, |ui| {
                 ui.horizontal(|ui| {
-                    ui.label(RichText::new(self.t("search")).strong().color(p.muted));
+                    ui.label(RichText::new(search_label).strong().color(p.muted));
                     let response = ui.add(
                         egui::TextEdit::singleline(&mut self.search_input)
-                            .hint_text(self.t("search_hint"))
+                            .hint_text(search_hint)
                             .desired_width((ui.available_width() - 280.0).max(220.0)),
                     );
-                    if self.primary_button(ui, self.t("go")).clicked()
+                    if self.primary_button(ui, go_label).clicked()
                         || (response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)))
                     {
                         self.current_tab = Tab::Discover;
                         self.start_discovery();
                     }
-                    if self.text_button(ui, self.t("inspect_repo")).clicked() {
+                    if self.text_button(ui, inspect_label).clicked() {
                         self.current_tab = Tab::Repository;
                     }
                 });
