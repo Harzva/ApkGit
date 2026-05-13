@@ -32,15 +32,28 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
   <img src="docs/assets/architecture_diagram.png" alt="GitMarket architecture" width="860" />
 </p>
 
+## 最新发布
+
+`v0.1.5` 已发布到 GitHub Release，包含新版 logo、中文字体修复、桌面工作台 UI、Android WebView preview APK、Rust/egui Android experimental APK，以及 Windows / Linux / macOS 桌面包。
+
+| 产物 | 入口 |
+| --- | --- |
+| Android experimental APK | [gitmarket-android-experimental.apk](https://github.com/Harzva/GitReleaseMarket/releases/download/v0.1.5/gitmarket-android-experimental.apk) |
+| Android WebView preview APK | [gitmarket-android-preview-v0.1.5.apk](https://github.com/Harzva/GitReleaseMarket/releases/download/v0.1.5/gitmarket-android-preview-v0.1.5.apk) |
+| Windows 桌面包 | [gitmarket-windows-x86_64.zip](https://github.com/Harzva/GitReleaseMarket/releases/download/v0.1.5/gitmarket-windows-x86_64.zip) |
+| Linux 桌面包 | [gitmarket-linux-x86_64.tar.gz](https://github.com/Harzva/GitReleaseMarket/releases/download/v0.1.5/gitmarket-linux-x86_64.tar.gz) |
+| macOS Apple Silicon 桌面包 | [gitmarket-macos-aarch64.tar.gz](https://github.com/Harzva/GitReleaseMarket/releases/download/v0.1.5/gitmarket-macos-aarch64.tar.gz) |
+| 在线体验 | [GitHub Pages](https://harzva.github.io/GitReleaseMarket/) |
+
 ## 当前进度
 
 | 模块 | 状态 | 说明 |
 | --- | --- | --- |
 | Web 首页 / Pages | 已上线 | `docs/index.html` 作为宣传页，`docs/app.html` 作为可交互预览，`docs/mobile-preview.html` 作为 APK / IPA 本地预览 |
-| Rust / egui 客户端 | `0.1.5` 开发中 | 已升级桌面工作台布局、移动端卡片流、四套主题、中英双语、多源发现页，并内置中文字体子集 |
-| Android preview APK | CI 构建 | WebView 壳，指向 GitHub Pages 预览地址 |
-| Android Rust experimental APK | CI 非阻塞构建 | 用于验证 egui 移动 UI，不作为最终 Android 原生路线 |
-| 桌面包 | CI 构建 | Windows / Linux / macOS release artifact |
+| Rust / egui 客户端 | `0.1.5` 已发布 | 已升级桌面工作台布局、移动端卡片流、四套主题、中英双语、多源发现页，并内置中文字体子集 |
+| Android preview APK | 已发布 | WebView 壳，指向 GitHub Pages 预览地址 |
+| Android Rust experimental APK | 已发布 | 用于验证 egui 移动 UI，不作为最终 Android 原生路线 |
+| 桌面包 | 已发布 | Windows / Linux / macOS release artifact |
 | iOS | 未开始 | 需要独立 SwiftUI/WebKit target 与 Apple 签名配置 |
 
 ## 新版 App 方向
@@ -129,7 +142,7 @@ git tag v0.1.5
 git push origin v0.1.5
 ```
 
-Tag 构建通过后，GitHub Release 会自动上传桌面包、Android preview APK、实验 APK 和 SHA256 文件。
+Tag 构建通过后，GitHub Release 会自动上传桌面包、Android preview APK、实验 APK 和 SHA256 文件；`v0.1.5` 已验证通过。
 
 ## 路线图
 
