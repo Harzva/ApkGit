@@ -34,15 +34,16 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 
 ## 最新发布
 
-`v0.1.5` 已发布到 GitHub Release，包含新版 logo、中文字体修复、桌面工作台 UI、Android WebView preview APK、Rust/egui Android experimental APK，以及 Windows / Linux / macOS 桌面包。
+`v0.1.6` 在 `v0.1.5` 基础上补齐 iOS SwiftUI 预览工程，并把 Android WebView preview APK 入口切到更像移动 App 的 `mobile-preview.html`。GitHub Release 会继续产出 Android preview、Android experimental、Windows、Linux、macOS 与 iOS simulator 预览包。
 
 | 产物 | 入口 |
 | --- | --- |
-| Android experimental APK | [gitmarket-android-experimental.apk](https://github.com/Harzva/GitReleaseMarket/releases/download/v0.1.5/gitmarket-android-experimental.apk) |
-| Android WebView preview APK | [gitmarket-android-preview-v0.1.5.apk](https://github.com/Harzva/GitReleaseMarket/releases/download/v0.1.5/gitmarket-android-preview-v0.1.5.apk) |
-| Windows 桌面包 | [gitmarket-windows-x86_64.zip](https://github.com/Harzva/GitReleaseMarket/releases/download/v0.1.5/gitmarket-windows-x86_64.zip) |
-| Linux 桌面包 | [gitmarket-linux-x86_64.tar.gz](https://github.com/Harzva/GitReleaseMarket/releases/download/v0.1.5/gitmarket-linux-x86_64.tar.gz) |
-| macOS Apple Silicon 桌面包 | [gitmarket-macos-aarch64.tar.gz](https://github.com/Harzva/GitReleaseMarket/releases/download/v0.1.5/gitmarket-macos-aarch64.tar.gz) |
+| Android experimental APK | [gitmarket-android-experimental.apk](https://github.com/Harzva/GitReleaseMarket/releases/latest) |
+| Android WebView preview APK | [gitmarket-android-preview](https://github.com/Harzva/GitReleaseMarket/releases/latest) |
+| iOS simulator preview | [gitmarket-ios-simulator.zip](https://github.com/Harzva/GitReleaseMarket/releases/latest) |
+| Windows 桌面包 | [gitmarket-windows-x86_64.zip](https://github.com/Harzva/GitReleaseMarket/releases/latest) |
+| Linux 桌面包 | [gitmarket-linux-x86_64.tar.gz](https://github.com/Harzva/GitReleaseMarket/releases/latest) |
+| macOS Apple Silicon 桌面包 | [gitmarket-macos-aarch64.tar.gz](https://github.com/Harzva/GitReleaseMarket/releases/latest) |
 | 在线体验 | [GitHub Pages](https://harzva.github.io/GitReleaseMarket/) |
 
 ## 当前进度
@@ -50,11 +51,11 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 | 模块 | 状态 | 说明 |
 | --- | --- | --- |
 | Web 首页 / Pages | 已上线 | `docs/index.html` 作为宣传页，`docs/app.html` 作为可交互预览，`docs/mobile-preview.html` 作为 APK / IPA 本地预览 |
-| Rust / egui 客户端 | `0.1.5` 已发布 | 已升级桌面工作台布局、移动端卡片流、四套主题、中英双语、多源发现页，并内置中文字体子集 |
-| Android preview APK | 已发布 | WebView 壳，指向 GitHub Pages 预览地址 |
+| Rust / egui 客户端 | `0.1.6` | 已升级桌面工作台布局、移动端卡片流、四套主题、中英双语、多源发现页，并内置中文字体子集 |
+| Android preview APK | `0.1.6` | WebView 壳，指向 GitHub Pages 移动端预览地址 |
 | Android Rust experimental APK | 已发布 | 用于验证 egui 移动 UI，不作为最终 Android 原生路线 |
 | 桌面包 | 已发布 | Windows / Linux / macOS release artifact |
-| iOS | 未开始 | 需要独立 SwiftUI/WebKit target 与 Apple 签名配置 |
+| iOS | SwiftUI 预览版 | `ios/GitMarket` 已提供原生 SwiftUI 壳、搜索台 WebView、安全页、来源页、主题和中英双语；正式 IPA 需要 Apple 签名配置 |
 
 ## 新版 App 方向
 
@@ -70,7 +71,7 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 
 `docs/mobile-preview.html` 可以直接用浏览器本地打开，用来减少反复安装测试包的次数：
 
-- **APK WebView 模式**：直接嵌入 `docs/app.html`。当前 `gitmarket-android-preview` 也是打开同一个 Pages 地址，因此内容与 preview APK 保持一致。
+- **APK WebView 模式**：`0.1.6` 起默认打开 `docs/mobile-preview.html`，更接近真实移动端 App 壳；搜索台仍可从预览页进入。
 - **Android Native / iOS Native 模式**：用同一套示例 Release 数据预演移动端原生界面，支持四套主题、中文 / English、底部导航、仓库检查、下载状态和安全页。
 - **验收方式**：日常先在 HTML 里检查布局、文案、主题和交互，最终发版前再用真实 Android / iOS 设备做关键路径验收。
 
@@ -134,15 +135,16 @@ cd android-preview
 - Windows / Linux / macOS 桌面构建
 - Android preview APK 构建
 - Android Rust experimental APK 非阻塞构建
+- iOS simulator preview 构建
 
 发布新版本：
 
 ```bash
-git tag v0.1.5
-git push origin v0.1.5
+git tag v0.1.6
+git push origin v0.1.6
 ```
 
-Tag 构建通过后，GitHub Release 会自动上传桌面包、Android preview APK、实验 APK 和 SHA256 文件；`v0.1.5` 已验证通过。
+Tag 构建通过后，GitHub Release 会自动上传桌面包、Android preview APK、实验 APK、iOS simulator 预览包和 SHA256 文件。
 
 ## 路线图
 

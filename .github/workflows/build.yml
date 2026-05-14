@@ -227,9 +227,43 @@ jobs:
           name: gitmarket-android-preview
           path: dist/*
 
+  build-ios-preview:
+    name: Build iOS simulator preview
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build iOS simulator app
+        run: |
+          xcodebuild \
+            -project ios/GitMarket/GitMarket.xcodeproj \
+            -scheme GitMarket \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath ios/build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Package simulator app
+        run: |
+          mkdir -p dist
+          APP_PATH="$(find ios/build/Build/Products/Release-iphonesimulator -name 'GitMarket.app' -type d | head -n 1)"
+          if [ -z "$APP_PATH" ]; then
+            echo "GitMarket.app not found"
+            exit 1
+          fi
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" dist/gitmarket-ios-simulator.zip
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitmarket-ios-simulator
+          path: dist/*.zip
+
   release:
     name: Publish GitHub Release
-    needs: [build-desktop, build-android-preview, build-android-experimental]
+    needs: [build-desktop, build-android-preview, build-android-experimental, build-ios-preview]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
