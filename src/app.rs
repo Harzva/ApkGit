@@ -73,7 +73,7 @@ enum Category {
 }
 
 enum AppMessage {
-    RepoInfo(RepoInfo),
+    RepoInfo(Box<RepoInfo>),
     Releases(Vec<ReleaseInfo>),
     Discover(Vec<SearchRepo>),
     Error(String),
@@ -1668,7 +1668,7 @@ impl GitMarketApp {
 
             match client.fetch_repo_info(platform, &owner, &repo) {
                 Ok(info) => {
-                    let _ = tx.send(AppMessage::RepoInfo(info));
+                    let _ = tx.send(AppMessage::RepoInfo(Box::new(info)));
                 }
                 Err(e) => {
                     let _ = tx.send(AppMessage::Error(e));
@@ -1802,7 +1802,7 @@ impl GitMarketApp {
         while let Ok(msg) = self.rx.try_recv() {
             match msg {
                 AppMessage::RepoInfo(info) => {
-                    self.repo_info = Some(info);
+                    self.repo_info = Some(*info);
                     self.is_loading = false;
                 }
                 AppMessage::Releases(releases) => {
