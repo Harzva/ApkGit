@@ -11,6 +11,16 @@ pub struct RepoInfo {
     pub html_url: String,
     pub updated_at: Option<String>,
     pub topics: Vec<String>,
+    pub license: Option<LicenseInfo>,
+    pub default_branch: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct LicenseInfo {
+    pub key: Option<String>,
+    pub name: Option<String>,
+    pub spdx_id: Option<String>,
+    pub url: Option<String>,
 }
 
 /// Release metadata with downloadable assets.

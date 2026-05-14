@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GitMarket Mobile Preview Lab</title>
-  <meta name="description" content="GitMarket APK / IPA local preview page. Open locally to inspect the Android WebView preview and native mobile product UI without reinstalling packages.">
+  <meta name="description" content="GitMarket local mobile UI preview page. Open locally to inspect Android/iOS product states before packaging real artifacts.">
   <link rel="icon" href="assets/gitmarket-logo-192.png">
   <style>
     :root {
@@ -1102,9 +1102,9 @@
 
     <section class="panel">
       <div class="intro">
-        <div class="kicker">APK / IPA Preview Lab</div>
+        <div class="kicker">Mobile UI Preview Lab</div>
         <h1 data-i18n="pageTitle">GitMarket 移动端本地预览</h1>
-        <p data-i18n="pageLead">这个 HTML 可以直接本地打开。Android WebView 模式加载同一个 app.html，因此和 preview APK 的页面内容一致；原生模式用于快速检查后续 Android / iOS 的高保真界面和交互。</p>
+        <p data-i18n="pageLead">这个 HTML 可以直接本地打开，用来预演移动端主题、状态、布局和文案；正式 Android 产物只保留 Rust/egui experimental APK。</p>
       </div>
 
       <div class="panel-grid">
@@ -1117,7 +1117,7 @@
               <span class="workflow-number">1</span>
               <div>
                 <strong data-i18n="stepOne">真实 WebView 预览</strong>
-                <span data-i18n="stepOneDesc">当前 preview APK 指向 GitHub Pages 的 app.html。本页默认用 iframe 加载同一页面，适合核对真实内容。</span>
+                <span data-i18n="stepOneDesc">WebView 模式只用于核对 GitHub Pages 搜索台，不再对应单独发布的 preview APK。</span>
               </div>
             </div>
             <div class="workflow-item">
@@ -1144,7 +1144,7 @@
           <div class="control-group">
             <div class="control-label" data-i18n="target">预览目标</div>
             <div class="control-buttons">
-              <button class="control-button" data-mode="webview">APK WebView</button>
+              <button class="control-button" data-mode="webview">Web Preview</button>
               <button class="control-button" data-mode="android">Android Native</button>
               <button class="control-button" data-mode="ios">iOS Native</button>
             </div>
@@ -1211,11 +1211,11 @@
     const copy = {
       zh: {
         pageTitle: "GitMarket 移动端本地预览",
-        pageLead: "这个 HTML 可以直接本地打开。Android WebView 模式加载同一个 app.html，因此和 preview APK 的页面内容一致；原生模式用于快速检查后续 Android / iOS 的高保真界面和交互。",
+        pageLead: "这个 HTML 可以直接本地打开，用来预演移动端主题、状态、布局和文案；正式 Android 产物只保留 Rust/egui experimental APK。",
         howTitle: "为什么这样做",
         howLead: "发布包最后仍然需要真机检查，但日常 UI、文案、主题、状态流和列表密度可以先在本地 HTML 里快速迭代，减少反复安装 APK 或 IPA 的时间。",
-        stepOne: "真实 WebView 预览",
-        stepOneDesc: "当前 preview APK 指向 GitHub Pages 的 app.html。本页默认用 iframe 加载同一页面，适合核对真实内容。",
+        stepOne: "网页搜索台预览",
+        stepOneDesc: "WebView 模式只用于核对 GitHub Pages 搜索台，不再对应单独发布的 preview APK。",
         stepTwo: "原生界面预演",
         stepTwoDesc: "把移动端主题、双语、底部导航、下载、安全和多来源搜索先做成可点的产品稿。",
         stepThree: "最终真机验收",
@@ -1229,7 +1229,7 @@
         language: "语言",
         openExact: "打开真实 app.html",
         openRelease: "打开 Release",
-        modeWebview: "当前模式直接加载 docs/app.html。因为 Android preview APK 的 WebView 也打开这个页面，所以页面内容与 preview APK 保持一致。",
+        modeWebview: "当前模式直接加载 docs/app.html。它只用于网页预演，不再对应单独发布的 Android preview APK。",
         modeAndroid: "当前模式是 Android 原生产品预演。它用于把 Rust/egui 或未来 Compose 版本的移动界面先在 HTML 里检查清楚。",
         modeIos: "当前模式是 iOS 原生产品预演。它使用同一套产品数据和状态，方便以后迁移到 SwiftUI 或 WebKit 壳。",
         appSub: "GitHub / Gitee / GitCode Release 发现",
@@ -1287,11 +1287,11 @@
       },
       en: {
         pageTitle: "GitMarket mobile local preview",
-        pageLead: "Open this HTML file locally. Android WebView mode loads the same app.html used by the preview APK, while native mode lets you inspect future Android and iOS product UI quickly.",
+        pageLead: "Open this HTML file locally to rehearse mobile themes, states, layout, and copy. Android releases now keep only the Rust/egui experimental APK.",
         howTitle: "Why this exists",
         howLead: "Final packages still need real device checks, but everyday UI, copy, themes, states, and list density can be iterated in local HTML before rebuilding APK or IPA files.",
-        stepOne: "Exact WebView preview",
-        stepOneDesc: "The current preview APK opens GitHub Pages app.html. This page loads that same file in a phone frame for content checks.",
+        stepOne: "Web console preview",
+        stepOneDesc: "WebView mode is only a GitHub Pages console check now; it no longer maps to a separately released preview APK.",
         stepTwo: "Native UI rehearsal",
         stepTwoDesc: "Themes, bilingual text, bottom navigation, downloads, security, and multi-source search are clickable before native implementation catches up.",
         stepThree: "Final device pass",
@@ -1305,7 +1305,7 @@
         language: "Language",
         openExact: "Open app.html",
         openRelease: "Open Release",
-        modeWebview: "This mode loads docs/app.html directly. The Android preview APK opens the same page in WebView, so the page content matches the preview APK.",
+        modeWebview: "This mode loads docs/app.html directly for web rehearsal only. GitMarket no longer ships a separate Android preview APK.",
         modeAndroid: "This mode previews the Android native product surface. Use it to review the Rust/egui or future Compose mobile UI before packaging.",
         modeIos: "This mode previews the iOS product surface with the same product data and states, ready for a future SwiftUI or WebKit target.",
         appSub: "GitHub / Gitee / GitCode release discovery",

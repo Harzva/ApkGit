@@ -108,7 +108,6 @@ jobs:
     name: Build Android experimental
     needs: check
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -178,55 +177,6 @@ jobs:
           name: gitmarket-android-experimental
           path: dist/*.apk
 
-  build-android-preview:
-    name: Build Android preview APK
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Create release signing key
-        run: |
-          keytool -genkeypair \
-            -keystore android-preview/gitmarket-preview.jks \
-            -storepass gitmarketpreview \
-            -keypass gitmarketpreview \
-            -alias gitmarket \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -dname "CN=GitMarket Preview,O=GitMarket,C=US"
-
-      - name: Build signed preview APK
-        run: |
-          cd android-preview
-          ./gradlew :app:assembleRelease \
-            -PreleaseStoreFile="$(pwd)/gitmarket-preview.jks" \
-            -PreleaseStorePassword=gitmarketpreview \
-            -PreleaseKeyAlias=gitmarket \
-            -PreleaseKeyPassword=gitmarketpreview
-
-      - name: Stage APK
-        run: |
-          mkdir -p dist
-          VERSION="${GITHUB_REF_NAME:-dev}"
-          cp android-preview/app/build/outputs/apk/release/app-release.apk "dist/gitmarket-android-preview-${VERSION}.apk"
-          sha256sum "dist/gitmarket-android-preview-${VERSION}.apk" > "dist/gitmarket-android-preview-${VERSION}.apk.sha256"
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: gitmarket-android-preview
-          path: dist/*
-
   build-ios-preview:
     name: Build iOS simulator preview
     runs-on: macos-latest
@@ -263,7 +213,7 @@ jobs:
 
   release:
     name: Publish GitHub Release
-    needs: [build-desktop, build-android-preview, build-android-experimental, build-ios-preview]
+    needs: [build-desktop, build-android-experimental, build-ios-preview]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:

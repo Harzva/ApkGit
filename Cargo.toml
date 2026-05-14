@@ -1,6 +1,6 @@
 [package]
 name = "gitmarket"
-version = "0.1.7"
+version = "0.1.8"
 edition = "2021"
 description = "GitHub/Gitee Release software discovery tool"
 authors = ["GitMarket Team"]
@@ -38,8 +38,8 @@ name = "gitmarket"
 path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
-# Experimental Rust Android packaging. The primary Android route is the
-# android-preview Gradle project, and the polished mobile MVP should be native.
+# Experimental Rust Android packaging. This is the only Android artifact built
+# by CI until the future native Kotlin/Compose app replaces it.
 [package.metadata.android]
 package = "com.gitmarket.app"
 build_targets = ["aarch64-linux-android"]

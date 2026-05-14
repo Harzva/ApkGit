@@ -9,7 +9,7 @@
   <a href="https://github.com/Harzva/GitReleaseMarket/releases"><img alt="Release" src="https://img.shields.io/github/v/release/Harzva/GitReleaseMarket?include_prereleases" /></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" /></a>
   <img alt="Rust" src="https://img.shields.io/badge/Rust-egui-orange" />
-  <img alt="Android" src="https://img.shields.io/badge/Android-preview-green" />
+  <img alt="Android" src="https://img.shields.io/badge/Android-experimental-green" />
 </p>
 
 <p align="center">
@@ -34,12 +34,11 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 
 ## 最新发布
 
-`v0.1.7` 在 `v0.1.6` 基础上把 Android WebView preview APK 入口切到 `mobile-preview.html?shell=app`，打开后直接进入产品态移动界面；GitHub Pages 仍保留 APK / IPA 预览实验室页面。GitHub Release 会继续产出 Android preview、Android experimental、Windows、Linux、macOS 与 iOS simulator 预览包。
+`v0.1.8` 开始停止维护 Android WebView preview APK，避免 preview 与 Rust/egui experimental APK 两套界面继续分叉。GitHub Release 只产出一个 Android 包：`gitmarket-android-experimental.apk`；桌面端修复 Windows 启动时附带终端窗口的问题，并增强搜索兜底、仓库信息、许可证、Release 资产和校验信息展示。
 
 | 产物 | 入口 |
 | --- | --- |
 | Android experimental APK | [gitmarket-android-experimental.apk](https://github.com/Harzva/GitReleaseMarket/releases/latest) |
-| Android WebView preview APK | [gitmarket-android-preview](https://github.com/Harzva/GitReleaseMarket/releases/latest) |
 | iOS simulator preview | [gitmarket-ios-simulator.zip](https://github.com/Harzva/GitReleaseMarket/releases/latest) |
 | Windows 桌面包 | [gitmarket-windows-x86_64.zip](https://github.com/Harzva/GitReleaseMarket/releases/latest) |
 | Linux 桌面包 | [gitmarket-linux-x86_64.tar.gz](https://github.com/Harzva/GitReleaseMarket/releases/latest) |
@@ -50,10 +49,9 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 
 | 模块 | 状态 | 说明 |
 | --- | --- | --- |
-| Web 首页 / Pages | 已上线 | `docs/index.html` 作为宣传页，`docs/app.html` 作为可交互预览，`docs/mobile-preview.html` 作为 APK / IPA 本地预览 |
-| Rust / egui 客户端 | `0.1.7` | 已升级桌面工作台布局、移动端卡片流、四套主题、中英双语、多源发现页，并内置中文字体子集 |
-| Android preview APK | `0.1.7` | WebView 壳，指向 GitHub Pages 产品态移动界面地址 |
-| Android Rust experimental APK | 已发布 | 用于验证 egui 移动 UI，不作为最终 Android 原生路线 |
+| Web 首页 / Pages | 已上线 | `docs/index.html` 作为宣传页，`docs/app.html` 作为可交互预览，`docs/mobile-preview.html` 作为移动 UI 本地预演 |
+| Rust / egui 客户端 | `0.1.8` | 已升级桌面工作台布局、移动端卡片流、四套主题、中英双语、多源发现页，并内置中文字体子集 |
+| Android Rust experimental APK | `0.1.8` | 唯一 Android 发布包；用于验证 egui 移动 UI，不再额外维护 WebView preview APK |
 | 桌面包 | 已发布 | Windows / Linux / macOS release artifact |
 | iOS | SwiftUI 预览版 | `ios/GitMarket` 已提供原生 SwiftUI 壳、搜索台 WebView、安全页、来源页、主题和中英双语；正式 IPA 需要 Apple 签名配置 |
 
@@ -71,7 +69,7 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 
 `docs/mobile-preview.html` 可以直接用浏览器本地打开，用来减少反复安装测试包的次数：
 
-- **APK WebView 模式**：`0.1.7` 起默认打开 `docs/mobile-preview.html?shell=app`，进入纯产品态移动界面；预览实验室仍可从 Pages/README 单独打开。
+- **HTML 预演模式**：`docs/mobile-preview.html` 只用于提前检查移动端布局、主题、文案和状态，不再产出单独 WebView preview APK。
 - **Android Native / iOS Native 模式**：用同一套示例 Release 数据预演移动端原生界面，支持四套主题、中文 / English、底部导航、仓库检查、下载状态和安全页。
 - **验收方式**：日常先在 HTML 里检查布局、文案、主题和交互，最终发版前再用真实 Android / iOS 设备做关键路径验收。
 
@@ -112,18 +110,7 @@ cargo clippy --locked --all-targets --all-features -- -D warnings
 cargo run --release
 ```
 
-Android preview APK:
-
-```powershell
-cd android-preview
-.\gradlew.bat :app:assembleRelease `
-  -PreleaseStoreFile="D:\path\to\release.jks" `
-  -PreleaseStorePassword="changeit" `
-  -PreleaseKeyAlias="release" `
-  -PreleaseKeyPassword="changeit"
-```
-
-产物位置：`android-preview/app/build/outputs/apk/release/app-release.apk`。
+Android 当前只维护 `gitmarket-android-experimental.apk`，由 GitHub Actions 使用 `cargo-apk` 构建。本地不要求配置 Android 打包环境。
 
 ## CI 与发布
 
@@ -133,18 +120,17 @@ cd android-preview
 - `cargo test --locked`
 - `cargo clippy --locked --all-targets --all-features -- -D warnings`
 - Windows / Linux / macOS 桌面构建
-- Android preview APK 构建
-- Android Rust experimental APK 非阻塞构建
+- Android Rust experimental APK 构建
 - iOS simulator preview 构建
 
 发布新版本：
 
 ```bash
-git tag v0.1.7
-git push origin v0.1.7
+git tag v0.1.8
+git push origin v0.1.8
 ```
 
-Tag 构建通过后，GitHub Release 会自动上传桌面包、Android preview APK、实验 APK、iOS simulator 预览包和 SHA256 文件。
+Tag 构建通过后，GitHub Release 会自动上传桌面包、Android experimental APK、iOS simulator 预览包和 SHA256 文件。
 
 ## 路线图
 

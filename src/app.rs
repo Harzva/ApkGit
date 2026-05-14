@@ -196,7 +196,7 @@ impl GitMarketApp {
 
     fn desktop_shell(&mut self, ui: &mut egui::Ui, available: egui::Vec2) {
         let p = self.palette();
-        let side_w = 228.0;
+        let side_w = 236.0;
         let show_inspector = available.x >= 1180.0;
         let inspector_w = if show_inspector { 292.0 } else { 0.0 };
         let gaps = if show_inspector { 28.0 } else { 14.0 };
@@ -216,7 +216,7 @@ impl GitMarketApp {
                 egui::Frame::none()
                     .fill(p.panel)
                     .stroke(Stroke::new(1.0, p.stroke))
-                    .rounding(Rounding::same(22.0))
+                    .rounding(Rounding::same(10.0))
                     .inner_margin(Margin::same(18.0))
                     .show(ui, |ui| {
                         ui.set_width(main_w);
@@ -263,7 +263,7 @@ impl GitMarketApp {
         egui::Frame::none()
             .fill(p.panel)
             .stroke(Stroke::new(1.0, p.stroke))
-            .rounding(Rounding::same(22.0))
+            .rounding(Rounding::same(10.0))
             .inner_margin(Margin::symmetric(16.0, 16.0))
             .show(ui, |ui| {
                 ui.set_min_height(ui.available_height() - 4.0);
@@ -277,12 +277,12 @@ impl GitMarketApp {
 
                 ui.add_space(24.0);
                 for (tab, label, badge) in [
-                    (Tab::Home, self.t("home"), "H"),
-                    (Tab::Discover, self.t("discover"), "D"),
-                    (Tab::Repository, self.t("repos"), "R"),
-                    (Tab::Downloads, self.t("downloads"), "DL"),
-                    (Tab::Security, self.t("security"), "S"),
-                    (Tab::Settings, self.t("settings_short"), "ST"),
+                    (Tab::Home, self.t("home"), ""),
+                    (Tab::Discover, self.t("discover"), ""),
+                    (Tab::Repository, self.t("repos"), ""),
+                    (Tab::Downloads, self.t("downloads"), ""),
+                    (Tab::Security, self.t("security"), ""),
+                    (Tab::Settings, self.t("settings_short"), ""),
                 ] {
                     if self.sidebar_nav_item(ui, tab, label, badge).clicked() {
                         self.current_tab = tab;
@@ -317,15 +317,29 @@ impl GitMarketApp {
         egui::Frame::none()
             .fill(p.panel_alt)
             .stroke(Stroke::new(1.0, p.stroke))
-            .rounding(Rounding::same(18.0))
+            .rounding(Rounding::same(10.0))
             .inner_margin(Margin::symmetric(14.0, 10.0))
             .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label(
+                        RichText::new(self.t("discover_title"))
+                            .size(16.0)
+                            .strong()
+                            .color(p.text),
+                    );
+                    ui.label(
+                        RichText::new(self.t("discover_sub"))
+                            .size(12.0)
+                            .color(p.muted),
+                    );
+                });
+                ui.add_space(8.0);
                 ui.horizontal(|ui| {
                     ui.label(RichText::new(search_label).strong().color(p.muted));
                     let response = ui.add(
                         egui::TextEdit::singleline(&mut self.search_input)
                             .hint_text(search_hint)
-                            .desired_width((ui.available_width() - 280.0).max(220.0)),
+                            .desired_width((ui.available_width() - 230.0).max(320.0)),
                     );
                     if self.primary_button(ui, go_label).clicked()
                         || (response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)))
@@ -337,8 +351,9 @@ impl GitMarketApp {
                         self.current_tab = Tab::Repository;
                     }
                 });
-                ui.add_space(8.0);
-                ui.horizontal_wrapped(|ui| {
+                ui.add_space(10.0);
+                ui.horizontal(|ui| {
+                    ui.label(RichText::new(self.t("source")).strong().color(p.muted));
                     for source in [
                         SourceChoice::All,
                         SourceChoice::GitHub,
@@ -364,7 +379,7 @@ impl GitMarketApp {
         egui::Frame::none()
             .fill(p.panel)
             .stroke(Stroke::new(1.0, p.stroke))
-            .rounding(Rounding::same(22.0))
+            .rounding(Rounding::same(10.0))
             .inner_margin(Margin::same(16.0))
             .show(ui, |ui| {
                 ui.set_min_height(ui.available_height() - 4.0);
@@ -547,6 +562,10 @@ impl GitMarketApp {
         for item in &items {
             self.search_result_card(ui, item);
             ui.add_space(8.0);
+        }
+
+        if items.is_empty() && !self.is_searching {
+            self.empty_state(ui, self.t("no_results"), self.t("no_results_sub"));
         }
 
         if self.active_source == SourceChoice::GitCode {
@@ -1142,7 +1161,33 @@ impl GitMarketApp {
                         if let Some(lang) = &item.language {
                             self.tag(ui, lang);
                         }
+                        if item.topics.iter().any(|topic| topic == "fallback") {
+                            self.tag(ui, self.t("local_fallback"));
+                        }
+                        if let Some(updated) = &item.updated_at {
+                            self.tag(
+                                ui,
+                                &format!(
+                                    "{} {}",
+                                    self.t("updated"),
+                                    &updated[..10.min(updated.len())]
+                                ),
+                            );
+                        }
                     });
+                    if !item.topics.is_empty() {
+                        ui.add_space(4.0);
+                        ui.horizontal_wrapped(|ui| {
+                            for topic in item
+                                .topics
+                                .iter()
+                                .filter(|topic| topic.as_str() != "fallback")
+                                .take(5)
+                            {
+                                self.tag(ui, topic);
+                            }
+                        });
+                    }
                 });
             });
             ui.add_space(8.0);
@@ -1187,11 +1232,42 @@ impl GitMarketApp {
                 if let Some(lang) = &repo.language {
                     self.tag(ui, lang);
                 }
+                if let Some(license) = &repo.license {
+                    if let Some(name) = license
+                        .spdx_id
+                        .as_deref()
+                        .filter(|value| *value != "NOASSERTION")
+                        .or(license.name.as_deref())
+                    {
+                        self.tag(ui, &format!("{} {}", self.t("license"), name));
+                    }
+                }
+                if let Some(branch) = &repo.default_branch {
+                    self.tag(ui, &format!("{} {}", self.t("branch"), branch));
+                }
+                if let Some(updated) = &repo.updated_at {
+                    self.tag(
+                        ui,
+                        &format!(
+                            "{} {}",
+                            self.t("updated"),
+                            &updated[..10.min(updated.len())]
+                        ),
+                    );
+                }
                 if self.text_button(ui, self.t("open_source")).clicked() {
                     ui.ctx()
                         .open_url(egui::OpenUrl::new_tab(repo.html_url.clone()));
                 }
             });
+            if !repo.topics.is_empty() {
+                ui.add_space(8.0);
+                ui.horizontal_wrapped(|ui| {
+                    for topic in repo.topics.iter().take(8) {
+                        self.tag(ui, topic);
+                    }
+                });
+            }
         });
     }
 
@@ -1231,6 +1307,7 @@ impl GitMarketApp {
                     .show(ui, |ui| {
                         ui.horizontal_wrapped(|ui| {
                             ui.label(RichText::new(&asset.name).strong());
+                            self.tag(ui, self.t("official_asset"));
                             self.tag(ui, &asset.size_display());
                             if asset.download_count > 0 {
                                 self.tag(
@@ -1439,8 +1516,8 @@ impl GitMarketApp {
             egui::Button::new(RichText::new(label).strong().color(Color32::WHITE))
                 .fill(self.palette().accent)
                 .stroke(Stroke::new(1.0, self.palette().accent))
-                .rounding(Rounding::same(12.0))
-                .min_size(egui::vec2(72.0, self.button_height())),
+                .rounding(Rounding::same(8.0))
+                .min_size(egui::vec2(86.0, self.button_height() + 2.0)),
         )
     }
 
@@ -1449,8 +1526,8 @@ impl GitMarketApp {
             egui::Button::new(label)
                 .fill(self.palette().panel_alt)
                 .stroke(Stroke::new(1.0, self.palette().stroke))
-                .rounding(Rounding::same(12.0))
-                .min_size(egui::vec2(52.0, self.button_height())),
+                .rounding(Rounding::same(8.0))
+                .min_size(egui::vec2(72.0, self.button_height() + 2.0)),
         )
     }
 
@@ -1459,7 +1536,7 @@ impl GitMarketApp {
             egui::Button::new(label)
                 .fill(self.palette().panel)
                 .stroke(Stroke::new(1.0, self.palette().stroke))
-                .rounding(Rounding::same(999.0))
+                .rounding(Rounding::same(8.0))
                 .min_size(egui::vec2(44.0, self.button_height())),
         )
     }
@@ -1474,7 +1551,7 @@ impl GitMarketApp {
             }))
             .fill(if selected { p.accent } else { p.panel })
             .stroke(Stroke::new(1.0, if selected { p.accent } else { p.stroke }))
-            .rounding(Rounding::same(999.0))
+            .rounding(Rounding::same(8.0))
             .min_size(egui::vec2(70.0, self.button_height())),
         )
     }
@@ -1489,8 +1566,8 @@ impl GitMarketApp {
             )
             .fill(if selected { p.accent } else { p.panel })
             .stroke(Stroke::new(1.0, if selected { p.accent } else { p.stroke }))
-            .rounding(Rounding::same(999.0))
-            .min_size(egui::vec2(58.0, 30.0)),
+            .rounding(Rounding::same(8.0))
+            .min_size(egui::vec2(72.0, 32.0)),
         )
     }
 
@@ -1499,7 +1576,7 @@ impl GitMarketApp {
         ui: &mut egui::Ui,
         tab: Tab,
         label: &str,
-        badge: &str,
+        _badge: &str,
     ) -> egui::Response {
         let p = self.palette();
         let selected = self.current_tab == tab;
@@ -1508,15 +1585,15 @@ impl GitMarketApp {
 
         ui.add(
             egui::Button::new(
-                RichText::new(format!("{badge:<2}  {label}"))
+                RichText::new(label)
                     .size(self.body_size())
                     .strong()
                     .color(text),
             )
             .fill(fill)
             .stroke(Stroke::new(1.0, if selected { p.accent } else { p.stroke }))
-            .rounding(Rounding::same(14.0))
-            .min_size(egui::vec2(ui.available_width(), 42.0)),
+            .rounding(Rounding::same(8.0))
+            .min_size(egui::vec2(ui.available_width(), 40.0)),
         )
     }
 
@@ -1617,7 +1694,9 @@ impl GitMarketApp {
 
         self.is_searching = true;
         self.error_message = None;
-        self.discover_items.clear();
+        if self.discover_items.is_empty() {
+            self.discover_items = self.sample_repos();
+        }
 
         let tx = self.tx.clone();
         let token = self.github_token.clone();
@@ -1639,7 +1718,7 @@ impl GitMarketApp {
             };
 
             let mut merged = Vec::new();
-            let mut last_error = None;
+            let mut errors = Vec::new();
 
             for platform in platforms {
                 match client.search_repositories(
@@ -1648,16 +1727,16 @@ impl GitMarketApp {
                     if query.is_empty() { 10 } else { 20 },
                 ) {
                     Ok(mut items) => merged.append(&mut items),
-                    Err(e) => last_error = Some(e),
+                    Err(e) => errors.push(e),
                 }
             }
 
             if merged.is_empty() {
-                if let Some(err) = last_error {
-                    let _ = tx.send(AppMessage::Error(err));
+                let _ = tx.send(AppMessage::Error(if errors.is_empty() {
+                    "No repositories matched this query. Try another keyword or source.".to_string()
                 } else {
-                    let _ = tx.send(AppMessage::Discover(Vec::new()));
-                }
+                    errors.join("\n")
+                }));
             } else {
                 merged.sort_by_key(|item| std::cmp::Reverse(item.stargazers_count));
                 let _ = tx.send(AppMessage::Discover(merged));
@@ -1995,7 +2074,7 @@ fn card<R>(ui: &mut egui::Ui, p: ThemePalette, add_contents: impl FnOnce(&mut eg
     egui::Frame::none()
         .fill(p.panel)
         .stroke(Stroke::new(1.0, p.stroke))
-        .rounding(Rounding::same(16.0))
+        .rounding(Rounding::same(8.0))
         .inner_margin(Margin::same(16.0))
         .show(ui, add_contents)
         .inner
@@ -2121,6 +2200,13 @@ fn zh(key: &str) -> &'static str {
         "discover_title" => "多来源发现",
         "discover_sub" => "并发搜索 GitHub 与 Gitee，GitCode 提供源站跳转兜底。",
         "loading_sources" => "正在加载来源结果...",
+        "no_results" => "没有可展示结果",
+        "no_results_sub" => "接口不可用时会自动使用本地兜底集合；你也可以换一个关键词或来源。",
+        "license" => "许可证",
+        "branch" => "默认分支",
+        "updated" => "更新",
+        "official_asset" => "官方 Release 资产",
+        "local_fallback" => "本地兜底结果",
         "gitcode_fallback" => "GitCode 当前作为源站搜索入口接入，后续可通过后端代理提供稳定 API。",
         "open_gitcode" => "打开 GitCode 搜索",
         "repo_title" => "仓库检查",
@@ -2204,6 +2290,13 @@ fn en(key: &str) -> &'static str {
         "discover_title" => "Multi-source Discover",
         "discover_sub" => "Search GitHub and Gitee in parallel, with GitCode as a source-link fallback.",
         "loading_sources" => "Loading source results...",
+        "no_results" => "No displayable results",
+        "no_results_sub" => "GitMarket falls back to a local source set when APIs are unavailable. Try another keyword or source.",
+        "license" => "License",
+        "branch" => "Default branch",
+        "updated" => "Updated",
+        "official_asset" => "Official Release asset",
+        "local_fallback" => "Local fallback",
         "gitcode_fallback" => "GitCode is connected as an upstream search entry. A backend proxy can make it stable later.",
         "open_gitcode" => "Open GitCode Search",
         "repo_title" => "Repository Inspector",

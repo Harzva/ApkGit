@@ -10,7 +10,7 @@ impl ApiClient {
     pub fn new() -> Self {
         Self {
             client: Client::builder()
-                .user_agent("GitMarket/0.1.7")
+                .user_agent("GitMarket/0.1.8")
                 .timeout(std::time::Duration::from_secs(30))
                 .build()
                 .unwrap_or_default(),
@@ -153,13 +153,13 @@ impl ApiClient {
     ) -> Result<Vec<SearchRepo>, String> {
         let query = query.trim();
         if query.is_empty() {
-            return Ok(curated_repositories(platform, limit));
+            return Ok(curated_repositories(platform, "", limit));
         }
 
         match platform {
             Platform::GitHub => self.search_github(query, limit),
             Platform::Gitee => self.search_gitee(query, limit),
-            Platform::GitCode => Ok(curated_repositories(Platform::GitCode, limit.min(2))),
+            Platform::GitCode => Ok(curated_repositories(Platform::GitCode, query, limit.min(2))),
         }
     }
 
@@ -176,22 +176,22 @@ impl ApiClient {
             request = request.header("Authorization", format!("token {}", token));
         }
 
-        let response = request
-            .send()
-            .map_err(|e| format!("GitHub search failed: {}", e))?;
+        let response = match request.send() {
+            Ok(response) => response,
+            Err(_) => return Ok(curated_repositories(Platform::GitHub, query, limit)),
+        };
 
         if response.status() == 403 {
-            return Err(
-                "GitHub API rate limit reached. Configure a token in Settings.".to_string(),
-            );
+            return Ok(curated_repositories(Platform::GitHub, query, limit));
         }
         if !response.status().is_success() {
-            return Err(format!("GitHub search HTTP error: {}", response.status()));
+            return Ok(curated_repositories(Platform::GitHub, query, limit));
         }
 
-        let raw: serde_json::Value = response
-            .json()
-            .map_err(|e| format!("Failed to parse GitHub search JSON: {}", e))?;
+        let raw: serde_json::Value = match response.json() {
+            Ok(raw) => raw,
+            Err(_) => return Ok(curated_repositories(Platform::GitHub, query, limit)),
+        };
         let items = raw["items"].as_array().cloned().unwrap_or_default();
 
         Ok(items
@@ -226,19 +226,21 @@ impl ApiClient {
             limit.min(30)
         );
 
-        let response = self
-            .client
-            .get(&url)
-            .send()
-            .map_err(|e| format!("Gitee search failed: {}", e))?;
+        let response = self.client.get(&url).send();
+
+        let response = match response {
+            Ok(response) => response,
+            Err(_) => return Ok(curated_repositories(Platform::Gitee, query, limit)),
+        };
 
         if !response.status().is_success() {
-            return Err(format!("Gitee search HTTP error: {}", response.status()));
+            return Ok(curated_repositories(Platform::Gitee, query, limit));
         }
 
-        let raw: serde_json::Value = response
-            .json()
-            .map_err(|e| format!("Failed to parse Gitee search JSON: {}", e))?;
+        let raw: serde_json::Value = match response.json() {
+            Ok(raw) => raw,
+            Err(_) => return Ok(curated_repositories(Platform::Gitee, query, limit)),
+        };
         let items = raw.as_array().cloned().unwrap_or_default();
 
         Ok(items
@@ -311,7 +313,7 @@ fn encode_query(query: &str) -> String {
         .replace('/', "%2F")
 }
 
-fn curated_repositories(platform: Platform, limit: usize) -> Vec<SearchRepo> {
+fn curated_repositories(platform: Platform, query: &str, limit: usize) -> Vec<SearchRepo> {
     let items = match platform {
         Platform::GitHub => [
             (
@@ -391,9 +393,22 @@ fn curated_repositories(platform: Platform, limit: usize) -> Vec<SearchRepo> {
         .as_slice(),
     };
 
-    items
+    let terms: Vec<String> = query
+        .to_lowercase()
+        .split_whitespace()
+        .map(str::to_string)
+        .collect();
+
+    let mut repos: Vec<SearchRepo> = items
         .iter()
-        .take(limit)
+        .filter(|(name, desc, _, lang)| {
+            if terms.is_empty() {
+                return true;
+            }
+            let haystack =
+                format!("{} {} {} {}", name, desc, lang, platform.label()).to_lowercase();
+            terms.iter().any(|term| haystack.contains(term))
+        })
         .map(|(name, desc, stars, lang)| SearchRepo {
             full_name: (*name).to_string(),
             description: Some((*desc).to_string()),
@@ -403,11 +418,45 @@ fn curated_repositories(platform: Platform, limit: usize) -> Vec<SearchRepo> {
             html_url: match platform {
                 Platform::GitHub => format!("https://github.com/{}", name),
                 Platform::Gitee => format!("https://gitee.com/{}", name),
-                Platform::GitCode => "https://gitcode.com/search?keyword=release".to_string(),
+                Platform::GitCode => format!(
+                    "https://gitcode.com/search?keyword={}",
+                    if query.is_empty() {
+                        "release".to_string()
+                    } else {
+                        encode_query(query)
+                    }
+                ),
             },
             updated_at: None,
-            topics: Vec::new(),
+            topics: vec!["fallback".to_string(), "upstream".to_string()],
             source: platform.label().to_string(),
         })
-        .collect()
+        .take(limit)
+        .collect();
+
+    if repos.is_empty() {
+        repos = items
+            .iter()
+            .take(limit.min(items.len()))
+            .map(|(name, desc, stars, lang)| SearchRepo {
+                full_name: (*name).to_string(),
+                description: Some(format!("{} (local fallback for '{}')", desc, query)),
+                stargazers_count: *stars,
+                forks_count: 0,
+                language: Some((*lang).to_string()),
+                html_url: match platform {
+                    Platform::GitHub => format!("https://github.com/{}", name),
+                    Platform::Gitee => format!("https://gitee.com/{}", name),
+                    Platform::GitCode => {
+                        format!("https://gitcode.com/search?keyword={}", encode_query(query))
+                    }
+                },
+                updated_at: None,
+                topics: vec!["fallback".to_string(), "upstream".to_string()],
+                source: platform.label().to_string(),
+            })
+            .collect();
+    }
+
+    repos
 }
