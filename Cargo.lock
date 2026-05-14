@@ -812,7 +812,7 @@ dependencies = [
 
 [[package]]
 name = "gitmarket"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "android-activity",
  "android_logger",

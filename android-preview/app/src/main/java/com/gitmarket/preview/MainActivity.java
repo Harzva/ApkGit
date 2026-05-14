@@ -13,7 +13,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity {
-    private static final String HOME_URL = "https://harzva.github.io/GitReleaseMarket/mobile-preview.html?mode=android&theme=me&lang=zh&tab=home";
+    private static final String HOME_URL = "https://harzva.github.io/GitReleaseMarket/mobile-preview.html?mode=android&theme=me&lang=zh&tab=home&shell=app";
     private WebView webView;
 
     @Override
@@ -35,8 +35,8 @@ public class MainActivity extends Activity {
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setLoadsImagesAutomatically(true);
-        settings.setLoadWithOverviewMode(true);
-        settings.setUseWideViewPort(true);
+        settings.setLoadWithOverviewMode(false);
+        settings.setUseWideViewPort(false);
 
         webView.setWebViewClient(new WebViewClient() {
             @Override

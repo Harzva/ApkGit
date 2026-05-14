@@ -912,6 +912,66 @@
       line-height: 1.5;
     }
 
+    body[data-shell="app"] {
+      min-height: 100vh;
+      background: var(--screen);
+    }
+
+    body[data-shell="app"] .layout {
+      width: 100%;
+      min-height: 100vh;
+      padding: 0;
+      display: block;
+    }
+
+    body[data-shell="app"] .phone-column {
+      position: static;
+      top: auto;
+      display: block;
+    }
+
+    body[data-shell="app"] .panel {
+      display: none;
+    }
+
+    body[data-shell="app"] .phone {
+      width: 100vw;
+      height: 100vh;
+      min-height: 100vh;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: var(--screen);
+      box-shadow: none;
+    }
+
+    body[data-shell="app"] .screen {
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    body[data-shell="app"] .statusbar {
+      display: none;
+    }
+
+    body[data-shell="app"] .native-app,
+    body[data-shell="app"] .webview-frame {
+      height: 100vh;
+    }
+
+    body[data-shell="app"] .mobile-scroll {
+      width: min(390px, 100vw);
+      max-width: 100vw;
+      margin: 0;
+      padding: 18px 16px 98px;
+    }
+
+    body[data-shell="app"] .bottom-nav {
+      left: 12px;
+      right: 12px;
+      bottom: 10px;
+    }
+
     @media (max-width: 980px) {
       .layout {
         grid-template-columns: 1fr;
@@ -974,9 +1034,51 @@
         right: 10px;
       }
     }
+
+    body[data-shell="app"] .phone,
+    body[data-shell="app"] .screen,
+    body[data-shell="app"] .native-app {
+      width: 100vw;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    body[data-shell="app"] .metric-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    body[data-shell="app"] .hero-card::after {
+      right: -82px;
+      bottom: -42px;
+      width: 134px;
+      height: 134px;
+      border-width: 16px;
+    }
+
+    body[data-shell="app"] .bottom-nav {
+      left: 50%;
+      right: auto;
+      width: min(366px, calc(100vw - 24px));
+      max-width: calc(100vw - 24px);
+      transform: translateX(-50%);
+    }
+
+    body[data-shell="app"] .nav-item {
+      overflow: hidden;
+    }
+
+    body[data-shell="app"] .section-row .tiny-button {
+      display: none;
+    }
+
+    @media (max-width: 370px) {
+      body[data-shell="app"] .metric-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
-<body data-theme="me" data-mode="webview">
+<body data-theme="me" data-mode="webview" data-shell="lab">
   <main class="layout">
     <section class="phone-column" aria-label="Mobile preview">
       <div class="phone">
@@ -1085,20 +1187,24 @@
       query: "",
       expanded: false,
       selectedRepo: "termux/termux-app",
-      downloadStarted: false
+      downloadStarted: false,
+      shell: "lab"
     };
     const initialParams = new URLSearchParams(window.location.search);
     const initialMode = initialParams.get("mode");
     const initialTheme = initialParams.get("theme");
     const initialLang = initialParams.get("lang");
     const initialTab = initialParams.get("tab");
+    const initialShell = initialParams.get("shell");
 
     if (["webview", "android", "ios"].includes(initialMode)) state.mode = initialMode;
     if (["me", "warm", "clean", "launch"].includes(initialTheme)) state.theme = initialTheme;
     if (["zh", "en"].includes(initialLang)) state.lang = initialLang;
     if (["home", "discover", "repos", "downloads", "security", "settings"].includes(initialTab)) state.tab = initialTab;
+    if (["lab", "app"].includes(initialShell)) state.shell = initialShell;
     document.body.dataset.mode = state.mode;
     document.body.dataset.theme = state.theme;
+    document.body.dataset.shell = state.shell;
     document.documentElement.lang = state.lang === "zh" ? "zh-CN" : "en";
     let searchTimer = 0;
 

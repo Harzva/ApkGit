@@ -34,7 +34,7 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 
 ## 最新发布
 
-`v0.1.6` 在 `v0.1.5` 基础上补齐 iOS SwiftUI 预览工程，并把 Android WebView preview APK 入口切到更像移动 App 的 `mobile-preview.html`。GitHub Release 会继续产出 Android preview、Android experimental、Windows、Linux、macOS 与 iOS simulator 预览包。
+`v0.1.7` 在 `v0.1.6` 基础上把 Android WebView preview APK 入口切到 `mobile-preview.html?shell=app`，打开后直接进入产品态移动界面；GitHub Pages 仍保留 APK / IPA 预览实验室页面。GitHub Release 会继续产出 Android preview、Android experimental、Windows、Linux、macOS 与 iOS simulator 预览包。
 
 | 产物 | 入口 |
 | --- | --- |
@@ -51,8 +51,8 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 | 模块 | 状态 | 说明 |
 | --- | --- | --- |
 | Web 首页 / Pages | 已上线 | `docs/index.html` 作为宣传页，`docs/app.html` 作为可交互预览，`docs/mobile-preview.html` 作为 APK / IPA 本地预览 |
-| Rust / egui 客户端 | `0.1.6` | 已升级桌面工作台布局、移动端卡片流、四套主题、中英双语、多源发现页，并内置中文字体子集 |
-| Android preview APK | `0.1.6` | WebView 壳，指向 GitHub Pages 移动端预览地址 |
+| Rust / egui 客户端 | `0.1.7` | 已升级桌面工作台布局、移动端卡片流、四套主题、中英双语、多源发现页，并内置中文字体子集 |
+| Android preview APK | `0.1.7` | WebView 壳，指向 GitHub Pages 产品态移动界面地址 |
 | Android Rust experimental APK | 已发布 | 用于验证 egui 移动 UI，不作为最终 Android 原生路线 |
 | 桌面包 | 已发布 | Windows / Linux / macOS release artifact |
 | iOS | SwiftUI 预览版 | `ios/GitMarket` 已提供原生 SwiftUI 壳、搜索台 WebView、安全页、来源页、主题和中英双语；正式 IPA 需要 Apple 签名配置 |
@@ -71,7 +71,7 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 
 `docs/mobile-preview.html` 可以直接用浏览器本地打开，用来减少反复安装测试包的次数：
 
-- **APK WebView 模式**：`0.1.6` 起默认打开 `docs/mobile-preview.html`，更接近真实移动端 App 壳；搜索台仍可从预览页进入。
+- **APK WebView 模式**：`0.1.7` 起默认打开 `docs/mobile-preview.html?shell=app`，进入纯产品态移动界面；预览实验室仍可从 Pages/README 单独打开。
 - **Android Native / iOS Native 模式**：用同一套示例 Release 数据预演移动端原生界面，支持四套主题、中文 / English、底部导航、仓库检查、下载状态和安全页。
 - **验收方式**：日常先在 HTML 里检查布局、文案、主题和交互，最终发版前再用真实 Android / iOS 设备做关键路径验收。
 
@@ -140,8 +140,8 @@ cd android-preview
 发布新版本：
 
 ```bash
-git tag v0.1.6
-git push origin v0.1.6
+git tag v0.1.7
+git push origin v0.1.7
 ```
 
 Tag 构建通过后，GitHub Release 会自动上传桌面包、Android preview APK、实验 APK、iOS simulator 预览包和 SHA256 文件。

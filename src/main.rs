@@ -15,7 +15,7 @@ fn main() -> eframe::Result<()> {
     };
 
     eframe::run_native(
-        "GitMarket v0.1.6",
+        "GitMarket v0.1.7",
         options,
         Box::new(|_cc| Ok(Box::new(GitMarketApp::default()))),
     )
