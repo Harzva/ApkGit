@@ -27,7 +27,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev libgtk-3-dev
 
       - name: Verify lockfile
-        run: cargo generate-lockfile --locked
+        run: cargo metadata --locked --no-deps --format-version 1 >/dev/null
 
       - name: Format check
         run: cargo fmt --check

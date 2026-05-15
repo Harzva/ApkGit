@@ -1,6 +1,7 @@
 use crate::data::{ApkAsset, Platform, ReleaseInfo, RepoInfo, SearchRepo};
 use reqwest::blocking::Client;
 
+#[derive(Clone)]
 pub struct ApiClient {
     client: Client,
     github_token: Option<String>,
@@ -10,8 +11,8 @@ impl ApiClient {
     pub fn new() -> Self {
         Self {
             client: Client::builder()
-                .user_agent("GitMarket/0.1.9")
-                .timeout(std::time::Duration::from_secs(30))
+                .user_agent("GitMarket/0.2.0")
+                .timeout(std::time::Duration::from_secs(12))
                 .build()
                 .unwrap_or_default(),
             github_token: None,

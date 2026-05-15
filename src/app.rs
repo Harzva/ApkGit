@@ -14,6 +14,9 @@ pub struct GitMarketApp {
     repo_info: Option<RepoInfo>,
     releases: Vec<ReleaseInfo>,
     discover_items: Vec<SearchRepo>,
+    discover_visible: usize,
+    discovery_request_id: u64,
+    last_discovery_key: String,
     error_message: Option<String>,
     is_loading: bool,
     is_searching: bool,
@@ -29,6 +32,7 @@ pub struct GitMarketApp {
     rx: mpsc::Receiver<AppMessage>,
     is_android: bool,
     fonts_ready: bool,
+    styled_theme: Option<ThemeChoice>,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -75,7 +79,10 @@ enum Category {
 enum AppMessage {
     RepoInfo(Box<RepoInfo>),
     Releases(Vec<ReleaseInfo>),
-    Discover(Vec<SearchRepo>),
+    DiscoverFinished {
+        request_id: u64,
+        result: Result<Vec<SearchRepo>, String>,
+    },
     Error(String),
     DownloadComplete {
         message: String,
@@ -110,6 +117,9 @@ impl Default for GitMarketApp {
             repo_info: None,
             releases: Vec::new(),
             discover_items: Vec::new(),
+            discover_visible: 12,
+            discovery_request_id: 0,
+            last_discovery_key: String::new(),
             error_message: None,
             is_loading: false,
             is_searching: false,
@@ -125,6 +135,7 @@ impl Default for GitMarketApp {
             rx,
             is_android: cfg!(target_os = "android"),
             fonts_ready: false,
+            styled_theme: None,
         }
     }
 }
@@ -133,7 +144,10 @@ impl eframe::App for GitMarketApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.check_messages();
         self.ensure_fonts(ctx);
-        self.apply_style(ctx);
+        if self.styled_theme != Some(self.theme) {
+            self.apply_style(ctx);
+            self.styled_theme = Some(self.theme);
+        }
 
         let palette = self.palette();
         egui::CentralPanel::default()
@@ -149,7 +163,12 @@ impl eframe::App for GitMarketApp {
                 }
             });
 
-        ctx.request_repaint_after(std::time::Duration::from_millis(180));
+        let repaint_ms = if self.is_loading || self.is_searching || self.is_downloading {
+            33
+        } else {
+            600
+        };
+        ctx.request_repaint_after(std::time::Duration::from_millis(repaint_ms));
     }
 }
 
@@ -312,7 +331,11 @@ impl GitMarketApp {
         let p = self.palette();
         let search_label = self.t("search");
         let search_hint = self.t("search_hint");
-        let go_label = self.t("go");
+        let go_label = if self.is_searching {
+            self.t("searching")
+        } else {
+            self.t("go")
+        };
         let inspect_label = self.t("inspect_repo");
         egui::Frame::none()
             .fill(p.panel_alt)
@@ -541,14 +564,20 @@ impl GitMarketApp {
         );
         ui.label(RichText::new(self.t("discover_sub")).color(self.palette().muted));
         ui.add_space(12.0);
-        self.search_box(ui);
-        ui.add_space(10.0);
-        self.source_row(ui);
-        ui.add_space(12.0);
 
         if self.discover_items.is_empty() && !self.is_searching {
             self.start_discovery();
         }
+
+        if self.compact_layout(ui) {
+            self.search_box(ui);
+            ui.add_space(10.0);
+            self.source_row(ui);
+        } else {
+            let total = self.discover_items.len();
+            self.discover_summary_bar(ui, total);
+        }
+        ui.add_space(12.0);
 
         if self.is_searching {
             self.loading_panel(ui, self.t("loading_sources"));
@@ -559,9 +588,21 @@ impl GitMarketApp {
         }
 
         let items = self.discover_items.clone();
-        for item in &items {
-            self.search_result_card(ui, item);
-            ui.add_space(8.0);
+        let visible_count = self.discover_visible.min(items.len());
+        let visible_items = &items[..visible_count];
+        self.search_results_view(ui, visible_items);
+
+        if items.len() > visible_count {
+            ui.add_space(6.0);
+            let label = format!(
+                "{} {} / {}",
+                self.t("show_more"),
+                visible_count,
+                items.len()
+            );
+            if self.text_button(ui, &label).clicked() {
+                self.discover_visible = (self.discover_visible + 12).min(items.len());
+            }
         }
 
         if items.is_empty() && !self.is_searching {
@@ -769,7 +810,11 @@ impl GitMarketApp {
     fn search_box(&mut self, ui: &mut egui::Ui) {
         let search_label = self.t("search");
         let search_hint = self.t("search_hint");
-        let go_label = self.t("go");
+        let go_label = if self.is_searching {
+            self.t("searching")
+        } else {
+            self.t("go")
+        };
         let body_size = self.body_size();
         card(ui, self.palette(), |ui| {
             ui.horizontal(|ui| {
@@ -858,6 +903,60 @@ impl GitMarketApp {
                 }
             }
         });
+    }
+
+    fn discover_summary_bar(&self, ui: &mut egui::Ui, total: usize) {
+        let p = self.palette();
+        egui::Frame::none()
+            .fill(p.panel_alt)
+            .stroke(Stroke::new(1.0, p.stroke))
+            .rounding(Rounding::same(8.0))
+            .inner_margin(Margin::symmetric(12.0, 10.0))
+            .show(ui, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    self.tag(ui, self.source_name(self.active_source));
+                    let query = self.search_input.trim();
+                    self.tag(
+                        ui,
+                        &format!(
+                            "{} {}",
+                            self.t("current_query"),
+                            if query.is_empty() {
+                                self.t("default_query")
+                            } else {
+                                query
+                            }
+                        ),
+                    );
+                    self.tag(ui, &format!("{} {}", self.t("results"), total));
+                    self.tag(
+                        ui,
+                        if self.is_searching {
+                            self.t("searching")
+                        } else {
+                            self.t("ready_status")
+                        },
+                    );
+                });
+            });
+    }
+
+    fn search_results_view(&mut self, ui: &mut egui::Ui, items: &[SearchRepo]) {
+        if !self.compact_layout(ui) && ui.available_width() > 760.0 {
+            for chunk in items.chunks(2) {
+                ui.columns(2, |columns| {
+                    for (idx, item) in chunk.iter().enumerate() {
+                        self.search_result_card(&mut columns[idx], item);
+                    }
+                });
+                ui.add_space(8.0);
+            }
+        } else {
+            for item in items {
+                self.search_result_card(ui, item);
+                ui.add_space(8.0);
+            }
+        }
     }
 
     fn hero_card(&mut self, ui: &mut egui::Ui) {
@@ -1688,20 +1787,25 @@ impl GitMarketApp {
     }
 
     fn start_discovery(&mut self) {
-        if self.is_searching {
+        let query = self.search_input.trim().to_string();
+        let source = self.active_source;
+        let discovery_key = format!("{}|{}", source_id(source), query.to_lowercase());
+        if self.is_searching && self.last_discovery_key == discovery_key {
             return;
         }
 
+        self.discovery_request_id = self.discovery_request_id.wrapping_add(1);
+        let request_id = self.discovery_request_id;
+        self.last_discovery_key = discovery_key;
         self.is_searching = true;
         self.error_message = None;
+        self.discover_visible = 12;
         if self.discover_items.is_empty() {
             self.discover_items = self.sample_repos();
         }
 
         let tx = self.tx.clone();
         let token = self.github_token.clone();
-        let query = self.search_input.trim().to_string();
-        let source = self.active_source;
 
         thread::spawn(move || {
             let client = if token.is_empty() {
@@ -1717,30 +1821,48 @@ impl GitMarketApp {
                 SourceChoice::GitCode => vec![Platform::GitCode],
             };
 
+            let per_source_limit = if query.is_empty() { 10 } else { 20 };
+            let handles: Vec<_> = platforms
+                .into_iter()
+                .map(|platform| {
+                    let client = client.clone();
+                    let query = query.clone();
+                    thread::spawn(move || {
+                        (
+                            platform,
+                            client.search_repositories(platform, &query, per_source_limit),
+                        )
+                    })
+                })
+                .collect();
+
             let mut merged = Vec::new();
             let mut errors = Vec::new();
 
-            for platform in platforms {
-                match client.search_repositories(
-                    platform,
-                    &query,
-                    if query.is_empty() { 10 } else { 20 },
-                ) {
-                    Ok(mut items) => merged.append(&mut items),
-                    Err(e) => errors.push(e),
+            for handle in handles {
+                match handle.join() {
+                    Ok((_, Ok(mut items))) => merged.append(&mut items),
+                    Ok((platform, Err(e))) => {
+                        errors.push(format!("{}: {}", platform.label(), e));
+                    }
+                    Err(_) => errors.push("A source worker stopped unexpectedly.".to_string()),
                 }
             }
 
-            if merged.is_empty() {
-                let _ = tx.send(AppMessage::Error(if errors.is_empty() {
+            let result = if merged.is_empty() {
+                Err(if errors.is_empty() {
                     "No repositories matched this query. Try another keyword or source.".to_string()
                 } else {
                     errors.join("\n")
-                }));
+                })
             } else {
                 merged.sort_by_key(|item| std::cmp::Reverse(item.stargazers_count));
-                let _ = tx.send(AppMessage::Discover(merged));
-            }
+                merged.dedup_by(|a, b| a.full_name == b.full_name && a.source == b.source);
+                merged.truncate(if query.is_empty() { 18 } else { 36 });
+                Ok(merged)
+            };
+
+            let _ = tx.send(AppMessage::DiscoverFinished { request_id, result });
         });
     }
 
@@ -1809,9 +1931,20 @@ impl GitMarketApp {
                     self.releases = releases;
                     self.is_loading = false;
                 }
-                AppMessage::Discover(items) => {
-                    self.discover_items = items;
+                AppMessage::DiscoverFinished { request_id, result } => {
+                    if request_id != self.discovery_request_id {
+                        continue;
+                    }
                     self.is_searching = false;
+                    match result {
+                        Ok(items) => {
+                            self.discover_items = items;
+                            self.discover_visible = 12;
+                        }
+                        Err(message) => {
+                            self.error_message = Some(message);
+                        }
+                    }
                 }
                 AppMessage::Error(e) => {
                     self.error_message = Some(e);
@@ -2155,6 +2288,15 @@ fn cjk_system_font_candidates() -> &'static [(&'static str, &'static str)] {
     ]
 }
 
+fn source_id(source: SourceChoice) -> &'static str {
+    match source {
+        SourceChoice::All => "all",
+        SourceChoice::GitHub => "github",
+        SourceChoice::Gitee => "gitee",
+        SourceChoice::GitCode => "gitcode",
+    }
+}
+
 fn zh(key: &str) -> &'static str {
     match key {
         "today" => "今日看板",
@@ -2190,6 +2332,11 @@ fn zh(key: &str) -> &'static str {
         "search" => "搜索",
         "search_hint" => "搜索仓库、工具、作者或 Release 关键词",
         "go" => "搜索",
+        "searching" => "搜索中",
+        "ready_status" => "就绪",
+        "current_query" => "关键词",
+        "default_query" => "默认发现",
+        "show_more" => "显示更多",
         "popular" => "热门仓库",
         "view_all" => "查看全部",
         "featured" => "Featured Release",
@@ -2280,6 +2427,11 @@ fn en(key: &str) -> &'static str {
         "search" => "Search",
         "search_hint" => "Search repositories, tools, authors, or release keywords",
         "go" => "Search",
+        "searching" => "Searching",
+        "ready_status" => "Ready",
+        "current_query" => "Query",
+        "default_query" => "Default discover",
+        "show_more" => "Show more",
         "popular" => "Popular Repositories",
         "view_all" => "View All",
         "featured" => "Featured Release",
