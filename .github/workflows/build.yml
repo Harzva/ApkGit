@@ -136,7 +136,13 @@ jobs:
         run: |
           # Public experimental key for install-over-install continuity.
           # Never use this key for a production Android signing track.
-          base64 -d ci/gitmarket-experimental.jks.base64 > gitmarket-experimental.jks
+          python3 - <<'PY'
+          import base64
+          from pathlib import Path
+
+          encoded = Path("ci/gitmarket-experimental.jks.base64").read_text(encoding="ascii")
+          Path("gitmarket-experimental.jks").write_bytes(base64.b64decode(encoded))
+          PY
           keytool -list -keystore gitmarket-experimental.jks -storepass gitmarketexperimental -alias gitmarket
 
       - name: Build Android APK

@@ -202,16 +202,31 @@ impl GitMarketApp {
     fn mobile_shell(&mut self, ui: &mut egui::Ui, available: egui::Vec2) {
         let nav_height = self.bottom_nav_height();
         let content_height = (available.y - nav_height).max(0.0);
+        let content_width = self.mobile_content_width(available);
+        let side_margin = ((available.x - content_width) * 0.5).max(0.0);
         ui.allocate_ui_with_layout(
             egui::vec2(available.x, content_height),
             egui::Layout::top_down(egui::Align::Min),
             |ui| {
-                egui::ScrollArea::vertical()
-                    .auto_shrink([false, false])
-                    .show(ui, |ui| self.show_page(ui));
+                ui.horizontal(|ui| {
+                    ui.add_space(side_margin);
+                    ui.allocate_ui_with_layout(
+                        egui::vec2(content_width, content_height),
+                        egui::Layout::top_down(egui::Align::Min),
+                        |ui| {
+                            ui.set_width(content_width);
+                            egui::ScrollArea::vertical()
+                                .auto_shrink([false, false])
+                                .show(ui, |ui| {
+                                    ui.set_width(content_width);
+                                    self.show_page(ui);
+                                });
+                        },
+                    );
+                });
             },
         );
-        self.bottom_nav(ui);
+        self.bottom_nav(ui, available);
     }
 
     fn desktop_shell(&mut self, ui: &mut egui::Ui, available: egui::Vec2) {
@@ -1071,7 +1086,7 @@ impl GitMarketApp {
 
     fn bottom_nav_height(&self) -> f32 {
         if self.is_android {
-            82.0
+            78.0
         } else {
             84.0
         }
@@ -1732,24 +1747,46 @@ impl GitMarketApp {
             });
     }
 
-    fn bottom_nav(&mut self, ui: &mut egui::Ui) {
+    fn bottom_nav(&mut self, ui: &mut egui::Ui, available: egui::Vec2) {
         let p = self.palette();
-        egui::Frame::none()
-            .fill(p.panel)
-            .stroke(Stroke::new(1.0, p.stroke))
-            .rounding(Rounding::same(18.0))
-            .inner_margin(Margin::symmetric(8.0, 8.0))
-            .show(ui, |ui| {
-                let tabs = self.nav_tabs();
-                ui.columns(tabs.len(), |columns| {
-                    for (idx, (tab, label)) in tabs.iter().enumerate() {
-                        let selected = self.current_tab == *tab;
-                        if nav_button(&mut columns[idx], label, selected, p).clicked() {
-                            self.current_tab = *tab;
-                        }
-                    }
-                });
-            });
+        let nav_width = self.mobile_content_width(available);
+        let side_margin = ((available.x - nav_width) * 0.5).max(0.0);
+        ui.horizontal(|ui| {
+            ui.add_space(side_margin);
+            ui.allocate_ui_with_layout(
+                egui::vec2(nav_width, self.bottom_nav_height()),
+                egui::Layout::top_down(egui::Align::Min),
+                |ui| {
+                    ui.set_width(nav_width);
+                    egui::Frame::none()
+                        .fill(p.panel)
+                        .stroke(Stroke::new(1.0, p.stroke))
+                        .rounding(Rounding::same(18.0))
+                        .inner_margin(Margin::symmetric(8.0, 7.0))
+                        .show(ui, |ui| {
+                            let tabs = self.nav_tabs();
+                            ui.columns(tabs.len(), |columns| {
+                                for (idx, (tab, label)) in tabs.iter().enumerate() {
+                                    let selected = self.current_tab == *tab;
+                                    if nav_button(&mut columns[idx], *tab, label, selected, p)
+                                        .clicked()
+                                    {
+                                        self.current_tab = *tab;
+                                    }
+                                }
+                            });
+                        });
+                },
+            );
+        });
+    }
+
+    fn mobile_content_width(&self, available: egui::Vec2) -> f32 {
+        if self.is_android && available.x > available.y && available.x > 760.0 {
+            560.0
+        } else {
+            available.x
+        }
     }
 
     fn logo_tile(&self, ui: &mut egui::Ui) {
@@ -2468,18 +2505,141 @@ impl ThemePalette {
     }
 }
 
-fn nav_button(ui: &mut egui::Ui, label: &str, selected: bool, p: ThemePalette) -> egui::Response {
-    ui.add(
-        egui::Button::new(RichText::new(label).color(if selected {
-            Color32::WHITE
+fn nav_button(
+    ui: &mut egui::Ui,
+    tab: Tab,
+    label: &str,
+    selected: bool,
+    p: ThemePalette,
+) -> egui::Response {
+    let desired = egui::vec2(ui.available_width().max(56.0), 58.0);
+    let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::click());
+
+    if ui.is_rect_visible(rect) {
+        let fill = if selected {
+            p.accent
+        } else if response.hovered() {
+            p.panel_alt
         } else {
-            p.muted
-        }))
-        .fill(if selected { p.accent } else { p.panel })
-        .stroke(Stroke::new(1.0, if selected { p.accent } else { p.stroke }))
-        .rounding(Rounding::same(12.0))
-        .min_size(egui::vec2(56.0, 48.0)),
-    )
+            p.panel
+        };
+        let stroke_color = if selected { p.accent } else { p.stroke };
+        let text_color = if selected { Color32::WHITE } else { p.muted };
+        ui.painter().rect(
+            rect.shrink(1.0),
+            Rounding::same(14.0),
+            fill,
+            Stroke::new(1.0, stroke_color),
+        );
+
+        let icon_rect = egui::Rect::from_center_size(
+            egui::pos2(rect.center().x, rect.top() + 21.0),
+            egui::vec2(23.0, 23.0),
+        );
+        draw_tab_icon(ui.painter(), tab, icon_rect, text_color);
+        ui.painter().text(
+            egui::pos2(rect.center().x, rect.bottom() - 14.0),
+            egui::Align2::CENTER_CENTER,
+            label,
+            egui::FontId::proportional(13.0),
+            text_color,
+        );
+    }
+
+    response
+}
+
+fn draw_tab_icon(painter: &egui::Painter, tab: Tab, rect: egui::Rect, color: Color32) {
+    let stroke = Stroke::new(2.0, color);
+    match tab {
+        Tab::Home => {
+            let top = egui::pos2(rect.center().x, rect.top() + 2.0);
+            let left = egui::pos2(rect.left() + 3.0, rect.center().y);
+            let right = egui::pos2(rect.right() - 3.0, rect.center().y);
+            let base_left = egui::pos2(rect.left() + 6.0, rect.bottom() - 3.0);
+            let base_right = egui::pos2(rect.right() - 6.0, rect.bottom() - 3.0);
+            painter.line_segment([left, top], stroke);
+            painter.line_segment([top, right], stroke);
+            painter.line_segment([base_left, base_right], stroke);
+            painter.line_segment(
+                [base_left, egui::pos2(base_left.x, rect.center().y)],
+                stroke,
+            );
+            painter.line_segment(
+                [base_right, egui::pos2(base_right.x, rect.center().y)],
+                stroke,
+            );
+        }
+        Tab::Discover => {
+            let center = rect.center() + egui::vec2(-2.0, -2.0);
+            painter.circle_stroke(center, 7.0, stroke);
+            painter.line_segment(
+                [
+                    center + egui::vec2(5.5, 5.5),
+                    rect.right_bottom() - egui::vec2(2.0, 2.0),
+                ],
+                stroke,
+            );
+        }
+        Tab::Repository => {
+            let body = egui::Rect::from_min_max(
+                rect.left_top() + egui::vec2(3.0, 8.0),
+                rect.right_bottom() - egui::vec2(3.0, 3.0),
+            );
+            let tab_rect = egui::Rect::from_min_max(
+                rect.left_top() + egui::vec2(4.0, 4.0),
+                egui::pos2(rect.left() + 12.0, rect.top() + 10.0),
+            );
+            painter.rect_stroke(body, Rounding::same(3.0), stroke);
+            painter.line_segment([tab_rect.left_bottom(), tab_rect.left_top()], stroke);
+            painter.line_segment([tab_rect.left_top(), tab_rect.right_top()], stroke);
+        }
+        Tab::Downloads => {
+            let x = rect.center().x;
+            painter.line_segment(
+                [
+                    egui::pos2(x, rect.top() + 3.0),
+                    egui::pos2(x, rect.bottom() - 8.0),
+                ],
+                stroke,
+            );
+            painter.line_segment(
+                [
+                    egui::pos2(x - 6.0, rect.center().y + 2.0),
+                    egui::pos2(x, rect.bottom() - 8.0),
+                ],
+                stroke,
+            );
+            painter.line_segment(
+                [
+                    egui::pos2(x + 6.0, rect.center().y + 2.0),
+                    egui::pos2(x, rect.bottom() - 8.0),
+                ],
+                stroke,
+            );
+            painter.line_segment(
+                [
+                    egui::pos2(rect.left() + 4.0, rect.bottom() - 3.0),
+                    egui::pos2(rect.right() - 4.0, rect.bottom() - 3.0),
+                ],
+                stroke,
+            );
+        }
+        Tab::Security | Tab::Settings => {
+            let points = [
+                egui::pos2(rect.center().x, rect.top() + 2.0),
+                egui::pos2(rect.right() - 4.0, rect.top() + 7.0),
+                egui::pos2(rect.right() - 6.0, rect.bottom() - 7.0),
+                egui::pos2(rect.center().x, rect.bottom() - 2.0),
+                egui::pos2(rect.left() + 6.0, rect.bottom() - 7.0),
+                egui::pos2(rect.left() + 4.0, rect.top() + 7.0),
+            ];
+            for pair in points.windows(2) {
+                painter.line_segment([pair[0], pair[1]], stroke);
+            }
+            painter.line_segment([points[points.len() - 1], points[0]], stroke);
+        }
+    }
 }
 
 fn sample(name: &str, desc: &str, stars: u64, language: &str, source: &str) -> SearchRepo {
