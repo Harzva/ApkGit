@@ -1019,7 +1019,8 @@ impl GitMarketApp {
         if self.compact_layout(ui) {
             egui::ScrollArea::horizontal()
                 .id_salt("category_scroller")
-                .auto_shrink([false, false])
+                .max_height(self.button_height() + 10.0)
+                .auto_shrink([false, true])
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         for category in categories {
@@ -1061,7 +1062,8 @@ impl GitMarketApp {
         if self.compact_layout(ui) {
             egui::ScrollArea::horizontal()
                 .id_salt("source_scroller")
-                .auto_shrink([false, false])
+                .max_height(self.button_height() + 10.0)
+                .auto_shrink([false, true])
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         for source in sources {
