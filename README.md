@@ -34,7 +34,7 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 
 ## 最新发布
 
-`v0.2.7` 继续把 Android experimental APK 往发布级打磨：移动端在横屏模拟器中收进手机宽度容器，横屏 header 改为紧凑布局，底部导航升级为 5 个带矢量图标的主任务，主题扩展到 8 套产品级配色；CI 同时产出 Apple Silicon 和 Intel macOS 包，并继续使用稳定 experimental 签名。Android 仍只产出一个包：`gitmarket-android-experimental.apk`。
+`v0.2.8` 继续把 Android experimental APK 往发布级打磨：移动端在横屏模拟器中收进手机宽度容器，横屏 header 与发现页改为紧凑布局，底部导航升级为 5 个带矢量图标的主任务，主题扩展到 8 套产品级配色；CI 同时产出 Apple Silicon 和 Intel macOS 包，并继续使用稳定 experimental 签名。Android 仍只产出一个包：`gitmarket-android-experimental.apk`。
 
 | 产物 | 入口 |
 | --- | --- |
@@ -51,8 +51,8 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 | 模块 | 状态 | 说明 |
 | --- | --- | --- |
 | Web 首页 / Pages | 已上线 | `docs/index.html` 作为宣传页，`docs/app.html` 作为可交互预览，`docs/mobile-preview.html` 作为移动 UI 本地预演 |
-| Rust / egui 客户端 | `0.2.7` | 桌面发现页并发搜索、懒加载结果、降低空白感和重绘开销；移动端头部、导航、搜索、来源筛选和卡片流继续升级 |
-| Android Rust experimental APK | `0.2.7` | 唯一 Android 发布包；使用公开 experimental 测试签名以保持后续覆盖安装能力，不再额外维护 WebView preview APK |
+| Rust / egui 客户端 | `0.2.8` | 桌面发现页并发搜索、懒加载结果、降低空白感和重绘开销；移动端头部、导航、搜索、来源筛选和卡片流继续升级 |
+| Android Rust experimental APK | `0.2.8` | 唯一 Android 发布包；使用公开 experimental 测试签名以保持后续覆盖安装能力，不再额外维护 WebView preview APK |
 | 桌面包 | 已发布 | Windows / Linux / macOS Apple Silicon / macOS Intel release artifact |
 | iOS | SwiftUI 预览版 | `ios/GitMarket` 已提供原生 SwiftUI 壳、搜索台 WebView、安全页、来源页、主题和中英双语；正式 IPA 需要 Apple 签名配置 |
 
@@ -128,8 +128,8 @@ Android 当前只维护 `gitmarket-android-experimental.apk`，由 GitHub Action
 发布新版本：
 
 ```bash
-git tag v0.2.7
-git push origin v0.2.7
+git tag v0.2.8
+git push origin v0.2.8
 ```
 
 Tag 构建通过后，GitHub Release 会自动上传桌面包、Android experimental APK、iOS simulator 预览包和 SHA256 文件。

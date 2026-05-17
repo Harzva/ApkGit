@@ -631,13 +631,17 @@ impl GitMarketApp {
     }
 
     fn show_discover(&mut self, ui: &mut egui::Ui) {
-        ui.label(
-            RichText::new(self.t("discover_title"))
-                .size(self.title_size())
-                .strong(),
-        );
-        ui.label(RichText::new(self.t("discover_sub")).color(self.palette().muted));
-        ui.add_space(12.0);
+        if self.android_landscape(ui) {
+            ui.add_space(4.0);
+        } else {
+            ui.label(
+                RichText::new(self.t("discover_title"))
+                    .size(self.title_size())
+                    .strong(),
+            );
+            ui.label(RichText::new(self.t("discover_sub")).color(self.palette().muted));
+            ui.add_space(12.0);
+        }
 
         if self.discover_items.is_empty()
             && !self.is_searching
