@@ -47,6 +47,7 @@ enum Tab {
 
 #[derive(Clone, Copy, PartialEq)]
 enum ThemeChoice {
+    HappyCat,
     MeAgent,
     Warm,
     Clean,
@@ -128,7 +129,7 @@ impl Default for GitMarketApp {
             is_loading: false,
             is_searching: false,
             current_tab: Tab::Home,
-            theme: ThemeChoice::MeAgent,
+            theme: ThemeChoice::HappyCat,
             language: Language::Zh,
             active_source: SourceChoice::All,
             active_category: Category::Trending,
@@ -877,6 +878,7 @@ impl GitMarketApp {
             ui.add_space(8.0);
             ui.horizontal_wrapped(|ui| {
                 for choice in [
+                    ThemeChoice::HappyCat,
                     ThemeChoice::MeAgent,
                     ThemeChoice::Warm,
                     ThemeChoice::Clean,
@@ -1255,6 +1257,11 @@ impl GitMarketApp {
     }
 
     fn hero_card(&mut self, ui: &mut egui::Ui) {
+        if self.theme == ThemeChoice::HappyCat {
+            self.happy_cat_hero_card(ui);
+            return;
+        }
+
         if self.theme == ThemeChoice::MeAgent {
             self.me_agent_hero_card(ui);
             return;
@@ -1310,6 +1317,137 @@ impl GitMarketApp {
                     });
                 }
             });
+    }
+
+    fn happy_cat_hero_card(&mut self, ui: &mut egui::Ui) {
+        let p = self.palette();
+        let wide = !self.compact_layout(ui) && ui.available_width() > 760.0;
+        egui::Frame::none()
+            .fill(p.panel)
+            .stroke(Stroke::new(1.0, p.stroke))
+            .rounding(Rounding::same(22.0))
+            .inner_margin(Margin::same(if self.compact_layout(ui) {
+                16.0
+            } else {
+                20.0
+            }))
+            .show(ui, |ui| {
+                if wide {
+                    ui.horizontal(|ui| {
+                        ui.vertical(|ui| self.happy_cat_copy(ui));
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            self.happy_cat_visual(ui, egui::vec2(210.0, 156.0));
+                        });
+                    });
+                } else {
+                    self.happy_cat_copy(ui);
+                    ui.add_space(12.0);
+                    self.happy_cat_visual(ui, egui::vec2(ui.available_width().min(310.0), 138.0));
+                }
+            });
+    }
+
+    fn happy_cat_copy(&mut self, ui: &mut egui::Ui) {
+        let p = self.palette();
+        ui.horizontal_wrapped(|ui| {
+            self.tag(ui, self.t("safe_original"));
+            self.tag(ui, "SHA256");
+            self.tag(ui, self.t("cross_platform"));
+        });
+        ui.add_space(14.0);
+        ui.label(
+            RichText::new(self.t("happy_hero_title"))
+                .size(self.hero_title_size())
+                .strong()
+                .color(p.text),
+        );
+        ui.add(egui::Label::new(RichText::new(self.t("happy_hero_sub")).color(p.muted)).wrap());
+        ui.add_space(16.0);
+        ui.horizontal_wrapped(|ui| {
+            if self.primary_button(ui, self.t("start_discover")).clicked() {
+                self.current_tab = Tab::Discover;
+                self.start_discovery();
+            }
+            if self.text_button(ui, self.t("inspect_repo")).clicked() {
+                self.current_tab = Tab::Repository;
+            }
+        });
+    }
+
+    fn happy_cat_visual(&self, ui: &mut egui::Ui, desired: egui::Vec2) {
+        let p = self.palette();
+        let (rect, _) = ui.allocate_exact_size(desired, egui::Sense::hover());
+        let painter = ui.painter();
+        painter.rect_filled(rect, Rounding::same(20.0), p.chip);
+        painter.rect_stroke(rect, Rounding::same(20.0), Stroke::new(1.0, p.stroke));
+
+        for (x, y, r, color) in [
+            (0.14, 0.20, 4.0, p.warning),
+            (0.84, 0.18, 5.0, p.accent),
+            (0.78, 0.76, 4.0, p.accent_alt),
+            (0.22, 0.74, 3.0, p.warning),
+        ] {
+            painter.circle_filled(
+                rect.left_top() + egui::vec2(rect.width() * x, rect.height() * y),
+                r,
+                Color32::from_rgba_unmultiplied(color.r(), color.g(), color.b(), 165),
+            );
+        }
+
+        let box_rect = egui::Rect::from_min_size(
+            rect.left_top() + egui::vec2(rect.width() * 0.30, rect.height() * 0.58),
+            egui::vec2(rect.width() * 0.44, rect.height() * 0.28),
+        );
+        painter.rect_filled(
+            box_rect,
+            Rounding::same(12.0),
+            Color32::from_rgb(255, 197, 107),
+        );
+        painter.rect_stroke(
+            box_rect,
+            Rounding::same(12.0),
+            Stroke::new(1.0, Color32::from_rgb(214, 132, 47)),
+        );
+        painter.line_segment(
+            [
+                egui::pos2(box_rect.left() + box_rect.width() * 0.18, box_rect.top()),
+                egui::pos2(box_rect.left() + box_rect.width() * 0.08, box_rect.bottom()),
+            ],
+            Stroke::new(1.0, Color32::from_rgb(226, 151, 66)),
+        );
+        painter.line_segment(
+            [
+                egui::pos2(box_rect.right() - box_rect.width() * 0.18, box_rect.top()),
+                egui::pos2(
+                    box_rect.right() - box_rect.width() * 0.08,
+                    box_rect.bottom(),
+                ),
+            ],
+            Stroke::new(1.0, Color32::from_rgb(226, 151, 66)),
+        );
+
+        self.draw_cat_face(
+            painter,
+            egui::Rect::from_center_size(
+                rect.center() + egui::vec2(0.0, -rect.height() * 0.10),
+                egui::vec2(rect.width() * 0.34, rect.height() * 0.48),
+            ),
+            true,
+        );
+
+        let badge = egui::Rect::from_min_size(
+            rect.left_top() + egui::vec2(14.0, rect.height() - 42.0),
+            egui::vec2(128.0, 28.0),
+        );
+        painter.rect_filled(badge, Rounding::same(14.0), p.panel);
+        painter.rect_stroke(badge, Rounding::same(14.0), Stroke::new(1.0, p.stroke));
+        painter.text(
+            badge.center(),
+            egui::Align2::CENTER_CENTER,
+            self.t("happy_badge"),
+            egui::FontId::proportional(12.0),
+            p.muted,
+        );
     }
 
     fn me_agent_hero_card(&mut self, ui: &mut egui::Ui) {
@@ -1857,6 +1995,18 @@ impl GitMarketApp {
     fn logo_tile_sized(&self, ui: &mut egui::Ui, size: f32) {
         let p = self.palette();
         let (rect, _) = ui.allocate_exact_size(egui::vec2(size, size), egui::Sense::hover());
+        if self.theme == ThemeChoice::HappyCat {
+            ui.painter()
+                .rect_filled(rect, Rounding::same(size * 0.28), p.panel);
+            ui.painter().rect_stroke(
+                rect,
+                Rounding::same(size * 0.28),
+                Stroke::new(1.0, p.stroke),
+            );
+            self.draw_cat_face(ui.painter(), rect.shrink(size * 0.12), false);
+            return;
+        }
+
         let round = (size * 0.26).round();
         ui.painter()
             .rect_filled(rect, Rounding::same(round), p.accent);
@@ -1899,6 +2049,102 @@ impl GitMarketApp {
             egui::FontId::proportional(size * 0.43),
             Color32::WHITE,
         );
+    }
+
+    fn draw_cat_face(&self, painter: &egui::Painter, rect: egui::Rect, full_body: bool) {
+        let center = rect.center();
+        let radius = rect.width().min(rect.height()) * if full_body { 0.30 } else { 0.34 };
+        let head_center = center
+            + egui::vec2(
+                0.0,
+                if full_body {
+                    -rect.height() * 0.06
+                } else {
+                    0.0
+                },
+            );
+        let fur = Color32::from_rgb(255, 242, 221);
+        let fur_shadow = Color32::from_rgb(244, 170, 80);
+        let ink = Color32::from_rgb(72, 43, 29);
+        let blush = Color32::from_rgba_unmultiplied(255, 134, 107, 120);
+
+        for side in [-1.0, 1.0] {
+            let base = head_center + egui::vec2(side * radius * 0.58, -radius * 0.48);
+            let ear = vec![
+                base + egui::vec2(side * radius * 0.10, radius * 0.28),
+                base + egui::vec2(side * radius * 0.38, -radius * 0.42),
+                base + egui::vec2(-side * radius * 0.28, -radius * 0.04),
+            ];
+            painter.add(egui::Shape::convex_polygon(
+                ear,
+                fur,
+                Stroke::new(1.4, fur_shadow),
+            ));
+        }
+
+        painter.circle_filled(head_center, radius, fur);
+        painter.circle_stroke(head_center, radius, Stroke::new(1.4, fur_shadow));
+
+        painter.circle_filled(
+            head_center + egui::vec2(-radius * 0.33, -radius * 0.08),
+            radius * 0.075,
+            ink,
+        );
+        painter.circle_filled(
+            head_center + egui::vec2(radius * 0.33, -radius * 0.08),
+            radius * 0.075,
+            ink,
+        );
+        painter.circle_filled(
+            head_center + egui::vec2(0.0, radius * 0.08),
+            radius * 0.055,
+            Color32::from_rgb(231, 111, 73),
+        );
+        painter.circle_filled(
+            head_center + egui::vec2(-radius * 0.48, radius * 0.16),
+            radius * 0.12,
+            blush,
+        );
+        painter.circle_filled(
+            head_center + egui::vec2(radius * 0.48, radius * 0.16),
+            radius * 0.12,
+            blush,
+        );
+
+        painter.line_segment(
+            [
+                head_center + egui::vec2(-radius * 0.15, radius * 0.24),
+                head_center + egui::vec2(0.0, radius * 0.32),
+            ],
+            Stroke::new(1.4, ink),
+        );
+        painter.line_segment(
+            [
+                head_center + egui::vec2(radius * 0.15, radius * 0.24),
+                head_center + egui::vec2(0.0, radius * 0.32),
+            ],
+            Stroke::new(1.4, ink),
+        );
+
+        for side in [-1.0, 1.0] {
+            for offset in [-0.10, 0.08] {
+                painter.line_segment(
+                    [
+                        head_center + egui::vec2(side * radius * 0.52, radius * (0.08 + offset)),
+                        head_center + egui::vec2(side * radius * 0.78, radius * (0.02 + offset)),
+                    ],
+                    Stroke::new(1.0, fur_shadow),
+                );
+            }
+        }
+
+        if full_body {
+            painter.circle_filled(
+                head_center + egui::vec2(radius * 0.74, radius * 0.64),
+                radius * 0.20,
+                fur,
+            );
+        }
     }
 
     fn app_icon(&self, ui: &mut egui::Ui, item: &SearchRepo) {
@@ -2313,7 +2559,8 @@ impl GitMarketApp {
     fn apply_style(&self, ctx: &egui::Context) {
         let p = self.palette();
         ctx.set_visuals(match self.theme {
-            ThemeChoice::MeAgent
+            ThemeChoice::HappyCat
+            | ThemeChoice::MeAgent
             | ThemeChoice::Warm
             | ThemeChoice::Clean
             | ThemeChoice::Sakura
@@ -2345,6 +2592,19 @@ impl GitMarketApp {
 
     fn palette(&self) -> ThemePalette {
         match self.theme {
+            ThemeChoice::HappyCat => ThemePalette {
+                bg: Color32::from_rgb(255, 249, 238),
+                panel: Color32::from_rgb(255, 253, 247),
+                panel_alt: Color32::from_rgb(255, 241, 224),
+                text: Color32::from_rgb(43, 31, 25),
+                muted: Color32::from_rgb(123, 101, 89),
+                accent: Color32::from_rgb(247, 132, 20),
+                accent_alt: Color32::from_rgb(58, 188, 131),
+                warning: Color32::from_rgb(255, 193, 79),
+                danger: Color32::from_rgb(236, 76, 80),
+                stroke: Color32::from_rgb(242, 218, 188),
+                chip: Color32::from_rgb(255, 246, 232),
+            },
             ThemeChoice::MeAgent => ThemePalette {
                 bg: Color32::from_rgb(244, 247, 252),
                 panel: Color32::from_rgb(255, 255, 255),
@@ -2454,6 +2714,7 @@ impl GitMarketApp {
 
     fn next_theme(&self) -> ThemeChoice {
         match self.theme {
+            ThemeChoice::HappyCat => ThemeChoice::MeAgent,
             ThemeChoice::MeAgent => ThemeChoice::Warm,
             ThemeChoice::Warm => ThemeChoice::Clean,
             ThemeChoice::Clean => ThemeChoice::Launch,
@@ -2461,7 +2722,7 @@ impl GitMarketApp {
             ThemeChoice::Aurora => ThemeChoice::Sakura,
             ThemeChoice::Sakura => ThemeChoice::Graphite,
             ThemeChoice::Graphite => ThemeChoice::Ocean,
-            ThemeChoice::Ocean => ThemeChoice::MeAgent,
+            ThemeChoice::Ocean => ThemeChoice::HappyCat,
         }
     }
 
@@ -2586,6 +2847,7 @@ impl GitMarketApp {
 
     fn theme_name(&self, choice: ThemeChoice) -> &'static str {
         match (self.language, choice) {
+            (Language::Zh, ThemeChoice::HappyCat) => "暖橙陪伴",
             (Language::Zh, ThemeChoice::MeAgent) => "ME Agent",
             (Language::Zh, ThemeChoice::Warm) => "暖色卡片",
             (Language::Zh, ThemeChoice::Clean) => "清爽蓝白",
@@ -2594,6 +2856,7 @@ impl GitMarketApp {
             (Language::Zh, ThemeChoice::Sakura) => "樱粉产品",
             (Language::Zh, ThemeChoice::Graphite) => "石墨专业",
             (Language::Zh, ThemeChoice::Ocean) => "海盐蓝",
+            (Language::En, ThemeChoice::HappyCat) => "HappyCat",
             (Language::En, ThemeChoice::MeAgent) => "ME Agent",
             (Language::En, ThemeChoice::Warm) => "Warm",
             (Language::En, ThemeChoice::Clean) => "Clean",
@@ -2839,6 +3102,13 @@ fn source_id(source: SourceChoice) -> &'static str {
 
 fn zh(key: &str) -> &'static str {
     match key {
+        "happy_hero_title" => "嗨，今天也一起发现好项目",
+        "happy_hero_sub" => {
+            "只链接官方 Release，不托管安装包；帮你把下载、校验、来源和更新放进一个安心的小工作台。"
+        }
+        "happy_badge" => "开源安心下载",
+        "safe_original" => "官方源",
+        "cross_platform" => "多平台",
         "today" => "今日看板",
         "me_hero_title" => "你的 Release 智能看板",
         "me_hero_sub" => "ME Agent 式移动工作台：聚合仓库、版本、资产、安全信号和下载进度。",
@@ -2934,6 +3204,11 @@ fn zh(key: &str) -> &'static str {
 
 fn en(key: &str) -> &'static str {
     match key {
+        "happy_hero_title" => "Hi, let's find something useful today",
+        "happy_hero_sub" => "GitMarket links to upstream Releases only, then keeps downloads, hashes, sources, and updates in one calmer workspace.",
+        "happy_badge" => "Upstream safe",
+        "safe_original" => "Official source",
+        "cross_platform" => "Cross-platform",
         "today" => "Today",
         "me_hero_title" => "Your release intelligence board",
         "me_hero_sub" => "A ME Agent-inspired mobile workspace for repositories, versions, assets, safety signals, and downloads.",

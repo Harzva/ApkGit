@@ -3,7 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @State private var selectedTab: GitMarketTab = .home
     @State private var language: GitMarketLanguage = .zh
-    @State private var theme: GitMarketTheme = .meAgent
+    @State private var theme: GitMarketTheme = .happyCat
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -209,7 +209,7 @@ private struct SettingsView: View {
                 }
 
                 Section(language.text("about")) {
-                    LabeledContent("GitMarket", value: "0.2.8 iOS Preview")
+                    LabeledContent("GitMarket", value: "0.2.9 iOS Preview")
                     LabeledContent(language.text("mode"), value: "SwiftUI + WKWebView")
                 }
             }

@@ -30,6 +30,25 @@
       --radius: 8px;
     }
 
+    body[data-theme="happy"] {
+      --page: #fff5e6;
+      --page-2: #fffaf2;
+      --screen: #fff9ef;
+      --surface: #fffdf7;
+      --surface-2: #fff1df;
+      --ink: #2b1f19;
+      --muted: #7b6559;
+      --line: #f2dabc;
+      --primary: #f78414;
+      --primary-2: #3abc83;
+      --accent: #ffc14f;
+      --good: #2fa86f;
+      --warn: #ef9d2d;
+      --danger: #ec4c50;
+      --shadow: 0 24px 70px rgba(191, 106, 18, .18);
+      --tight-shadow: 0 12px 28px rgba(191, 106, 18, .12);
+    }
+
     body[data-theme="warm"] {
       --page: #fff4e7;
       --page-2: #fffaf3;
@@ -1160,7 +1179,7 @@
     }
   </style>
 </head>
-<body data-theme="me" data-mode="webview" data-shell="lab">
+<body data-theme="happy" data-mode="webview" data-shell="lab">
   <main class="layout">
     <section class="phone-column" aria-label="Mobile preview">
       <div class="phone">
@@ -1235,6 +1254,7 @@
           <div class="control-group">
             <div class="control-label" data-i18n="theme">主题</div>
             <div class="control-buttons">
+              <button class="control-button" data-theme-option="happy" data-i18n="themeHappy">暖橙陪伴</button>
               <button class="control-button" data-theme-option="me">ME Agent</button>
               <button class="control-button" data-theme-option="warm" data-i18n="themeWarm">暖色卡片</button>
               <button class="control-button" data-theme-option="clean" data-i18n="themeClean">清爽蓝白</button>
@@ -1266,7 +1286,7 @@
   <script>
     const state = {
       mode: "webview",
-      theme: "me",
+      theme: "happy",
       lang: "zh",
       tab: "home",
       source: "all",
@@ -1284,7 +1304,7 @@
     const initialShell = initialParams.get("shell");
 
     if (["webview", "android", "ios"].includes(initialMode)) state.mode = initialMode;
-    const themes = ["me", "warm", "clean", "launch", "aurora", "sakura", "graphite", "ocean"];
+    const themes = ["happy", "me", "warm", "clean", "launch", "aurora", "sakura", "graphite", "ocean"];
     if (themes.includes(initialTheme)) state.theme = initialTheme;
     if (["zh", "en"].includes(initialLang)) state.lang = initialLang;
     if (["home", "discover", "repos", "downloads", "security", "settings"].includes(initialTab)) state.tab = initialTab;
@@ -1310,6 +1330,7 @@
         controls: "预览控制台",
         target: "预览目标",
         theme: "主题",
+        themeHappy: "暖橙陪伴",
         themeWarm: "暖色卡片",
         themeClean: "清爽蓝白",
         themeLaunch: "橙色发布",
@@ -1390,6 +1411,7 @@
         controls: "Preview console",
         target: "Target",
         theme: "Theme",
+        themeHappy: "HappyCat",
         themeWarm: "Warm Cards",
         themeClean: "Clean Blue",
         themeLaunch: "Launch Orange",
@@ -1862,6 +1884,7 @@
         <div class="setting-card">
           <strong>${t("theme")}</strong>
           <div class="theme-strip">
+            <button class="tab-chip" data-theme-option="happy" aria-pressed="${state.theme === "happy"}">${t("themeHappy")}</button>
             <button class="tab-chip" data-theme-option="me" aria-pressed="${state.theme === "me"}">ME Agent</button>
             <button class="tab-chip" data-theme-option="warm" aria-pressed="${state.theme === "warm"}">${t("themeWarm")}</button>
             <button class="tab-chip" data-theme-option="clean" aria-pressed="${state.theme === "clean"}">${t("themeClean")}</button>

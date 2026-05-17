@@ -83,6 +83,7 @@ enum GitMarketLanguage: String, CaseIterable, Identifiable {
 }
 
 enum GitMarketTheme: String, CaseIterable, Identifiable {
+    case happyCat
     case meAgent
     case cleanBlue
     case warmLaunch
@@ -96,6 +97,7 @@ enum GitMarketTheme: String, CaseIterable, Identifiable {
 
     func label(language: GitMarketLanguage) -> String {
         switch (self, language) {
+        case (.happyCat, .zh): return "暖橙陪伴"
         case (.meAgent, .zh): return "ME Agent"
         case (.cleanBlue, .zh): return "清爽蓝白"
         case (.warmLaunch, .zh): return "暖色卡片"
@@ -104,6 +106,7 @@ enum GitMarketTheme: String, CaseIterable, Identifiable {
         case (.sakura, .zh): return "樱粉产品"
         case (.graphite, .zh): return "石墨专业"
         case (.ocean, .zh): return "海盐蓝"
+        case (.happyCat, .en): return "HappyCat"
         case (.meAgent, .en): return "ME Agent"
         case (.cleanBlue, .en): return "Clean Blue"
         case (.warmLaunch, .en): return "Warm Cards"
@@ -117,6 +120,7 @@ enum GitMarketTheme: String, CaseIterable, Identifiable {
 
     var accent: Color {
         switch self {
+        case .happyCat: return Color(red: 0.97, green: 0.52, blue: 0.08)
         case .meAgent: return Color(red: 0.20, green: 0.32, blue: 0.72)
         case .cleanBlue: return Color(red: 0.05, green: 0.48, blue: 0.82)
         case .warmLaunch: return Color(red: 0.94, green: 0.36, blue: 0.18)
@@ -130,6 +134,7 @@ enum GitMarketTheme: String, CaseIterable, Identifiable {
 
     var background: Color {
         switch self {
+        case .happyCat: return Color(red: 1.00, green: 0.98, blue: 0.93)
         case .meAgent: return Color(red: 0.96, green: 0.97, blue: 0.99)
         case .cleanBlue: return Color(red: 0.93, green: 0.97, blue: 1.00)
         case .warmLaunch: return Color(red: 1.00, green: 0.96, blue: 0.89)
@@ -143,6 +148,7 @@ enum GitMarketTheme: String, CaseIterable, Identifiable {
 
     var card: Color {
         switch self {
+        case .happyCat: return Color(red: 1.00, green: 0.99, blue: 0.97)
         case .launch: return Color(red: 0.10, green: 0.13, blue: 0.18)
         case .aurora: return Color(red: 0.05, green: 0.12, blue: 0.19)
         case .graphite: return Color(red: 0.09, green: 0.11, blue: 0.12)
