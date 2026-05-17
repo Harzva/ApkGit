@@ -938,7 +938,7 @@ impl GitMarketApp {
 
         if self.compact_layout(ui) {
             egui::ScrollArea::horizontal()
-                .id_source("category_scroller")
+                .id_salt("category_scroller")
                 .auto_shrink([false, false])
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
@@ -980,7 +980,7 @@ impl GitMarketApp {
 
         if self.compact_layout(ui) {
             egui::ScrollArea::horizontal()
-                .id_source("source_scroller")
+                .id_salt("source_scroller")
                 .auto_shrink([false, false])
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
