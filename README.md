@@ -34,7 +34,7 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 
 ## 最新发布
 
-`v0.2.4` 继续把 Android experimental APK 往发布级打磨：移动端在横屏模拟器中收进手机宽度容器，底部导航升级为 5 个带矢量图标的主任务，触控目标保持 48dp；CI 使用稳定 experimental 签名并通过 Python 还原 keystore，后续版本可以覆盖安装。Android 仍只产出一个包：`gitmarket-android-experimental.apk`。
+`v0.2.5` 继续把 Android experimental APK 往发布级打磨：移动端在横屏模拟器中收进手机宽度容器，底部导航升级为 5 个带矢量图标的主任务，主题扩展到 8 套产品级配色；CI 同时产出 Apple Silicon 和 Intel macOS 包，并继续使用稳定 experimental 签名。Android 仍只产出一个包：`gitmarket-android-experimental.apk`。
 
 | 产物 | 入口 |
 | --- | --- |
@@ -43,6 +43,7 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 | Windows 桌面包 | [gitmarket-windows-x86_64.zip](https://github.com/Harzva/GitReleaseMarket/releases/latest) |
 | Linux 桌面包 | [gitmarket-linux-x86_64.tar.gz](https://github.com/Harzva/GitReleaseMarket/releases/latest) |
 | macOS Apple Silicon 桌面包 | [gitmarket-macos-aarch64.tar.gz](https://github.com/Harzva/GitReleaseMarket/releases/latest) |
+| macOS Intel 桌面包 | [gitmarket-macos-x86_64.tar.gz](https://github.com/Harzva/GitReleaseMarket/releases/latest) |
 | 在线体验 | [GitHub Pages](https://harzva.github.io/GitReleaseMarket/) |
 
 ## 当前进度
@@ -50,9 +51,9 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 | 模块 | 状态 | 说明 |
 | --- | --- | --- |
 | Web 首页 / Pages | 已上线 | `docs/index.html` 作为宣传页，`docs/app.html` 作为可交互预览，`docs/mobile-preview.html` 作为移动 UI 本地预演 |
-| Rust / egui 客户端 | `0.2.4` | 桌面发现页并发搜索、懒加载结果、降低空白感和重绘开销；移动端头部、导航、搜索、来源筛选和卡片流继续升级 |
-| Android Rust experimental APK | `0.2.4` | 唯一 Android 发布包；使用公开 experimental 测试签名以保持后续覆盖安装能力，不再额外维护 WebView preview APK |
-| 桌面包 | 已发布 | Windows / Linux / macOS release artifact |
+| Rust / egui 客户端 | `0.2.5` | 桌面发现页并发搜索、懒加载结果、降低空白感和重绘开销；移动端头部、导航、搜索、来源筛选和卡片流继续升级 |
+| Android Rust experimental APK | `0.2.5` | 唯一 Android 发布包；使用公开 experimental 测试签名以保持后续覆盖安装能力，不再额外维护 WebView preview APK |
+| 桌面包 | 已发布 | Windows / Linux / macOS Apple Silicon / macOS Intel release artifact |
 | iOS | SwiftUI 预览版 | `ios/GitMarket` 已提供原生 SwiftUI 壳、搜索台 WebView、安全页、来源页、主题和中英双语；正式 IPA 需要 Apple 签名配置 |
 
 ## 新版 App 方向
@@ -63,6 +64,7 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 - **暖色卡片主题**：柔和橙色软件市场视觉，适合轻量应用集合页。
 - **清爽蓝白主题**：偏工具型、干净、高对比，适合桌面和浅色系统。
 - **橙色发布主题**：偏品牌发布和活动宣传，适合展示新版本与推荐项目。
+- **极光深色 / 樱粉产品 / 石墨专业 / 海盐蓝**：新增 4 套主题，分别覆盖深色开发、柔和内容、专业桌面和清爽工具场景。
 - **中文 / English**：设置页可切换语言，导航、搜索、下载、安全页均覆盖。
 
 ## APK / IPA 本地预览
@@ -70,7 +72,7 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 `docs/mobile-preview.html` 可以直接用浏览器本地打开，用来减少反复安装测试包的次数：
 
 - **HTML 预演模式**：`docs/mobile-preview.html` 只用于提前检查移动端布局、主题、文案和状态，不再产出单独 WebView preview APK。
-- **Android Native / iOS Native 模式**：用同一套示例 Release 数据预演移动端原生界面，支持四套主题、中文 / English、底部导航、仓库检查、下载状态和安全页。
+- **Android Native / iOS Native 模式**：用同一套示例 Release 数据预演移动端原生界面，支持八套主题、中文 / English、底部导航、仓库检查、下载状态和安全页。
 - **验收方式**：日常先在 HTML 里检查布局、文案、主题和交互，最终发版前再用真实 Android / iOS 设备做关键路径验收。
 
 ## 核心能力
@@ -119,15 +121,15 @@ Android 当前只维护 `gitmarket-android-experimental.apk`，由 GitHub Action
 - `cargo fmt --check`
 - `cargo test --locked`
 - `cargo clippy --locked --all-targets --all-features -- -D warnings`
-- Windows / Linux / macOS 桌面构建
+- Windows / Linux / macOS Apple Silicon / macOS Intel 桌面构建
 - Android Rust experimental APK 构建
 - iOS simulator preview 构建
 
 发布新版本：
 
 ```bash
-git tag v0.2.4
-git push origin v0.2.4
+git tag v0.2.5
+git push origin v0.2.5
 ```
 
 Tag 构建通过后，GitHub Release 会自动上传桌面包、Android experimental APK、iOS simulator 预览包和 SHA256 文件。

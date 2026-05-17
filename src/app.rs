@@ -51,6 +51,10 @@ enum ThemeChoice {
     Warm,
     Clean,
     Launch,
+    Aurora,
+    Sakura,
+    Graphite,
+    Ocean,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -829,6 +833,10 @@ impl GitMarketApp {
                     ThemeChoice::Warm,
                     ThemeChoice::Clean,
                     ThemeChoice::Launch,
+                    ThemeChoice::Aurora,
+                    ThemeChoice::Sakura,
+                    ThemeChoice::Graphite,
+                    ThemeChoice::Ocean,
                 ] {
                     let selected = self.theme == choice;
                     if self
@@ -2252,8 +2260,14 @@ impl GitMarketApp {
     fn apply_style(&self, ctx: &egui::Context) {
         let p = self.palette();
         ctx.set_visuals(match self.theme {
-            ThemeChoice::MeAgent | ThemeChoice::Warm | ThemeChoice::Clean => egui::Visuals::light(),
-            ThemeChoice::Launch => egui::Visuals::dark(),
+            ThemeChoice::MeAgent
+            | ThemeChoice::Warm
+            | ThemeChoice::Clean
+            | ThemeChoice::Sakura
+            | ThemeChoice::Ocean => egui::Visuals::light(),
+            ThemeChoice::Launch | ThemeChoice::Aurora | ThemeChoice::Graphite => {
+                egui::Visuals::dark()
+            }
         });
         ctx.style_mut(|style| {
             style.visuals.panel_fill = p.bg;
@@ -2318,17 +2332,69 @@ impl GitMarketApp {
                 chip: Color32::from_rgb(242, 246, 252),
             },
             ThemeChoice::Launch => ThemePalette {
-                bg: Color32::from_rgb(8, 13, 26),
-                panel: Color32::from_rgb(15, 23, 43),
-                panel_alt: Color32::from_rgb(24, 34, 66),
-                text: Color32::from_rgb(237, 244, 255),
-                muted: Color32::from_rgb(139, 154, 189),
-                accent: Color32::from_rgb(100, 80, 255),
-                accent_alt: Color32::from_rgb(40, 217, 188),
-                warning: Color32::from_rgb(255, 178, 78),
-                danger: Color32::from_rgb(255, 90, 112),
-                stroke: Color32::from_rgb(42, 55, 92),
-                chip: Color32::from_rgb(18, 28, 54),
+                bg: Color32::from_rgb(11, 14, 22),
+                panel: Color32::from_rgb(18, 23, 34),
+                panel_alt: Color32::from_rgb(31, 38, 54),
+                text: Color32::from_rgb(246, 248, 242),
+                muted: Color32::from_rgb(151, 162, 176),
+                accent: Color32::from_rgb(244, 119, 52),
+                accent_alt: Color32::from_rgb(45, 211, 142),
+                warning: Color32::from_rgb(255, 190, 92),
+                danger: Color32::from_rgb(255, 92, 105),
+                stroke: Color32::from_rgb(55, 65, 82),
+                chip: Color32::from_rgb(24, 30, 44),
+            },
+            ThemeChoice::Aurora => ThemePalette {
+                bg: Color32::from_rgb(5, 18, 30),
+                panel: Color32::from_rgb(12, 30, 48),
+                panel_alt: Color32::from_rgb(18, 49, 73),
+                text: Color32::from_rgb(233, 252, 249),
+                muted: Color32::from_rgb(135, 173, 183),
+                accent: Color32::from_rgb(29, 209, 161),
+                accent_alt: Color32::from_rgb(108, 99, 255),
+                warning: Color32::from_rgb(244, 180, 78),
+                danger: Color32::from_rgb(255, 91, 116),
+                stroke: Color32::from_rgb(35, 72, 92),
+                chip: Color32::from_rgb(11, 40, 61),
+            },
+            ThemeChoice::Sakura => ThemePalette {
+                bg: Color32::from_rgb(255, 247, 250),
+                panel: Color32::from_rgb(255, 255, 255),
+                panel_alt: Color32::from_rgb(250, 235, 244),
+                text: Color32::from_rgb(42, 35, 52),
+                muted: Color32::from_rgb(128, 101, 119),
+                accent: Color32::from_rgb(207, 73, 118),
+                accent_alt: Color32::from_rgb(66, 169, 147),
+                warning: Color32::from_rgb(230, 155, 67),
+                danger: Color32::from_rgb(218, 65, 83),
+                stroke: Color32::from_rgb(236, 216, 227),
+                chip: Color32::from_rgb(255, 241, 247),
+            },
+            ThemeChoice::Graphite => ThemePalette {
+                bg: Color32::from_rgb(14, 16, 19),
+                panel: Color32::from_rgb(24, 27, 31),
+                panel_alt: Color32::from_rgb(35, 39, 45),
+                text: Color32::from_rgb(238, 241, 245),
+                muted: Color32::from_rgb(154, 164, 176),
+                accent: Color32::from_rgb(76, 154, 255),
+                accent_alt: Color32::from_rgb(58, 203, 128),
+                warning: Color32::from_rgb(235, 178, 83),
+                danger: Color32::from_rgb(239, 88, 100),
+                stroke: Color32::from_rgb(58, 64, 74),
+                chip: Color32::from_rgb(28, 32, 38),
+            },
+            ThemeChoice::Ocean => ThemePalette {
+                bg: Color32::from_rgb(239, 249, 252),
+                panel: Color32::from_rgb(255, 255, 255),
+                panel_alt: Color32::from_rgb(224, 243, 250),
+                text: Color32::from_rgb(13, 44, 58),
+                muted: Color32::from_rgb(82, 116, 130),
+                accent: Color32::from_rgb(0, 122, 160),
+                accent_alt: Color32::from_rgb(238, 118, 73),
+                warning: Color32::from_rgb(219, 151, 58),
+                danger: Color32::from_rgb(212, 70, 82),
+                stroke: Color32::from_rgb(199, 224, 234),
+                chip: Color32::from_rgb(235, 248, 252),
             },
         }
     }
@@ -2338,7 +2404,11 @@ impl GitMarketApp {
             ThemeChoice::MeAgent => ThemeChoice::Warm,
             ThemeChoice::Warm => ThemeChoice::Clean,
             ThemeChoice::Clean => ThemeChoice::Launch,
-            ThemeChoice::Launch => ThemeChoice::MeAgent,
+            ThemeChoice::Launch => ThemeChoice::Aurora,
+            ThemeChoice::Aurora => ThemeChoice::Sakura,
+            ThemeChoice::Sakura => ThemeChoice::Graphite,
+            ThemeChoice::Graphite => ThemeChoice::Ocean,
+            ThemeChoice::Ocean => ThemeChoice::MeAgent,
         }
     }
 
@@ -2467,10 +2537,18 @@ impl GitMarketApp {
             (Language::Zh, ThemeChoice::Warm) => "暖色卡片",
             (Language::Zh, ThemeChoice::Clean) => "清爽蓝白",
             (Language::Zh, ThemeChoice::Launch) => "橙色发布",
+            (Language::Zh, ThemeChoice::Aurora) => "极光深色",
+            (Language::Zh, ThemeChoice::Sakura) => "樱粉产品",
+            (Language::Zh, ThemeChoice::Graphite) => "石墨专业",
+            (Language::Zh, ThemeChoice::Ocean) => "海盐蓝",
             (Language::En, ThemeChoice::MeAgent) => "ME Agent",
             (Language::En, ThemeChoice::Warm) => "Warm",
             (Language::En, ThemeChoice::Clean) => "Clean",
             (Language::En, ThemeChoice::Launch) => "Launch",
+            (Language::En, ThemeChoice::Aurora) => "Aurora",
+            (Language::En, ThemeChoice::Sakura) => "Sakura",
+            (Language::En, ThemeChoice::Graphite) => "Graphite",
+            (Language::En, ThemeChoice::Ocean) => "Ocean",
         }
     }
 

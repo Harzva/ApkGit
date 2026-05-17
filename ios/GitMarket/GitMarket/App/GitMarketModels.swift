@@ -86,7 +86,11 @@ enum GitMarketTheme: String, CaseIterable, Identifiable {
     case meAgent
     case cleanBlue
     case warmLaunch
-    case darkLab
+    case launch
+    case aurora
+    case sakura
+    case graphite
+    case ocean
 
     var id: String { rawValue }
 
@@ -94,12 +98,20 @@ enum GitMarketTheme: String, CaseIterable, Identifiable {
         switch (self, language) {
         case (.meAgent, .zh): return "ME Agent"
         case (.cleanBlue, .zh): return "清爽蓝白"
-        case (.warmLaunch, .zh): return "暖色发布"
-        case (.darkLab, .zh): return "深色实验室"
+        case (.warmLaunch, .zh): return "暖色卡片"
+        case (.launch, .zh): return "橙色发布"
+        case (.aurora, .zh): return "极光深色"
+        case (.sakura, .zh): return "樱粉产品"
+        case (.graphite, .zh): return "石墨专业"
+        case (.ocean, .zh): return "海盐蓝"
         case (.meAgent, .en): return "ME Agent"
         case (.cleanBlue, .en): return "Clean Blue"
-        case (.warmLaunch, .en): return "Warm Launch"
-        case (.darkLab, .en): return "Dark Lab"
+        case (.warmLaunch, .en): return "Warm Cards"
+        case (.launch, .en): return "Launch Orange"
+        case (.aurora, .en): return "Aurora"
+        case (.sakura, .en): return "Sakura"
+        case (.graphite, .en): return "Graphite"
+        case (.ocean, .en): return "Ocean"
         }
     }
 
@@ -108,7 +120,11 @@ enum GitMarketTheme: String, CaseIterable, Identifiable {
         case .meAgent: return Color(red: 0.20, green: 0.32, blue: 0.72)
         case .cleanBlue: return Color(red: 0.05, green: 0.48, blue: 0.82)
         case .warmLaunch: return Color(red: 0.94, green: 0.36, blue: 0.18)
-        case .darkLab: return Color(red: 0.32, green: 0.82, blue: 0.52)
+        case .launch: return Color(red: 0.96, green: 0.47, blue: 0.20)
+        case .aurora: return Color(red: 0.11, green: 0.82, blue: 0.63)
+        case .sakura: return Color(red: 0.81, green: 0.29, blue: 0.46)
+        case .graphite: return Color(red: 0.30, green: 0.60, blue: 1.00)
+        case .ocean: return Color(red: 0.00, green: 0.48, blue: 0.63)
         }
     }
 
@@ -117,27 +133,33 @@ enum GitMarketTheme: String, CaseIterable, Identifiable {
         case .meAgent: return Color(red: 0.96, green: 0.97, blue: 0.99)
         case .cleanBlue: return Color(red: 0.93, green: 0.97, blue: 1.00)
         case .warmLaunch: return Color(red: 1.00, green: 0.96, blue: 0.89)
-        case .darkLab: return Color(red: 0.04, green: 0.06, blue: 0.08)
+        case .launch: return Color(red: 0.04, green: 0.06, blue: 0.09)
+        case .aurora: return Color(red: 0.02, green: 0.07, blue: 0.12)
+        case .sakura: return Color(red: 1.00, green: 0.97, blue: 0.98)
+        case .graphite: return Color(red: 0.05, green: 0.06, blue: 0.07)
+        case .ocean: return Color(red: 0.94, green: 0.98, blue: 0.99)
         }
     }
 
     var card: Color {
         switch self {
-        case .darkLab: return Color(red: 0.08, green: 0.11, blue: 0.13)
+        case .launch: return Color(red: 0.10, green: 0.13, blue: 0.18)
+        case .aurora: return Color(red: 0.05, green: 0.12, blue: 0.19)
+        case .graphite: return Color(red: 0.09, green: 0.11, blue: 0.12)
         default: return .white
         }
     }
 
     var primaryText: Color {
         switch self {
-        case .darkLab: return Color(red: 0.94, green: 0.98, blue: 0.94)
+        case .launch, .aurora, .graphite: return Color(red: 0.94, green: 0.98, blue: 0.96)
         default: return Color(red: 0.08, green: 0.10, blue: 0.16)
         }
     }
 
     var secondaryText: Color {
         switch self {
-        case .darkLab: return Color(red: 0.66, green: 0.73, blue: 0.72)
+        case .launch, .aurora, .graphite: return Color(red: 0.64, green: 0.72, blue: 0.72)
         default: return Color(red: 0.42, green: 0.47, blue: 0.56)
         }
     }

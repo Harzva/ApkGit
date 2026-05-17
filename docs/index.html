@@ -449,7 +449,7 @@
           <article class="status-card">
             <small>Desktop</small>
             <strong>Windows / Linux / macOS</strong>
-            <p>桌面端以 Rust/egui 为主，CI 会产出可下载包，适合作为长期跨平台工具。</p>
+            <p>桌面端以 Rust/egui 为主，CI 会产出可下载包；macOS 同时覆盖 Apple Silicon 和 Intel。</p>
           </article>
           <article class="status-card">
             <small>Mobile Future</small>
@@ -519,7 +519,7 @@
       <div class="wrap">
         <div class="section-head">
           <h2>用 App Preview Lab 先看效果。</h2>
-          <p>APK / IPA / exe 发版前，先用本地 HTML 预览主题、文案、列表密度、下载状态和安全页。最终再用真机或真实系统做少量关键路径验收。</p>
+          <p>APK / IPA / exe 发版前，先用本地 HTML 预览主题、文案、列表密度、下载状态和安全页。应用内主题已扩展到 ME Agent、暖色、清爽、发布、极光、樱粉、石墨和海盐蓝。最终再用真机或真实系统做少量关键路径验收。</p>
         </div>
         <div class="preview-frame">
           <img src="assets/gitmarket-mobile-preview.png" alt="GitMarket mobile preview lab">
@@ -530,8 +530,8 @@
     <section class="preview-band">
       <div class="wrap">
         <div class="section-head">
-          <h2>v0.2.4 继续打磨 Android，横屏模拟器更像手机，底部导航更像产品。</h2>
-          <p>WebView preview APK 与 Rust/egui experimental APK 不同步，继续维护会制造误导；新版 Release 只上传 `gitmarket-android-experimental.apk`，移动端把搜索、来源筛选、发现结果和下载统计改成更稳定的触控流，并使用公开 experimental 测试签名支持后续覆盖安装。</p>
+          <h2>v0.2.5 扩展 8 套主题，并补齐 Apple Silicon 与 Intel macOS 构建。</h2>
+          <p>WebView preview APK 与 Rust/egui experimental APK 不同步，继续维护会制造误导；新版 Release 只上传 `gitmarket-android-experimental.apk`，移动端把搜索、来源筛选、发现结果、主题和下载统计改成更稳定的触控流，并使用公开 experimental 测试签名支持后续覆盖安装。</p>
         </div>
         <div class="flow">
           <article class="step"><strong>真机验收</strong><span>检查 Android experimental APK 和 iOS simulator preview 的中文、滚动、触控、网络与下载提示。</span></article>

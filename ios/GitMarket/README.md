@@ -6,7 +6,7 @@ It is intentionally a SwiftUI preview app, not a signed App Store or TestFlight 
 
 - native SwiftUI home, sources, security, and settings screens,
 - Chinese / English language switching,
-- four visual themes aligned with the Android/mobile preview direction,
+- eight visual themes aligned with the Android/mobile preview direction,
 - an embedded `WKWebView` search console for the live GitMarket Pages app,
 - simulator build output through GitHub Actions.
 

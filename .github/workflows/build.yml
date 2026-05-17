@@ -55,6 +55,11 @@ jobs:
             name: macos-aarch64
             binary: gitmarket
             archive: tar.gz
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            name: macos-x86_64
+            binary: gitmarket
+            archive: tar.gz
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             name: windows-x86_64

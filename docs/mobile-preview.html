@@ -90,6 +90,88 @@
       --tight-shadow: 0 12px 28px rgba(0, 0, 0, .26);
     }
 
+    body[data-theme="aurora"] {
+      color-scheme: dark;
+      --page: #06121e;
+      --page-2: #123149;
+      --shell: #040a10;
+      --shell-line: rgba(130, 255, 230, .18);
+      --screen: #05121e;
+      --surface: #0c1e30;
+      --surface-2: #123149;
+      --ink: #e9fcf9;
+      --muted: #87adb7;
+      --line: #23485c;
+      --primary: #1dd1a1;
+      --primary-2: #6c63ff;
+      --accent: #f4b44e;
+      --good: #31d488;
+      --warn: #f4b44e;
+      --danger: #ff5b74;
+      --shadow: 0 24px 70px rgba(0, 0, 0, .42);
+      --tight-shadow: 0 12px 28px rgba(0, 0, 0, .3);
+    }
+
+    body[data-theme="sakura"] {
+      --page: #fff7fa;
+      --page-2: #fdf1f7;
+      --screen: #fff7fa;
+      --surface: #ffffff;
+      --surface-2: #faebf4;
+      --ink: #2a2334;
+      --muted: #806577;
+      --line: #ecd8e3;
+      --primary: #cf4976;
+      --primary-2: #42a993;
+      --accent: #e69b43;
+      --good: #2e9f75;
+      --warn: #e69b43;
+      --danger: #da4153;
+      --shadow: 0 24px 70px rgba(207, 73, 118, .16);
+      --tight-shadow: 0 12px 28px rgba(207, 73, 118, .1);
+    }
+
+    body[data-theme="graphite"] {
+      color-scheme: dark;
+      --page: #0e1013;
+      --page-2: #23272d;
+      --shell: #050607;
+      --shell-line: rgba(255, 255, 255, .14);
+      --screen: #0e1013;
+      --surface: #181b1f;
+      --surface-2: #23272d;
+      --ink: #eef1f5;
+      --muted: #9aa4b0;
+      --line: #3a404a;
+      --primary: #4c9aff;
+      --primary-2: #3acb80;
+      --accent: #ebb253;
+      --good: #3acb80;
+      --warn: #ebb253;
+      --danger: #ef5864;
+      --shadow: 0 24px 70px rgba(0, 0, 0, .44);
+      --tight-shadow: 0 12px 28px rgba(0, 0, 0, .28);
+    }
+
+    body[data-theme="ocean"] {
+      --page: #eff9fc;
+      --page-2: #f8fdff;
+      --screen: #eff9fc;
+      --surface: #ffffff;
+      --surface-2: #e0f3fa;
+      --ink: #0d2c3a;
+      --muted: #527482;
+      --line: #c7e0ea;
+      --primary: #007aa0;
+      --primary-2: #ee7649;
+      --accent: #2fbf99;
+      --good: #239c72;
+      --warn: #db973a;
+      --danger: #d44652;
+      --shadow: 0 24px 70px rgba(0, 122, 160, .14);
+      --tight-shadow: 0 12px 28px rgba(0, 122, 160, .1);
+    }
+
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body {
@@ -1157,6 +1239,10 @@
               <button class="control-button" data-theme-option="warm" data-i18n="themeWarm">暖色卡片</button>
               <button class="control-button" data-theme-option="clean" data-i18n="themeClean">清爽蓝白</button>
               <button class="control-button" data-theme-option="launch" data-i18n="themeLaunch">橙色发布</button>
+              <button class="control-button" data-theme-option="aurora" data-i18n="themeAurora">极光深色</button>
+              <button class="control-button" data-theme-option="sakura" data-i18n="themeSakura">樱粉产品</button>
+              <button class="control-button" data-theme-option="graphite" data-i18n="themeGraphite">石墨专业</button>
+              <button class="control-button" data-theme-option="ocean" data-i18n="themeOcean">海盐蓝</button>
             </div>
           </div>
 
@@ -1198,7 +1284,8 @@
     const initialShell = initialParams.get("shell");
 
     if (["webview", "android", "ios"].includes(initialMode)) state.mode = initialMode;
-    if (["me", "warm", "clean", "launch"].includes(initialTheme)) state.theme = initialTheme;
+    const themes = ["me", "warm", "clean", "launch", "aurora", "sakura", "graphite", "ocean"];
+    if (themes.includes(initialTheme)) state.theme = initialTheme;
     if (["zh", "en"].includes(initialLang)) state.lang = initialLang;
     if (["home", "discover", "repos", "downloads", "security", "settings"].includes(initialTab)) state.tab = initialTab;
     if (["lab", "app"].includes(initialShell)) state.shell = initialShell;
@@ -1226,6 +1313,10 @@
         themeWarm: "暖色卡片",
         themeClean: "清爽蓝白",
         themeLaunch: "橙色发布",
+        themeAurora: "极光深色",
+        themeSakura: "樱粉产品",
+        themeGraphite: "石墨专业",
+        themeOcean: "海盐蓝",
         language: "语言",
         openExact: "打开真实 app.html",
         openRelease: "打开 Release",
@@ -1302,6 +1393,10 @@
         themeWarm: "Warm Cards",
         themeClean: "Clean Blue",
         themeLaunch: "Launch Orange",
+        themeAurora: "Aurora",
+        themeSakura: "Sakura",
+        themeGraphite: "Graphite",
+        themeOcean: "Ocean",
         language: "Language",
         openExact: "Open app.html",
         openRelease: "Open Release",
@@ -1771,6 +1866,10 @@
             <button class="tab-chip" data-theme-option="warm" aria-pressed="${state.theme === "warm"}">${t("themeWarm")}</button>
             <button class="tab-chip" data-theme-option="clean" aria-pressed="${state.theme === "clean"}">${t("themeClean")}</button>
             <button class="tab-chip" data-theme-option="launch" aria-pressed="${state.theme === "launch"}">${t("themeLaunch")}</button>
+            <button class="tab-chip" data-theme-option="aurora" aria-pressed="${state.theme === "aurora"}">${t("themeAurora")}</button>
+            <button class="tab-chip" data-theme-option="sakura" aria-pressed="${state.theme === "sakura"}">${t("themeSakura")}</button>
+            <button class="tab-chip" data-theme-option="graphite" aria-pressed="${state.theme === "graphite"}">${t("themeGraphite")}</button>
+            <button class="tab-chip" data-theme-option="ocean" aria-pressed="${state.theme === "ocean"}">${t("themeOcean")}</button>
           </div>
         </div>
         <div class="setting-card">
