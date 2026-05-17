@@ -227,6 +227,7 @@ impl GitMarketApp {
                         |ui| {
                             ui.set_width(content_width);
                             egui::ScrollArea::vertical()
+                                .id_salt(("mobile_page_scroll", self.current_tab_id()))
                                 .auto_shrink([false, false])
                                 .show(ui, |ui| {
                                     ui.set_width(content_width);
@@ -270,6 +271,7 @@ impl GitMarketApp {
                         self.desktop_topbar(ui);
                         ui.add_space(14.0);
                         egui::ScrollArea::vertical()
+                            .id_salt(("desktop_page_scroll", self.current_tab_id()))
                             .auto_shrink([false, false])
                             .show(ui, |ui| self.show_active_tab(ui));
                     });
@@ -306,6 +308,19 @@ impl GitMarketApp {
             Tab::Skills => self.show_skills(ui),
             Tab::Mcp => self.show_mcp(ui),
             Tab::Settings => self.show_settings(ui),
+        }
+    }
+
+    fn current_tab_id(&self) -> &'static str {
+        match self.current_tab {
+            Tab::Home => "home",
+            Tab::Discover => "discover",
+            Tab::Repository => "repository",
+            Tab::Downloads => "downloads",
+            Tab::Security => "security",
+            Tab::Skills => "skills",
+            Tab::Mcp => "mcp",
+            Tab::Settings => "settings",
         }
     }
 
