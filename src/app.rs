@@ -25,6 +25,8 @@ pub struct GitMarketApp {
     language: Language,
     active_source: SourceChoice,
     active_category: Category,
+    skill_plugin_enabled: bool,
+    mcp_plugin_enabled: bool,
     download_status: Arc<Mutex<String>>,
     last_download_path: Option<PathBuf>,
     is_downloading: bool,
@@ -42,6 +44,8 @@ enum Tab {
     Repository,
     Downloads,
     Security,
+    Skills,
+    Mcp,
     Settings,
 }
 
@@ -133,6 +137,8 @@ impl Default for GitMarketApp {
             language: Language::Zh,
             active_source: SourceChoice::All,
             active_category: Category::Trending,
+            skill_plugin_enabled: false,
+            mcp_plugin_enabled: false,
             download_status: Arc::new(Mutex::new(String::new())),
             last_download_path: None,
             is_downloading: false,
@@ -297,6 +303,8 @@ impl GitMarketApp {
             Tab::Repository => self.show_repository(ui),
             Tab::Downloads => self.show_downloads(ui),
             Tab::Security => self.show_security(ui),
+            Tab::Skills => self.show_skills(ui),
+            Tab::Mcp => self.show_mcp(ui),
             Tab::Settings => self.show_settings(ui),
         }
     }
@@ -319,15 +327,10 @@ impl GitMarketApp {
                 });
 
                 ui.add_space(24.0);
-                for (tab, label, badge) in [
-                    (Tab::Home, self.t("home"), ""),
-                    (Tab::Discover, self.t("discover"), ""),
-                    (Tab::Repository, self.t("repos"), ""),
-                    (Tab::Downloads, self.t("downloads"), ""),
-                    (Tab::Security, self.t("security"), ""),
-                    (Tab::Settings, self.t("settings_short"), ""),
-                ] {
-                    if self.sidebar_nav_item(ui, tab, label, badge).clicked() {
+                let mut sidebar_tabs = self.nav_tabs();
+                sidebar_tabs.push((Tab::Settings, self.t("settings_short")));
+                for (tab, label) in sidebar_tabs {
+                    if self.sidebar_nav_item(ui, tab, label, "").clicked() {
                         self.current_tab = tab;
                     }
                     ui.add_space(5.0);
@@ -873,6 +876,182 @@ impl GitMarketApp {
         }
     }
 
+    fn show_skills(&mut self, ui: &mut egui::Ui) {
+        if !self.skill_plugin_enabled {
+            let title = self.t("skills");
+            let desc = self.t("skill_plugin_desc");
+            self.plugin_gate(ui, title, desc);
+            return;
+        }
+
+        let title = self.t("skill_market_title");
+        let subtitle = self.t("skill_market_sub");
+        let preview_desc = self.t("skill_preview_desc");
+        let readme_desc = self.t("skill_readme_desc");
+        let android_desc = self.t("skill_android_desc");
+        let frontend_desc = self.t("skill_frontend_desc");
+        self.plugin_marketplace_page(
+            ui,
+            title,
+            subtitle,
+            &[
+                ("App Preview Lab", preview_desc, &["APK", "IPA", "HTML"][..]),
+                (
+                    "README Design",
+                    readme_desc,
+                    &["Docs", "Open Source", "Showcase"][..],
+                ),
+                (
+                    "Android Emulator QA",
+                    android_desc,
+                    &["ADB", "Screenshot", "Logcat"][..],
+                ),
+                (
+                    "Frontend Design",
+                    frontend_desc,
+                    &["UI", "Mobile", "Theme"][..],
+                ),
+            ],
+        );
+    }
+
+    fn show_mcp(&mut self, ui: &mut egui::Ui) {
+        if !self.mcp_plugin_enabled {
+            let title = self.t("mcp");
+            let desc = self.t("mcp_plugin_desc");
+            self.plugin_gate(ui, title, desc);
+            return;
+        }
+
+        let title = self.t("mcp_market_title");
+        let subtitle = self.t("mcp_market_sub");
+        let github_desc = self.t("mcp_github_desc");
+        let figma_desc = self.t("mcp_figma_desc");
+        let ios_desc = self.t("mcp_ios_desc");
+        let android_desc = self.t("mcp_android_desc");
+        self.plugin_marketplace_page(
+            ui,
+            title,
+            subtitle,
+            &[
+                ("GitHub", github_desc, &["Repo", "Issue", "Release"][..]),
+                ("Figma", figma_desc, &["Design", "Token", "Handoff"][..]),
+                (
+                    "Build iOS Apps",
+                    ios_desc,
+                    &["SwiftUI", "Simulator", "Profile"][..],
+                ),
+                (
+                    "Test Android Apps",
+                    android_desc,
+                    &["Emulator", "Perf", "QA"][..],
+                ),
+            ],
+        );
+    }
+
+    fn plugin_gate(&mut self, ui: &mut egui::Ui, title: &str, desc: &str) {
+        ui.label(RichText::new(title).size(self.title_size()).strong());
+        ui.label(RichText::new(desc).color(self.palette().muted));
+        ui.add_space(14.0);
+        card(ui, self.palette(), |ui| {
+            ui.label(RichText::new(self.t("plugin_locked_title")).strong());
+            ui.add(
+                egui::Label::new(
+                    RichText::new(self.t("plugin_locked_sub")).color(self.palette().muted),
+                )
+                .wrap(),
+            );
+            ui.add_space(12.0);
+            if self
+                .primary_button(ui, self.t("open_plugin_settings"))
+                .clicked()
+            {
+                self.current_tab = Tab::Settings;
+            }
+        });
+    }
+
+    fn plugin_marketplace_page(
+        &mut self,
+        ui: &mut egui::Ui,
+        title: &str,
+        subtitle: &str,
+        items: &[(&str, &str, &[&str])],
+    ) {
+        ui.label(RichText::new(title).size(self.title_size()).strong());
+        ui.label(RichText::new(subtitle).color(self.palette().muted));
+        ui.add_space(12.0);
+
+        card(ui, self.palette(), |ui| {
+            ui.horizontal_wrapped(|ui| {
+                self.tag(ui, self.t("plugin_enabled"));
+                self.tag(ui, self.t("plugin_opt_in"));
+                self.tag(ui, self.t("plugin_no_mix"));
+            });
+        });
+        ui.add_space(12.0);
+
+        if !self.compact_layout(ui) && ui.available_width() > 760.0 {
+            for chunk in items.chunks(2) {
+                ui.columns(2, |columns| {
+                    for (idx, item) in chunk.iter().enumerate() {
+                        self.plugin_card(&mut columns[idx], item.0, item.1, item.2);
+                    }
+                });
+                ui.add_space(10.0);
+            }
+        } else {
+            for item in items {
+                self.plugin_card(ui, item.0, item.1, item.2);
+                ui.add_space(8.0);
+            }
+        }
+    }
+
+    fn plugin_card(&mut self, ui: &mut egui::Ui, name: &str, desc: &str, tags: &[&str]) {
+        card(ui, self.palette(), |ui| {
+            ui.horizontal(|ui| {
+                self.plugin_icon(ui, name);
+                ui.vertical(|ui| {
+                    ui.label(RichText::new(name).size(self.body_size() + 3.0).strong());
+                    ui.add(
+                        egui::Label::new(RichText::new(desc).color(self.palette().muted)).wrap(),
+                    );
+                });
+            });
+            ui.add_space(10.0);
+            ui.horizontal_wrapped(|ui| {
+                for tag in tags {
+                    self.tag(ui, tag);
+                }
+                self.tag(ui, self.t("official_source"));
+            });
+            ui.add_space(10.0);
+            ui.horizontal_wrapped(|ui| {
+                let _ = self.text_button(ui, self.t("view_detail"));
+                let _ = self.primary_button(ui, self.t("connect_later"));
+            });
+        });
+    }
+
+    fn plugin_icon(&self, ui: &mut egui::Ui, name: &str) {
+        let p = self.palette();
+        let (rect, _) = ui.allocate_exact_size(egui::vec2(48.0, 48.0), egui::Sense::hover());
+        ui.painter()
+            .rect_filled(rect, Rounding::same(14.0), p.panel_alt);
+        ui.painter()
+            .rect_stroke(rect, Rounding::same(14.0), Stroke::new(1.0, p.stroke));
+        let letter = name.chars().next().unwrap_or('G').to_string();
+        ui.painter().text(
+            rect.center(),
+            egui::Align2::CENTER_CENTER,
+            letter,
+            egui::FontId::proportional(22.0),
+            p.accent,
+        );
+    }
+
     fn show_settings(&mut self, ui: &mut egui::Ui) {
         ui.label(
             RichText::new(self.t("settings"))
@@ -926,11 +1105,83 @@ impl GitMarketApp {
 
         ui.add_space(10.0);
         card(ui, self.palette(), |ui| {
+            ui.label(RichText::new(self.t("plugin_modules")).strong());
+            ui.add(
+                egui::Label::new(
+                    RichText::new(self.t("plugin_modules_sub")).color(self.palette().muted),
+                )
+                .wrap(),
+            );
+            ui.add_space(12.0);
+            let skill_title = self.t("skill_plugin");
+            let skill_desc = self.t("skill_plugin_desc");
+            self.plugin_toggle_row(ui, Tab::Skills, skill_title, skill_desc);
+            ui.add_space(10.0);
+            let mcp_title = self.t("mcp_plugin");
+            let mcp_desc = self.t("mcp_plugin_desc");
+            self.plugin_toggle_row(ui, Tab::Mcp, mcp_title, mcp_desc);
+        });
+
+        ui.add_space(10.0);
+        card(ui, self.palette(), |ui| {
             ui.label(RichText::new("GitHub Token").strong());
             ui.add_space(8.0);
             ui.text_edit_singleline(&mut self.github_token);
             ui.label(RichText::new(self.t("token_help")).color(self.palette().muted));
         });
+    }
+
+    fn plugin_toggle_row(&mut self, ui: &mut egui::Ui, tab: Tab, title: &str, desc: &str) {
+        let enabled = match tab {
+            Tab::Skills => self.skill_plugin_enabled,
+            Tab::Mcp => self.mcp_plugin_enabled,
+            _ => false,
+        };
+
+        egui::Frame::none()
+            .fill(self.palette().panel_alt)
+            .stroke(Stroke::new(1.0, self.palette().stroke))
+            .rounding(Rounding::same(14.0))
+            .inner_margin(Margin::same(12.0))
+            .show(ui, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    ui.vertical(|ui| {
+                        ui.label(RichText::new(title).strong());
+                        ui.add(
+                            egui::Label::new(RichText::new(desc).color(self.palette().muted))
+                                .wrap(),
+                        );
+                    });
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        if enabled && self.primary_button(ui, self.t("enter_market")).clicked() {
+                            self.current_tab = tab;
+                        }
+                        let next_label = if enabled {
+                            self.t("plugin_on")
+                        } else {
+                            self.t("plugin_off")
+                        };
+                        if self.text_button(ui, next_label).clicked() {
+                            match tab {
+                                Tab::Skills => {
+                                    self.skill_plugin_enabled = !self.skill_plugin_enabled
+                                }
+                                Tab::Mcp => self.mcp_plugin_enabled = !self.mcp_plugin_enabled,
+                                _ => {}
+                            }
+                            if (tab == Tab::Skills
+                                && !self.skill_plugin_enabled
+                                && self.current_tab == Tab::Skills)
+                                || (tab == Tab::Mcp
+                                    && !self.mcp_plugin_enabled
+                                    && self.current_tab == Tab::Mcp)
+                            {
+                                self.current_tab = Tab::Settings;
+                            }
+                        }
+                    });
+                });
+            });
     }
 
     fn search_box(&mut self, ui: &mut egui::Ui) {
@@ -1169,14 +1420,21 @@ impl GitMarketApp {
         }
     }
 
-    fn nav_tabs(&self) -> [(Tab, &'static str); 5] {
-        [
+    fn nav_tabs(&self) -> Vec<(Tab, &'static str)> {
+        let mut tabs = vec![
             (Tab::Home, self.t("home")),
             (Tab::Discover, self.t("discover")),
             (Tab::Repository, self.t("repos")),
             (Tab::Downloads, self.t("downloads")),
             (Tab::Security, self.t("security")),
-        ]
+        ];
+        if self.skill_plugin_enabled {
+            tabs.push((Tab::Skills, self.t("skills")));
+        }
+        if self.mcp_plugin_enabled {
+            tabs.push((Tab::Mcp, self.t("mcp")));
+        }
+        tabs
     }
 
     fn mobile_feature_strip(&mut self, ui: &mut egui::Ui) {
@@ -3102,6 +3360,30 @@ fn draw_tab_icon(painter: &egui::Painter, tab: Tab, rect: egui::Rect, color: Col
                 stroke,
             );
         }
+        Tab::Skills => {
+            for row in 0..2 {
+                for col in 0..2 {
+                    let cell = egui::Rect::from_min_size(
+                        rect.left_top()
+                            + egui::vec2(3.0 + col as f32 * 10.0, 3.0 + row as f32 * 10.0),
+                        egui::vec2(7.0, 7.0),
+                    );
+                    painter.rect_stroke(cell, Rounding::same(2.0), stroke);
+                }
+            }
+        }
+        Tab::Mcp => {
+            let a = egui::pos2(rect.left() + 5.0, rect.center().y);
+            let b = egui::pos2(rect.center().x, rect.top() + 5.0);
+            let c = egui::pos2(rect.right() - 5.0, rect.center().y);
+            let d = egui::pos2(rect.center().x, rect.bottom() - 5.0);
+            for (from, to) in [(a, b), (b, c), (c, d), (d, a)] {
+                painter.line_segment([from, to], stroke);
+            }
+            for point in [a, b, c, d] {
+                painter.circle_stroke(point, 3.0, stroke);
+            }
+        }
         Tab::Security | Tab::Settings => {
             let points = [
                 egui::pos2(rect.center().x, rect.top() + 2.0),
@@ -3228,6 +3510,8 @@ fn zh(key: &str) -> &'static str {
         "repos" => "仓库",
         "downloads" => "下载",
         "security" => "安全",
+        "skills" => "技能",
+        "mcp" => "MCP",
         "search" => "搜索",
         "search_hint" => "搜索仓库、工具、作者或 Release 关键词",
         "go" => "搜索",
@@ -3283,7 +3567,47 @@ fn zh(key: &str) -> &'static str {
         "permissions_desc" => "Android 权限必须解释用途，特别是网络和安装相关权限。",
         "token_storage" => "Token 边界",
         "token_storage_desc" => "GitHub Token 仅用于提高 API 限额，正式移动端应使用系统凭据存储。",
-        "settings_sub" => "切换主题、语言与 GitHub API Token。",
+        "settings_sub" => "切换主题、语言、GitHub API Token，以及可选能力插件。",
+        "plugin_modules" => "能力插件",
+        "plugin_modules_sub" => {
+            "Release 发现保持主线；Skill 与 MCP 作为可选插件，开启后才进入对应广场。"
+        }
+        "skill_plugin" => "Skill 发现插件",
+        "skill_plugin_desc" => "发现可复用的本地技能、预览工作流、设计与 QA 能力包。",
+        "mcp_plugin" => "MCP 发现插件",
+        "mcp_plugin_desc" => {
+            "发现可连接的 MCP/Connector 能力，例如 GitHub、Figma、iOS、Android 测试。"
+        }
+        "plugin_on" => "已开启",
+        "plugin_off" => "未开启",
+        "enter_market" => "进入广场",
+        "plugin_locked_title" => "插件未开启",
+        "plugin_locked_sub" => {
+            "为了保持 Release 发现足够清爽，Skill / MCP 广场需要在设置中手动开启。"
+        }
+        "open_plugin_settings" => "打开插件设置",
+        "skill_market_title" => "Skill 广场",
+        "skill_market_sub" => {
+            "把开发、设计、测试、发布等可复用工作流整理成能力卡片，后续可安装到本地技能目录。"
+        }
+        "mcp_market_title" => "MCP 广场",
+        "mcp_market_sub" => {
+            "把 GitHub、Figma、移动端构建和测试等连接器作为可选能力接入，按需启用。"
+        }
+        "plugin_enabled" => "插件已启用",
+        "plugin_opt_in" => "手动开启",
+        "plugin_no_mix" => "不混入 Release 搜索",
+        "official_source" => "官方/上游源",
+        "view_detail" => "查看详情",
+        "connect_later" => "稍后接入",
+        "skill_preview_desc" => "本地打开 APK / IPA / 桌面包预览页面，减少反复安装验证。",
+        "skill_readme_desc" => "生成更适合开源传播的 README 首屏、截图和项目叙事。",
+        "skill_android_desc" => "通过模拟器安装 APK、截图、导出 UI XML 和 logcat 做发布前 QA。",
+        "skill_frontend_desc" => "沉淀移动端主题、交互节奏、布局密度和视觉系统。",
+        "mcp_github_desc" => "连接仓库、Issue、Release 和 Actions，形成真实项目运营入口。",
+        "mcp_figma_desc" => "连接设计稿、设计系统和组件交付，让界面迭代更可控。",
+        "mcp_ios_desc" => "连接 iOS 构建、模拟器、SwiftUI 预览和性能检查能力。",
+        "mcp_android_desc" => "连接安卓模拟器、性能采样、截图巡检和发布验收能力。",
         "token_help" => "可选。仅用于提高 GitHub API 频率限制，不应在共享设备长期保存。",
         "empty_repo" => "请输入仓库 URL 或 owner/repo。",
         "invalid_repo" => "格式无效。支持 github.com、gitee.com、gitcode.com 或 owner/repo。",
@@ -3329,6 +3653,8 @@ fn en(key: &str) -> &'static str {
         "repos" => "Repos",
         "downloads" => "Downloads",
         "security" => "Security",
+        "skills" => "Skills",
+        "mcp" => "MCP",
         "search" => "Search",
         "search_hint" => "Search repositories, tools, authors, or release keywords",
         "go" => "Search",
@@ -3384,7 +3710,37 @@ fn en(key: &str) -> &'static str {
         "permissions_desc" => "Android permissions must explain their purpose, especially network and installer access.",
         "token_storage" => "Token boundary",
         "token_storage_desc" => "GitHub tokens only raise API limits; production mobile builds should use OS credential storage.",
-        "settings_sub" => "Switch theme, language, and GitHub API token.",
+        "settings_sub" => "Switch theme, language, GitHub API token, and optional capability plugins.",
+        "plugin_modules" => "Capability plugins",
+        "plugin_modules_sub" => "Release discovery stays primary. Skill and MCP markets are optional plugin surfaces.",
+        "skill_plugin" => "Skill discovery plugin",
+        "skill_plugin_desc" => "Discover reusable local skills, preview workflows, design systems, and QA packs.",
+        "mcp_plugin" => "MCP discovery plugin",
+        "mcp_plugin_desc" => "Discover MCP/connector capabilities such as GitHub, Figma, iOS, and Android testing.",
+        "plugin_on" => "Enabled",
+        "plugin_off" => "Disabled",
+        "enter_market" => "Enter Market",
+        "plugin_locked_title" => "Plugin disabled",
+        "plugin_locked_sub" => "To keep Release discovery focused, Skill and MCP markets must be enabled from Settings first.",
+        "open_plugin_settings" => "Open Plugin Settings",
+        "skill_market_title" => "Skill Market",
+        "skill_market_sub" => "Reusable workflows for development, design, testing, and release work. Later they can install into a local skills directory.",
+        "mcp_market_title" => "MCP Market",
+        "mcp_market_sub" => "Optional connectors for GitHub, Figma, mobile builds, and testing workflows.",
+        "plugin_enabled" => "Plugin enabled",
+        "plugin_opt_in" => "Opt-in",
+        "plugin_no_mix" => "Separate from Release search",
+        "official_source" => "Official/upstream",
+        "view_detail" => "Details",
+        "connect_later" => "Connect Later",
+        "skill_preview_desc" => "Open APK / IPA / desktop previews locally to reduce repeated install checks.",
+        "skill_readme_desc" => "Create stronger README first screens, screenshots, and open-source storytelling.",
+        "skill_android_desc" => "Install APKs in an emulator, capture screenshots, export UI XML, and collect logcat.",
+        "skill_frontend_desc" => "Capture mobile themes, interaction rhythm, layout density, and visual systems.",
+        "mcp_github_desc" => "Connect repositories, issues, releases, and Actions for real project operations.",
+        "mcp_figma_desc" => "Connect designs, design systems, and component handoff.",
+        "mcp_ios_desc" => "Connect iOS builds, simulators, SwiftUI previews, and performance checks.",
+        "mcp_android_desc" => "Connect Android emulator, performance sampling, screenshot checks, and release QA.",
         "token_help" => "Optional. Only used to raise GitHub API limits. Avoid long-term storage on shared devices.",
         "empty_repo" => "Enter a repository URL or owner/repo.",
         "invalid_repo" => "Invalid format. Use github.com, gitee.com, gitcode.com, or owner/repo.",

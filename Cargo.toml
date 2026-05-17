@@ -1,6 +1,6 @@
 [package]
 name = "gitmarket"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 description = "GitHub/Gitee Release software discovery tool"
 authors = ["GitMarket Team"]
