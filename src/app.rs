@@ -263,10 +263,10 @@ impl GitMarketApp {
     fn show_page(&mut self, ui: &mut egui::Ui) {
         ui.add_space(self.top_padding());
         self.header(ui);
-        ui.add_space(16.0);
+        ui.add_space(if self.is_android { 10.0 } else { 16.0 });
         self.show_active_tab(ui);
         if self.is_android {
-            ui.add_space(20.0);
+            ui.add_space(14.0);
         }
     }
 
@@ -460,34 +460,37 @@ impl GitMarketApp {
             egui::Frame::none()
                 .fill(p.panel)
                 .stroke(Stroke::new(1.0, p.stroke))
-                .rounding(Rounding::same(18.0))
-                .inner_margin(Margin::symmetric(14.0, 12.0))
+                .rounding(Rounding::same(16.0))
+                .inner_margin(Margin::symmetric(12.0, 10.0))
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
-                        self.logo_tile_sized(ui, 48.0);
-                        ui.add_space(4.0);
+                        self.logo_tile_sized(ui, 42.0);
+                        ui.add_space(6.0);
                         ui.vertical(|ui| {
-                            ui.label(RichText::new("GitMarket").size(23.0).strong().color(p.text));
+                            ui.label(RichText::new("GitMarket").size(22.0).strong().color(p.text));
                             ui.add(
                                 egui::Label::new(
-                                    RichText::new(self.t("tagline")).size(13.0).color(p.muted),
+                                    RichText::new(self.t("tagline")).size(12.5).color(p.muted),
                                 )
                                 .wrap(),
                             );
                         });
                     });
-                    ui.add_space(10.0);
+                    ui.add_space(8.0);
                     ui.horizontal_wrapped(|ui| {
-                        if self.pill_button(ui, self.language_label()).clicked() {
+                        if self.header_pill_button(ui, self.language_label()).clicked() {
                             self.language = match self.language {
                                 Language::Zh => Language::En,
                                 Language::En => Language::Zh,
                             };
                         }
-                        if self.pill_button(ui, self.theme_name(self.theme)).clicked() {
+                        if self
+                            .header_pill_button(ui, self.theme_name(self.theme))
+                            .clicked()
+                        {
                             self.theme = self.next_theme();
                         }
-                        if self.pill_button(ui, self.t("settings")).clicked() {
+                        if self.header_pill_button(ui, self.t("settings")).clicked() {
                             self.current_tab = Tab::Settings;
                         }
                     });
@@ -859,25 +862,20 @@ impl GitMarketApp {
         let body_size = self.body_size();
         card(ui, self.palette(), |ui| {
             if self.compact_layout(ui) {
-                ui.label(
-                    RichText::new(search_label)
-                        .size(body_size + 1.0)
-                        .strong()
-                        .color(self.palette().muted),
-                );
-                ui.add_space(6.0);
-                let response = ui.add(
-                    egui::TextEdit::singleline(&mut self.search_input)
-                        .hint_text(search_hint)
-                        .desired_width(ui.available_width()),
-                );
-                ui.add_space(8.0);
-                if self.primary_button(ui, go_label).clicked()
-                    || (response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)))
-                {
-                    self.current_tab = Tab::Discover;
-                    self.start_discovery();
-                }
+                ui.horizontal(|ui| {
+                    let field_width = (ui.available_width() - 102.0).max(180.0);
+                    let response = ui.add(
+                        egui::TextEdit::singleline(&mut self.search_input)
+                            .hint_text(format!("{search_label} / {search_hint}"))
+                            .desired_width(field_width),
+                    );
+                    if self.primary_button(ui, go_label).clicked()
+                        || (response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)))
+                    {
+                        self.current_tab = Tab::Discover;
+                        self.start_discovery();
+                    }
+                });
             } else {
                 ui.horizontal(|ui| {
                     ui.label(RichText::new(search_label).size(body_size + 2.0));
@@ -1073,7 +1071,7 @@ impl GitMarketApp {
 
     fn bottom_nav_height(&self) -> f32 {
         if self.is_android {
-            96.0
+            82.0
         } else {
             84.0
         }
@@ -1881,6 +1879,16 @@ impl GitMarketApp {
         )
     }
 
+    fn header_pill_button(&self, ui: &mut egui::Ui, label: &str) -> egui::Response {
+        ui.add(
+            egui::Button::new(RichText::new(label).size(self.body_size()))
+                .fill(self.palette().panel)
+                .stroke(Stroke::new(1.0, self.palette().stroke))
+                .rounding(Rounding::same(8.0))
+                .min_size(egui::vec2(44.0, 40.0)),
+        )
+    }
+
     fn segment(&self, ui: &mut egui::Ui, label: &str, selected: bool) -> egui::Response {
         let p = self.palette();
         ui.add(
@@ -2299,7 +2307,7 @@ impl GitMarketApp {
 
     fn top_padding(&self) -> f32 {
         if self.is_android {
-            38.0
+            22.0
         } else {
             10.0
         }
