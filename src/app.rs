@@ -200,7 +200,8 @@ impl GitMarketApp {
     }
 
     fn mobile_shell(&mut self, ui: &mut egui::Ui, available: egui::Vec2) {
-        let content_height = (available.y - 82.0).max(0.0);
+        let nav_height = self.bottom_nav_height();
+        let content_height = (available.y - nav_height).max(0.0);
         ui.allocate_ui_with_layout(
             egui::vec2(available.x, content_height),
             egui::Layout::top_down(egui::Align::Min),
@@ -264,6 +265,9 @@ impl GitMarketApp {
         self.header(ui);
         ui.add_space(16.0);
         self.show_active_tab(ui);
+        if self.is_android {
+            ui.add_space(20.0);
+        }
     }
 
     fn show_active_tab(&mut self, ui: &mut egui::Ui) {
@@ -453,35 +457,41 @@ impl GitMarketApp {
         let compact = self.is_android || ui.available_width() < 480.0;
 
         if compact {
-            ui.horizontal(|ui| {
-                self.logo_tile(ui);
-                ui.vertical(|ui| {
-                    ui.label(RichText::new("GitMarket").size(24.0).strong().color(p.text));
-                    ui.add(
-                        egui::Label::new(
-                            RichText::new(self.t("tagline"))
-                                .size(self.body_size())
-                                .color(p.muted),
-                        )
-                        .wrap(),
-                    );
+            egui::Frame::none()
+                .fill(p.panel)
+                .stroke(Stroke::new(1.0, p.stroke))
+                .rounding(Rounding::same(18.0))
+                .inner_margin(Margin::symmetric(14.0, 12.0))
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        self.logo_tile_sized(ui, 48.0);
+                        ui.add_space(4.0);
+                        ui.vertical(|ui| {
+                            ui.label(RichText::new("GitMarket").size(23.0).strong().color(p.text));
+                            ui.add(
+                                egui::Label::new(
+                                    RichText::new(self.t("tagline")).size(13.0).color(p.muted),
+                                )
+                                .wrap(),
+                            );
+                        });
+                    });
+                    ui.add_space(10.0);
+                    ui.horizontal_wrapped(|ui| {
+                        if self.pill_button(ui, self.language_label()).clicked() {
+                            self.language = match self.language {
+                                Language::Zh => Language::En,
+                                Language::En => Language::Zh,
+                            };
+                        }
+                        if self.pill_button(ui, self.theme_name(self.theme)).clicked() {
+                            self.theme = self.next_theme();
+                        }
+                        if self.pill_button(ui, self.t("settings")).clicked() {
+                            self.current_tab = Tab::Settings;
+                        }
+                    });
                 });
-            });
-            ui.add_space(8.0);
-            ui.horizontal_wrapped(|ui| {
-                if self.pill_button(ui, self.t("settings")).clicked() {
-                    self.current_tab = Tab::Settings;
-                }
-                if self.pill_button(ui, self.t("theme")).clicked() {
-                    self.theme = self.next_theme();
-                }
-                if self.pill_button(ui, self.language_label()).clicked() {
-                    self.language = match self.language {
-                        Language::Zh => Language::En,
-                        Language::En => Language::Zh,
-                    };
-                }
-            });
         } else {
             ui.horizontal(|ui| {
                 self.logo_tile(ui);
@@ -524,6 +534,7 @@ impl GitMarketApp {
         self.category_row(ui);
         ui.add_space(14.0);
         self.hero_card(ui);
+        self.mobile_feature_strip(ui);
         ui.add_space(18.0);
 
         if !self.compact_layout(ui) {
@@ -573,6 +584,8 @@ impl GitMarketApp {
             self.search_box(ui);
             ui.add_space(10.0);
             self.source_row(ui);
+            ui.add_space(10.0);
+            self.mobile_discover_status(ui);
         } else {
             let total = self.discover_items.len();
             self.discover_summary_bar(ui, total);
@@ -675,14 +688,15 @@ impl GitMarketApp {
         ui.label(RichText::new(self.t("downloads_sub")).color(self.palette().muted));
         ui.add_space(14.0);
 
-        ui.columns(3, |columns| {
+        if self.compact_layout(ui) {
             self.metric_card(
-                &mut columns[0],
+                ui,
                 self.t("active"),
                 if self.is_downloading { "1" } else { "0" },
             );
+            ui.add_space(8.0);
             self.metric_card(
-                &mut columns[1],
+                ui,
                 self.t("completed"),
                 if self.last_download_path.is_some() {
                     "1"
@@ -690,8 +704,9 @@ impl GitMarketApp {
                     "0"
                 },
             );
+            ui.add_space(8.0);
             self.metric_card(
-                &mut columns[2],
+                ui,
                 self.t("verifying"),
                 if self.last_download_path.is_some() {
                     "1"
@@ -699,7 +714,33 @@ impl GitMarketApp {
                     "0"
                 },
             );
-        });
+        } else {
+            ui.columns(3, |columns| {
+                self.metric_card(
+                    &mut columns[0],
+                    self.t("active"),
+                    if self.is_downloading { "1" } else { "0" },
+                );
+                self.metric_card(
+                    &mut columns[1],
+                    self.t("completed"),
+                    if self.last_download_path.is_some() {
+                        "1"
+                    } else {
+                        "0"
+                    },
+                );
+                self.metric_card(
+                    &mut columns[2],
+                    self.t("verifying"),
+                    if self.last_download_path.is_some() {
+                        "1"
+                    } else {
+                        "0"
+                    },
+                );
+            });
+        }
         ui.add_space(12.0);
 
         let status = self.download_status.lock().unwrap().clone();
@@ -817,20 +858,42 @@ impl GitMarketApp {
         };
         let body_size = self.body_size();
         card(ui, self.palette(), |ui| {
-            ui.horizontal(|ui| {
-                ui.label(RichText::new(search_label).size(body_size + 2.0));
+            if self.compact_layout(ui) {
+                ui.label(
+                    RichText::new(search_label)
+                        .size(body_size + 1.0)
+                        .strong()
+                        .color(self.palette().muted),
+                );
+                ui.add_space(6.0);
                 let response = ui.add(
                     egui::TextEdit::singleline(&mut self.search_input)
                         .hint_text(search_hint)
-                        .desired_width(f32::INFINITY),
+                        .desired_width(ui.available_width()),
                 );
+                ui.add_space(8.0);
                 if self.primary_button(ui, go_label).clicked()
                     || (response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)))
                 {
                     self.current_tab = Tab::Discover;
                     self.start_discovery();
                 }
-            });
+            } else {
+                ui.horizontal(|ui| {
+                    ui.label(RichText::new(search_label).size(body_size + 2.0));
+                    let response = ui.add(
+                        egui::TextEdit::singleline(&mut self.search_input)
+                            .hint_text(search_hint)
+                            .desired_width(f32::INFINITY),
+                    );
+                    if self.primary_button(ui, go_label).clicked()
+                        || (response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)))
+                    {
+                        self.current_tab = Tab::Discover;
+                        self.start_discovery();
+                    }
+                });
+            }
         });
     }
 
@@ -865,41 +928,204 @@ impl GitMarketApp {
     }
 
     fn category_row(&mut self, ui: &mut egui::Ui) {
-        ui.horizontal_wrapped(|ui| {
-            for category in [
-                Category::Trending,
-                Category::Editors,
-                Category::DevTools,
-                Category::Android,
-                Category::Utilities,
-            ] {
-                let selected = self.active_category == category;
-                if self
-                    .segment(ui, self.category_name(category), selected)
-                    .clicked()
-                {
-                    self.active_category = category;
-                    self.search_input = self.category_query(category).to_string();
+        let categories = [
+            Category::Trending,
+            Category::Editors,
+            Category::DevTools,
+            Category::Android,
+            Category::Utilities,
+        ];
+
+        if self.compact_layout(ui) {
+            egui::ScrollArea::horizontal()
+                .id_source("category_scroller")
+                .auto_shrink([false, false])
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        for category in categories {
+                            let selected = self.active_category == category;
+                            if self
+                                .segment(ui, self.category_name(category), selected)
+                                .clicked()
+                            {
+                                self.active_category = category;
+                                self.search_input = self.category_query(category).to_string();
+                            }
+                        }
+                    });
+                });
+        } else {
+            ui.horizontal_wrapped(|ui| {
+                for category in categories {
+                    let selected = self.active_category == category;
+                    if self
+                        .segment(ui, self.category_name(category), selected)
+                        .clicked()
+                    {
+                        self.active_category = category;
+                        self.search_input = self.category_query(category).to_string();
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     fn source_row(&mut self, ui: &mut egui::Ui) {
+        let sources = [
+            SourceChoice::All,
+            SourceChoice::GitHub,
+            SourceChoice::Gitee,
+            SourceChoice::GitCode,
+        ];
+
+        if self.compact_layout(ui) {
+            egui::ScrollArea::horizontal()
+                .id_source("source_scroller")
+                .auto_shrink([false, false])
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        for source in sources {
+                            let selected = self.active_source == source;
+                            if self
+                                .segment(ui, self.source_name(source), selected)
+                                .clicked()
+                            {
+                                self.active_source = source;
+                                self.start_discovery();
+                            }
+                        }
+                    });
+                });
+        } else {
+            ui.horizontal_wrapped(|ui| {
+                for source in sources {
+                    let selected = self.active_source == source;
+                    if self
+                        .segment(ui, self.source_name(source), selected)
+                        .clicked()
+                    {
+                        self.active_source = source;
+                        self.start_discovery();
+                    }
+                }
+            });
+        }
+    }
+
+    fn mobile_status_strip(&self, ui: &mut egui::Ui) {
+        let p = self.palette();
+        egui::Frame::none()
+            .fill(p.panel_alt)
+            .stroke(Stroke::new(1.0, p.stroke))
+            .rounding(Rounding::same(16.0))
+            .inner_margin(Margin::symmetric(12.0, 10.0))
+            .show(ui, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    self.tag(ui, self.source_name(self.active_source));
+                    self.tag(
+                        ui,
+                        &format!("{} {}", self.t("results"), self.discover_items.len()),
+                    );
+                    self.tag(
+                        ui,
+                        if self.is_searching {
+                            self.t("searching")
+                        } else {
+                            self.t("ready_status")
+                        },
+                    );
+                });
+            });
+    }
+
+    fn mobile_action_strip(&mut self, ui: &mut egui::Ui) {
+        let p = self.palette();
+        egui::Frame::none()
+            .fill(p.panel_alt)
+            .stroke(Stroke::new(1.0, p.stroke))
+            .rounding(Rounding::same(16.0))
+            .inner_margin(Margin::symmetric(12.0, 10.0))
+            .show(ui, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    self.tag(ui, "APK");
+                    self.tag(ui, "EXE");
+                    self.tag(ui, "IPA");
+                    self.tag(ui, "SHA256");
+                });
+                ui.add_space(8.0);
+                ui.horizontal_wrapped(|ui| {
+                    if self.primary_button(ui, self.t("start_discover")).clicked() {
+                        self.current_tab = Tab::Discover;
+                        self.start_discovery();
+                    }
+                    if self.text_button(ui, self.t("inspect_repo")).clicked() {
+                        self.current_tab = Tab::Repository;
+                    }
+                });
+            });
+    }
+
+    fn show_mobile_bottom_space(&self, ui: &mut egui::Ui) {
+        if self.is_android {
+            ui.add_space(8.0);
+        }
+    }
+
+    fn bottom_nav_height(&self) -> f32 {
+        if self.is_android {
+            96.0
+        } else {
+            84.0
+        }
+    }
+
+    fn hero_title_size(&self) -> f32 {
+        if self.is_android {
+            28.0
+        } else {
+            self.title_size() + 4.0
+        }
+    }
+
+    fn nav_tabs(&self) -> [(Tab, &'static str); 5] {
+        [
+            (Tab::Home, self.t("home")),
+            (Tab::Discover, self.t("discover")),
+            (Tab::Repository, self.t("repos")),
+            (Tab::Downloads, self.t("downloads")),
+            (Tab::Security, self.t("security")),
+        ]
+    }
+
+    fn mobile_feature_strip(&mut self, ui: &mut egui::Ui) {
+        if self.compact_layout(ui) {
+            self.mobile_action_strip(ui);
+            self.show_mobile_bottom_space(ui);
+        }
+    }
+
+    fn mobile_discover_status(&self, ui: &mut egui::Ui) {
+        if self.compact_layout(ui) {
+            self.mobile_status_strip(ui);
+        }
+    }
+
+    fn mobile_result_actions(&mut self, ui: &mut egui::Ui, item: &SearchRepo) {
         ui.horizontal_wrapped(|ui| {
-            for source in [
-                SourceChoice::All,
-                SourceChoice::GitHub,
-                SourceChoice::Gitee,
-                SourceChoice::GitCode,
-            ] {
-                let selected = self.active_source == source;
-                if self
-                    .segment(ui, self.source_name(source), selected)
-                    .clicked()
-                {
-                    self.active_source = source;
-                    self.start_discovery();
+            if item.source == Platform::GitCode.label() {
+                if self.primary_button(ui, self.t("open_source")).clicked() {
+                    ui.ctx()
+                        .open_url(egui::OpenUrl::new_tab(item.html_url.clone()));
+                }
+            } else {
+                if self.primary_button(ui, self.t("inspect")).clicked() {
+                    self.repo_input = item.full_name.clone();
+                    self.current_tab = Tab::Repository;
+                    self.fetch_repo();
+                }
+                if self.text_button(ui, self.t("open_source")).clicked() {
+                    ui.ctx()
+                        .open_url(egui::OpenUrl::new_tab(item.html_url.clone()));
                 }
             }
         });
@@ -972,7 +1198,7 @@ impl GitMarketApp {
             .rounding(Rounding::same(18.0))
             .inner_margin(Margin::same(18.0))
             .show(ui, |ui| {
-                ui.horizontal(|ui| {
+                if self.compact_layout(ui) {
                     ui.vertical(|ui| {
                         ui.label(RichText::new(self.t("featured")).color(p.accent).strong());
                         ui.label(RichText::new("NovaTerm").size(self.title_size()).strong());
@@ -990,21 +1216,49 @@ impl GitMarketApp {
                             self.fetch_repo();
                         }
                     });
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        self.terminal_preview(ui);
+                } else {
+                    ui.horizontal(|ui| {
+                        ui.vertical(|ui| {
+                            ui.label(RichText::new(self.t("featured")).color(p.accent).strong());
+                            ui.label(RichText::new("NovaTerm").size(self.title_size()).strong());
+                            ui.label(RichText::new(self.t("featured_desc")).color(p.muted));
+                            ui.add_space(10.0);
+                            ui.horizontal_wrapped(|ui| {
+                                self.tag(ui, self.t("fast"));
+                                self.tag(ui, self.t("secure"));
+                                self.tag(ui, "v1.3.0");
+                            });
+                            ui.add_space(12.0);
+                            if self.primary_button(ui, self.t("view_releases")).clicked() {
+                                self.repo_input = "termux/termux-app".to_string();
+                                self.current_tab = Tab::Repository;
+                                self.fetch_repo();
+                            }
+                        });
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            self.terminal_preview(ui);
+                        });
                     });
-                });
+                }
             });
     }
 
     fn me_agent_hero_card(&mut self, ui: &mut egui::Ui) {
         let p = self.palette();
-        let wide = ui.available_width() > 720.0;
+        let wide = !self.compact_layout(ui) && ui.available_width() > 720.0;
         egui::Frame::none()
             .fill(p.panel)
             .stroke(Stroke::new(1.0, p.stroke))
-            .rounding(Rounding::same(22.0))
-            .inner_margin(Margin::same(20.0))
+            .rounding(Rounding::same(if self.compact_layout(ui) {
+                18.0
+            } else {
+                22.0
+            }))
+            .inner_margin(Margin::same(if self.compact_layout(ui) {
+                16.0
+            } else {
+                20.0
+            }))
             .show(ui, |ui| {
                 if wide {
                     let first_col_width = (ui.available_width() * 0.52).max(360.0);
@@ -1032,7 +1286,7 @@ impl GitMarketApp {
         ui.add_space(14.0);
         ui.label(
             RichText::new(self.t("me_hero_title"))
-                .size(self.title_size() + 4.0)
+                .size(self.hero_title_size())
                 .strong()
                 .color(p.text),
         );
@@ -1058,7 +1312,7 @@ impl GitMarketApp {
             .rounding(Rounding::same(20.0))
             .inner_margin(Margin::same(14.0))
             .show(ui, |ui| {
-                ui.set_min_width(260.0);
+                ui.set_min_width(if self.is_android { 220.0 } else { 260.0 });
                 ui.horizontal(|ui| {
                     self.logo_tile_sized(ui, 38.0);
                     ui.vertical(|ui| {
@@ -1202,6 +1456,7 @@ impl GitMarketApp {
 
     fn repo_row(&mut self, ui: &mut egui::Ui, item: &SearchRepo) {
         card(ui, self.palette(), |ui| {
+            let compact = self.compact_layout(ui);
             ui.horizontal(|ui| {
                 self.app_icon(ui, item);
                 ui.vertical(|ui| {
@@ -1224,14 +1479,24 @@ impl GitMarketApp {
                         self.tag(ui, &item.source);
                     });
                 });
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if self.text_button(ui, self.t("inspect")).clicked() {
-                        self.repo_input = item.full_name.clone();
-                        self.current_tab = Tab::Repository;
-                        self.fetch_repo();
-                    }
-                });
+                if !compact {
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        if self.text_button(ui, self.t("inspect")).clicked() {
+                            self.repo_input = item.full_name.clone();
+                            self.current_tab = Tab::Repository;
+                            self.fetch_repo();
+                        }
+                    });
+                }
             });
+            if compact {
+                ui.add_space(8.0);
+                if self.text_button(ui, self.t("inspect")).clicked() {
+                    self.repo_input = item.full_name.clone();
+                    self.current_tab = Tab::Repository;
+                    self.fetch_repo();
+                }
+            }
         });
     }
 
@@ -1290,24 +1555,7 @@ impl GitMarketApp {
                 });
             });
             ui.add_space(8.0);
-            ui.horizontal_wrapped(|ui| {
-                if item.source == Platform::GitCode.label() {
-                    if self.primary_button(ui, self.t("open_source")).clicked() {
-                        ui.ctx()
-                            .open_url(egui::OpenUrl::new_tab(item.html_url.clone()));
-                    }
-                } else {
-                    if self.primary_button(ui, self.t("inspect")).clicked() {
-                        self.repo_input = item.full_name.clone();
-                        self.current_tab = Tab::Repository;
-                        self.fetch_repo();
-                    }
-                    if self.text_button(ui, self.t("open_source")).clicked() {
-                        ui.ctx()
-                            .open_url(egui::OpenUrl::new_tab(item.html_url.clone()));
-                    }
-                }
-            });
+            self.mobile_result_actions(ui, item);
         });
     }
 
@@ -1494,15 +1742,8 @@ impl GitMarketApp {
             .rounding(Rounding::same(18.0))
             .inner_margin(Margin::symmetric(8.0, 8.0))
             .show(ui, |ui| {
-                ui.columns(6, |columns| {
-                    let tabs = [
-                        (Tab::Home, self.t("home")),
-                        (Tab::Discover, self.t("discover")),
-                        (Tab::Repository, self.t("repos")),
-                        (Tab::Downloads, self.t("downloads")),
-                        (Tab::Security, self.t("security")),
-                        (Tab::Settings, self.t("settings_short")),
-                    ];
+                let tabs = self.nav_tabs();
+                ui.columns(tabs.len(), |columns| {
                     for (idx, (tab, label)) in tabs.iter().enumerate() {
                         let selected = self.current_tab == *tab;
                         if nav_button(&mut columns[idx], label, selected, p).clicked() {
@@ -2070,7 +2311,7 @@ impl GitMarketApp {
 
     fn title_size(&self) -> f32 {
         if self.is_android {
-            34.0
+            30.0
         } else {
             28.0
         }
@@ -2094,7 +2335,7 @@ impl GitMarketApp {
 
     fn button_height(&self) -> f32 {
         if self.is_android {
-            42.0
+            48.0
         } else {
             34.0
         }
@@ -2229,7 +2470,7 @@ fn nav_button(ui: &mut egui::Ui, label: &str, selected: bool, p: ThemePalette) -
         .fill(if selected { p.accent } else { p.panel })
         .stroke(Stroke::new(1.0, if selected { p.accent } else { p.stroke }))
         .rounding(Rounding::same(12.0))
-        .min_size(egui::vec2(56.0, 42.0)),
+        .min_size(egui::vec2(56.0, 48.0)),
     )
 }
 
