@@ -209,7 +209,7 @@ private struct SettingsView: View {
                 }
 
                 Section(language.text("about")) {
-                    LabeledContent("GitMarket", value: "0.2.9 iOS Preview")
+                    LabeledContent("GitMarket", value: "0.3.0 iOS Preview")
                     LabeledContent(language.text("mode"), value: "SwiftUI + WKWebView")
                 }
             }

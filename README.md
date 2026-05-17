@@ -34,7 +34,7 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 
 ## 最新发布
 
-`v0.2.9` 继续把 GitMarket 往移动端主打产品推进：新增参考暖橙陪伴风格的 HappyCat 默认主题，强化官方源、SHA256、多平台等信任标签，并让 Android、iOS preview 和 HTML 预览的主题方向保持一致；CI 继续产出 Android APK、iOS simulator、Apple Silicon / Intel macOS、Windows 和 Linux 包。Android 仍只产出一个包：`gitmarket-android-experimental.apk`。
+`v0.3.0` 继续把 GitMarket 往移动端主打产品推进：新增参考暖橙陪伴风格的 HappyCat 默认主题，移动端首屏加入陪伴式欢迎卡，并在搜索时先展示本地精选结果、再用真实来源结果替换，避免网络慢造成空屏；CI 继续产出 Android APK、iOS simulator、Apple Silicon / Intel macOS、Windows 和 Linux 包。Android 仍只产出一个包：`gitmarket-android-experimental.apk`。
 
 | 产物 | 入口 |
 | --- | --- |
@@ -51,8 +51,8 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 | 模块 | 状态 | 说明 |
 | --- | --- | --- |
 | Web 首页 / Pages | 已上线 | `docs/index.html` 作为宣传页，`docs/app.html` 作为可交互预览，`docs/mobile-preview.html` 作为移动 UI 本地预演 |
-| Rust / egui 客户端 | `0.2.9` | 新增 HappyCat 暖橙陪伴默认主题，移动端头部、导航、搜索、来源筛选和卡片流继续升级 |
-| Android Rust experimental APK | `0.2.9` | 唯一 Android 发布包；使用公开 experimental 测试签名以保持后续覆盖安装能力，不再额外维护 WebView preview APK |
+| Rust / egui 客户端 | `0.3.0` | HappyCat 暖橙陪伴默认主题，移动端首屏欢迎卡、即时精选结果、来源筛选和卡片流继续升级 |
+| Android Rust experimental APK | `0.3.0` | 唯一 Android 发布包；使用公开 experimental 测试签名以保持后续覆盖安装能力，不再额外维护 WebView preview APK |
 | 桌面包 | 已发布 | Windows / Linux / macOS Apple Silicon / macOS Intel release artifact |
 | iOS | SwiftUI 预览版 | `ios/GitMarket` 已提供原生 SwiftUI 壳、搜索台 WebView、安全页、来源页、主题和中英双语；正式 IPA 需要 Apple 签名配置 |
 
@@ -128,8 +128,8 @@ Android 当前只维护 `gitmarket-android-experimental.apk`，由 GitHub Action
 发布新版本：
 
 ```bash
-git tag v0.2.9
-git push origin v0.2.9
+git tag v0.3.0
+git push origin v0.3.0
 ```
 
 Tag 构建通过后，GitHub Release 会自动上传桌面包、Android experimental APK、iOS simulator 预览包和 SHA256 文件。

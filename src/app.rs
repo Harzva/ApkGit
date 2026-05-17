@@ -592,12 +592,18 @@ impl GitMarketApp {
 
     fn show_home(&mut self, ui: &mut egui::Ui) {
         if self.compact_layout(ui) {
+            if self.theme == ThemeChoice::HappyCat {
+                self.happy_cat_mobile_welcome(ui);
+                ui.add_space(12.0);
+            }
             self.search_box(ui);
             ui.add_space(12.0);
         }
         self.category_row(ui);
         ui.add_space(14.0);
-        self.hero_card(ui);
+        if !self.compact_layout(ui) || self.theme != ThemeChoice::HappyCat {
+            self.hero_card(ui);
+        }
         self.mobile_feature_strip(ui);
         ui.add_space(18.0);
 
@@ -671,7 +677,10 @@ impl GitMarketApp {
             self.message_panel(ui, err, self.palette().danger);
         }
 
-        let items = self.discover_items.clone();
+        let mut items = self.discover_items.clone();
+        if items.is_empty() {
+            items = self.sample_repos_for_source(self.active_source);
+        }
         let visible_count = self.discover_visible.min(items.len());
         let visible_items = &items[..visible_count];
         self.search_results_view(ui, visible_items);
@@ -1345,6 +1354,53 @@ impl GitMarketApp {
                     self.happy_cat_visual(ui, egui::vec2(ui.available_width().min(310.0), 138.0));
                 }
             });
+    }
+
+    fn happy_cat_mobile_welcome(&mut self, ui: &mut egui::Ui) {
+        let p = self.palette();
+        egui::Frame::none()
+            .fill(p.panel)
+            .stroke(Stroke::new(1.0, p.stroke))
+            .rounding(Rounding::same(22.0))
+            .inner_margin(Margin::same(14.0))
+            .show(ui, |ui| {
+                let wide = ui.available_width() > 430.0;
+                if wide {
+                    ui.horizontal(|ui| {
+                        ui.vertical(|ui| self.happy_cat_mobile_copy(ui));
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            self.happy_cat_visual(ui, egui::vec2(128.0, 92.0));
+                        });
+                    });
+                } else {
+                    self.happy_cat_mobile_copy(ui);
+                    ui.add_space(10.0);
+                    self.happy_cat_visual(ui, egui::vec2(ui.available_width().min(260.0), 104.0));
+                }
+            });
+    }
+
+    fn happy_cat_mobile_copy(&mut self, ui: &mut egui::Ui) {
+        let p = self.palette();
+        ui.horizontal_wrapped(|ui| {
+            self.tag(ui, self.t("safe_original"));
+            self.tag(ui, self.t("cross_platform"));
+        });
+        ui.add_space(8.0);
+        ui.label(
+            RichText::new(self.t("happy_hero_title"))
+                .size(self.section_size() + 2.0)
+                .strong()
+                .color(p.text),
+        );
+        ui.add(
+            egui::Label::new(
+                RichText::new(self.t("happy_mobile_sub"))
+                    .size(self.body_size())
+                    .color(p.muted),
+            )
+            .wrap(),
+        );
     }
 
     fn happy_cat_copy(&mut self, ui: &mut egui::Ui) {
@@ -2393,9 +2449,7 @@ impl GitMarketApp {
         self.is_searching = true;
         self.error_message = None;
         self.discover_visible = 12;
-        if self.discover_items.is_empty() {
-            self.discover_items = self.sample_repos();
-        }
+        self.discover_items = self.sample_repos_for_source(source);
 
         let tx = self.tx.clone();
         let token = self.github_token.clone();
@@ -2810,6 +2864,33 @@ impl GitMarketApp {
         ]
     }
 
+    fn sample_repos_for_source(&self, source: SourceChoice) -> Vec<SearchRepo> {
+        let mut repos = self.sample_repos();
+        repos.push(sample(
+            "gitcode/release-search",
+            "GitCode upstream release search entry",
+            0,
+            "Fallback",
+            "GitCode",
+        ));
+
+        match source {
+            SourceChoice::All => repos,
+            SourceChoice::GitHub => repos
+                .into_iter()
+                .filter(|repo| repo.source == Platform::GitHub.label())
+                .collect(),
+            SourceChoice::Gitee => repos
+                .into_iter()
+                .filter(|repo| repo.source == Platform::Gitee.label())
+                .collect(),
+            SourceChoice::GitCode => repos
+                .into_iter()
+                .filter(|repo| repo.source == Platform::GitCode.label())
+                .collect(),
+        }
+    }
+
     fn category_query(&self, category: Category) -> &'static str {
         match category {
             Category::Trending => "release tools",
@@ -3045,6 +3126,11 @@ fn sample(name: &str, desc: &str, stars: u64, language: &str, source: &str) -> S
         language: Some(language.to_string()),
         html_url: if source == "Gitee" {
             format!("https://gitee.com/{}", name)
+        } else if source == "GitCode" {
+            format!(
+                "https://gitcode.com/search?keyword={}",
+                name.replace('/', "%2F")
+            )
         } else {
             format!("https://github.com/{}", name)
         },
@@ -3106,6 +3192,7 @@ fn zh(key: &str) -> &'static str {
         "happy_hero_sub" => {
             "只链接官方 Release，不托管安装包；帮你把下载、校验、来源和更新放进一个安心的小工作台。"
         }
+        "happy_mobile_sub" => "先给你一组安心精选；网络慢时也不空屏，接口回来后自动更新真实结果。",
         "happy_badge" => "开源安心下载",
         "safe_original" => "官方源",
         "cross_platform" => "多平台",
@@ -3206,6 +3293,7 @@ fn en(key: &str) -> &'static str {
     match key {
         "happy_hero_title" => "Hi, let's find something useful today",
         "happy_hero_sub" => "GitMarket links to upstream Releases only, then keeps downloads, hashes, sources, and updates in one calmer workspace.",
+        "happy_mobile_sub" => "Curated picks appear instantly while live source results arrive in the background.",
         "happy_badge" => "Upstream safe",
         "safe_original" => "Official source",
         "cross_platform" => "Cross-platform",
