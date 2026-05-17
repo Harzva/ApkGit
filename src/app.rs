@@ -482,37 +482,78 @@ impl GitMarketApp {
                 .rounding(Rounding::same(16.0))
                 .inner_margin(Margin::symmetric(12.0, 10.0))
                 .show(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        self.logo_tile_sized(ui, 42.0);
-                        ui.add_space(6.0);
-                        ui.vertical(|ui| {
-                            ui.label(RichText::new("GitMarket").size(22.0).strong().color(p.text));
-                            ui.add(
-                                egui::Label::new(
-                                    RichText::new(self.t("tagline")).size(12.5).color(p.muted),
-                                )
-                                .wrap(),
+                    if self.android_landscape(ui) {
+                        ui.horizontal(|ui| {
+                            self.logo_tile_sized(ui, 38.0);
+                            ui.add_space(6.0);
+                            ui.vertical(|ui| {
+                                ui.label(
+                                    RichText::new("GitMarket").size(21.0).strong().color(p.text),
+                                );
+                                ui.add(
+                                    egui::Label::new(
+                                        RichText::new(self.t("tagline")).size(11.5).color(p.muted),
+                                    )
+                                    .wrap(),
+                                );
+                            });
+                            ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::Center),
+                                |ui| {
+                                    if self.header_pill_button(ui, self.t("settings")).clicked() {
+                                        self.current_tab = Tab::Settings;
+                                    }
+                                    if self
+                                        .header_pill_button(ui, self.theme_name(self.theme))
+                                        .clicked()
+                                    {
+                                        self.theme = self.next_theme();
+                                    }
+                                    if self.header_pill_button(ui, self.language_label()).clicked()
+                                    {
+                                        self.language = match self.language {
+                                            Language::Zh => Language::En,
+                                            Language::En => Language::Zh,
+                                        };
+                                    }
+                                },
                             );
                         });
-                    });
-                    ui.add_space(8.0);
-                    ui.horizontal_wrapped(|ui| {
-                        if self.header_pill_button(ui, self.language_label()).clicked() {
-                            self.language = match self.language {
-                                Language::Zh => Language::En,
-                                Language::En => Language::Zh,
-                            };
-                        }
-                        if self
-                            .header_pill_button(ui, self.theme_name(self.theme))
-                            .clicked()
-                        {
-                            self.theme = self.next_theme();
-                        }
-                        if self.header_pill_button(ui, self.t("settings")).clicked() {
-                            self.current_tab = Tab::Settings;
-                        }
-                    });
+                    } else {
+                        ui.horizontal(|ui| {
+                            self.logo_tile_sized(ui, 42.0);
+                            ui.add_space(6.0);
+                            ui.vertical(|ui| {
+                                ui.label(
+                                    RichText::new("GitMarket").size(22.0).strong().color(p.text),
+                                );
+                                ui.add(
+                                    egui::Label::new(
+                                        RichText::new(self.t("tagline")).size(12.5).color(p.muted),
+                                    )
+                                    .wrap(),
+                                );
+                            });
+                        });
+                        ui.add_space(8.0);
+                        ui.horizontal_wrapped(|ui| {
+                            if self.header_pill_button(ui, self.language_label()).clicked() {
+                                self.language = match self.language {
+                                    Language::Zh => Language::En,
+                                    Language::En => Language::Zh,
+                                };
+                            }
+                            if self
+                                .header_pill_button(ui, self.theme_name(self.theme))
+                                .clicked()
+                            {
+                                self.theme = self.next_theme();
+                            }
+                            if self.header_pill_button(ui, self.t("settings")).clicked() {
+                                self.current_tab = Tab::Settings;
+                            }
+                        });
+                    }
                 });
         } else {
             ui.horizontal(|ui| {
@@ -598,7 +639,10 @@ impl GitMarketApp {
         ui.label(RichText::new(self.t("discover_sub")).color(self.palette().muted));
         ui.add_space(12.0);
 
-        if self.discover_items.is_empty() && !self.is_searching {
+        if self.discover_items.is_empty()
+            && !self.is_searching
+            && self.last_discovery_key.is_empty()
+        {
             self.start_discovery();
         }
 
@@ -1795,6 +1839,11 @@ impl GitMarketApp {
         } else {
             available.x
         }
+    }
+
+    fn android_landscape(&self, ui: &egui::Ui) -> bool {
+        let screen = ui.ctx().screen_rect();
+        self.is_android && screen.width() > screen.height()
     }
 
     fn logo_tile(&self, ui: &mut egui::Ui) {
