@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GitMarket - 多来源 Release 发现工具</title>
-  <meta name="description" content="GitMarket 帮助用户从 GitHub、Gitee、GitCode 等开源平台发现 Release 软件包，查看上游来源、许可证、校验信息和官方下载链接。">
+  <title>GitMarket - Human & Agent Git Search Market</title>
+  <meta name="description" content="GitMarket 帮助人类用户和 AI Agent 从 GitHub、Gitee、GitCode 等平台发现 Release、Skill、MCP、许可证、校验信息和官方下载链接。">
   <link rel="icon" href="assets/gitmarket-logo-192.png">
   <style>
     :root {
@@ -404,6 +404,7 @@
       <div class="nav-links">
         <a href="./app.html">在线体验</a>
         <a href="./mobile-preview.html">移动 UI 预演</a>
+        <a class="optional" href="#agent-market">Agent 市场</a>
         <a class="optional" href="#sources">来源</a>
         <a class="optional" href="#route">路线</a>
         <a href="https://github.com/Harzva/GitReleaseMarket/releases/latest">下载</a>
@@ -416,12 +417,13 @@
     <section class="hero">
       <div class="wrap">
         <div class="hero-copy">
-          <div class="eyebrow">GitHub / Gitee / GitCode Release Discovery</div>
+          <div class="eyebrow">Human Mobile App + AI Agent Git Search Market</div>
           <h1>GitMarket</h1>
-          <p class="lead">一个面向开源软件包的 Release 发现层：从趋势、Explore 和多代码平台搜索进入项目，再回到上游 Release、许可证、校验信息和官方下载链接。</p>
+          <p class="lead">一个面向人类移动端和 AI Agent 的 Git 搜索市场：从趋势、Explore、多代码平台搜索进入项目，再回到上游 Release、Skill、MCP、许可证、校验信息和官方下载链接。</p>
           <div class="actions">
             <a class="button primary" href="./app.html">打开搜索台</a>
             <a class="button" href="./mobile-preview.html?mode=android&theme=me&lang=zh&tab=home">移动端预览</a>
+            <a class="button" href="#agent-market">Skill / MCP 广场</a>
             <a class="button" href="https://github.com/trending">GitHub Trending</a>
             <a class="button" href="https://github.com/explore">GitHub Explore</a>
           </div>
@@ -432,8 +434,8 @@
     <section>
       <div class="wrap">
         <div class="section-head">
-          <h2>先把上游 Release 看清楚，再决定下载。</h2>
-          <p>GitMarket 不托管、不镜像、不重签第三方二进制。它更像一个 Release 入口：把仓库、资产、许可证、哈希、签名和权限提示放到同一个决策界面里。</p>
+          <h2>先把上游 Release 和能力边界看清楚，再决定下载或接入。</h2>
+          <p>GitMarket 不托管、不镜像、不重签第三方二进制。它更像一个 Git 能力市场：把仓库、资产、Skill、MCP、许可证、哈希、签名和权限提示放到同一个决策界面里。</p>
         </div>
         <div class="status-grid">
           <article class="status-card">
@@ -455,6 +457,32 @@
             <small>Mobile Future</small>
             <strong>Android 原生路线</strong>
             <p>正式 Android MVP 仍建议 Kotlin + Jetpack Compose，用于系统权限、安装器和凭据存储。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="agent-market">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>面向 Agent 的 Git 搜索市场。</h2>
+          <p>参考 Semble 的 Agent-first 表达方式，GitMarket 也需要让 Agent 一眼知道自己能搜索什么、怎么接入、能返回什么证据。区别是 GitMarket 不做代码片段检索，而是聚合 Release、Skill、MCP 和可安装资产。</p>
+        </div>
+        <div class="source-grid">
+          <article class="source-card">
+            <small>Release Market</small>
+            <strong>官方上游资产</strong>
+            <p>检索 APK、EXE、IPA、DMG、ZIP 等 Release 文件，并展示许可证、来源、下载量和 SHA256 线索。</p>
+          </article>
+          <article class="source-card">
+            <small>Skill Market</small>
+            <strong>可复用工作流</strong>
+            <p>Skill 作为可选插件开启，后续可安装到本地技能目录，帮助 Agent 做 UI 预览、README 设计、Android QA 等任务。</p>
+          </article>
+          <article class="source-card">
+            <small>MCP Market</small>
+            <strong>可连接工具能力</strong>
+            <p>MCP 作为可选插件开启，后续提供 GitHub、Figma、iOS 构建、Android 测试等可连接能力的发现与接入。</p>
           </article>
         </div>
       </div>
@@ -519,7 +547,7 @@
       <div class="wrap">
         <div class="section-head">
           <h2>用 App Preview Lab 先看效果。</h2>
-          <p>APK / IPA / exe 发版前，先用本地 HTML 预览主题、文案、列表密度、下载状态和安全页。应用内主题已扩展到 ME Agent、暖色、清爽、发布、极光、樱粉、石墨和海盐蓝。最终再用真机或真实系统做少量关键路径验收。</p>
+          <p>APK / IPA / exe 发版前，先用本地 HTML 预览主题、文案、列表密度、下载状态和安全页。默认主题已统一为 GitMarket logo 的橙绿品牌色，应用内还保留 ME Agent、暖色、清爽、发布、极光、樱粉、石墨和海盐蓝。最终再用真机或真实系统做少量关键路径验收。</p>
         </div>
         <div class="preview-frame">
           <img src="assets/gitmarket-mobile-preview.png" alt="GitMarket mobile preview lab">
@@ -530,8 +558,8 @@
     <section class="preview-band">
       <div class="wrap">
         <div class="section-head">
-          <h2>v0.3.3 新增 Skill / MCP 可选插件广场，并优化各 Tab 的独立滚动体验。</h2>
-          <p>WebView preview APK 与 Rust/egui experimental APK 不同步，继续维护会制造误导；新版 Release 只上传 `gitmarket-android-experimental.apk`，移动端把搜索、来源筛选、发现结果、主题和下载统计改成更稳定的触控流，并使用公开 experimental 测试签名支持后续覆盖安装。</p>
+          <h2>v0.3.4 升级品牌图标，并把 GitMarket 定位为 Human + Agent Git Market。</h2>
+          <p>WebView preview APK 与 Rust/egui experimental APK 不同步，继续维护会制造误导；新版 Release 只上传 `gitmarket-android-experimental.apk`。Skill / MCP 广场仍是可选插件，后续会继续补可安装 Skill、MCP server 和 Agent 可读结果 schema。</p>
         </div>
         <div class="flow">
           <article class="step"><strong>真机验收</strong><span>检查 Android experimental APK 和 iOS simulator preview 的中文、滚动、触控、网络与下载提示。</span></article>

@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitMarket Agent Search"
+  short_description: "Find releases, skills, MCPs, and assets."
+  default_prompt: "Use GitMarket Agent Search to find upstream releases, skills, MCP servers, and installable assets with safety evidence."

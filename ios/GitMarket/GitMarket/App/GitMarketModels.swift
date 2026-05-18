@@ -28,9 +28,9 @@ enum GitMarketLanguage: String, CaseIterable, Identifiable {
             "sources": "来源",
             "security": "安全",
             "settings": "设置",
-            "tagline": "GitHub / Gitee / GitCode Release",
-            "heroTitle": "你的 Release 智能看板",
-            "heroBody": "聚合仓库、版本、资产、安全信号和下载进度，把开源软件包带回上游官方 Release。",
+            "tagline": "人类与 Agent 的 Git 搜索市场",
+            "heroTitle": "你的 Agent Git 智能看板",
+            "heroBody": "聚合仓库、Release、Skill、MCP、安全信号和下载进度，把开源能力带回上游官方来源。",
             "verify": "待校验",
             "openConsole": "打开搜索台",
             "safety": "安全边界",
@@ -56,9 +56,9 @@ enum GitMarketLanguage: String, CaseIterable, Identifiable {
             "sources": "Sources",
             "security": "Security",
             "settings": "Settings",
-            "tagline": "GitHub / Gitee / GitCode Release",
-            "heroTitle": "Your release intelligence board",
-            "heroBody": "Collect repositories, versions, assets, safety signals, and download progress while sending packages back to upstream Releases.",
+            "tagline": "Git search market for humans and agents",
+            "heroTitle": "Your Agent Git intelligence board",
+            "heroBody": "Collect repositories, Releases, Skills, MCPs, safety signals, and download progress while sending packages back to upstream sources.",
             "verify": "Verify",
             "openConsole": "Open console",
             "safety": "Safety",
@@ -97,7 +97,7 @@ enum GitMarketTheme: String, CaseIterable, Identifiable {
 
     func label(language: GitMarketLanguage) -> String {
         switch (self, language) {
-        case (.happyCat, .zh): return "暖橙陪伴"
+        case (.happyCat, .zh): return "GitMarket 橙绿"
         case (.meAgent, .zh): return "ME Agent"
         case (.cleanBlue, .zh): return "清爽蓝白"
         case (.warmLaunch, .zh): return "暖色卡片"
@@ -106,7 +106,7 @@ enum GitMarketTheme: String, CaseIterable, Identifiable {
         case (.sakura, .zh): return "樱粉产品"
         case (.graphite, .zh): return "石墨专业"
         case (.ocean, .zh): return "海盐蓝"
-        case (.happyCat, .en): return "HappyCat"
+        case (.happyCat, .en): return "GitMarket Orange"
         case (.meAgent, .en): return "ME Agent"
         case (.cleanBlue, .en): return "Clean Blue"
         case (.warmLaunch, .en): return "Warm Cards"
@@ -120,7 +120,7 @@ enum GitMarketTheme: String, CaseIterable, Identifiable {
 
     var accent: Color {
         switch self {
-        case .happyCat: return Color(red: 0.97, green: 0.52, blue: 0.08)
+        case .happyCat: return Color(red: 1.00, green: 0.54, blue: 0.08)
         case .meAgent: return Color(red: 0.20, green: 0.32, blue: 0.72)
         case .cleanBlue: return Color(red: 0.05, green: 0.48, blue: 0.82)
         case .warmLaunch: return Color(red: 0.94, green: 0.36, blue: 0.18)
@@ -134,7 +134,7 @@ enum GitMarketTheme: String, CaseIterable, Identifiable {
 
     var background: Color {
         switch self {
-        case .happyCat: return Color(red: 1.00, green: 0.98, blue: 0.93)
+        case .happyCat: return Color(red: 1.00, green: 0.97, blue: 0.92)
         case .meAgent: return Color(red: 0.96, green: 0.97, blue: 0.99)
         case .cleanBlue: return Color(red: 0.93, green: 0.97, blue: 1.00)
         case .warmLaunch: return Color(red: 1.00, green: 0.96, blue: 0.89)
@@ -159,6 +159,7 @@ enum GitMarketTheme: String, CaseIterable, Identifiable {
     var primaryText: Color {
         switch self {
         case .launch, .aurora, .graphite: return Color(red: 0.94, green: 0.98, blue: 0.96)
+        case .happyCat: return Color(red: 0.12, green: 0.16, blue: 0.23)
         default: return Color(red: 0.08, green: 0.10, blue: 0.16)
         }
     }
@@ -166,6 +167,7 @@ enum GitMarketTheme: String, CaseIterable, Identifiable {
     var secondaryText: Color {
         switch self {
         case .launch, .aurora, .graphite: return Color(red: 0.64, green: 0.72, blue: 0.72)
+        case .happyCat: return Color(red: 0.42, green: 0.36, blue: 0.31)
         default: return Color(red: 0.42, green: 0.47, blue: 0.56)
         }
     }

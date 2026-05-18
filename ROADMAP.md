@@ -22,6 +22,15 @@
 - Curated FLOSS repository catalog.
 - Basic hot list based on stars, release recency, and APK availability.
 - Cache API responses to reduce rate-limit pressure.
+- Agent-facing discovery: keep Release as the default lane, then expose Skill and MCP markets as opt-in capability plugins.
+- Package `skills/gitmarket-agent-search` as the first GitMarket Skill for upstream Release / Skill / MCP evidence gathering.
+
+## Agent Market
+
+- Define a shared result schema for repositories, Releases, assets, skills, and MCP servers.
+- Build a GitMarket MCP server with `search_releases`, `search_skills`, `search_mcp_servers`, and `inspect_repo`.
+- Add trust fields for official upstream source, license, checksum, archive status, prerelease status, and credential requirements.
+- Keep human-facing app UX and agent-facing output aligned, but avoid mixing binary downloads, local skills, and connector servers without labels.
 
 ## Android Native MVP
 

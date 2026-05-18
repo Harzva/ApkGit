@@ -337,7 +337,7 @@ impl GitMarketApp {
                     self.logo_tile_sized(ui, 46.0);
                     ui.vertical(|ui| {
                         ui.label(RichText::new("GitMarket").size(20.0).strong().color(p.text));
-                        ui.label(RichText::new("Release OS").size(12.0).color(p.muted));
+                        ui.label(RichText::new("Agent Git Market").size(12.0).color(p.muted));
                     });
                 });
 
@@ -1709,14 +1709,14 @@ impl GitMarketApp {
         let p = self.palette();
         let (rect, _) = ui.allocate_exact_size(desired, egui::Sense::hover());
         let painter = ui.painter();
-        painter.rect_filled(rect, Rounding::same(20.0), p.chip);
+        painter.rect_filled(rect, Rounding::same(20.0), p.panel_alt);
         painter.rect_stroke(rect, Rounding::same(20.0), Stroke::new(1.0, p.stroke));
 
         for (x, y, r, color) in [
-            (0.14, 0.20, 4.0, p.warning),
-            (0.84, 0.18, 5.0, p.accent),
-            (0.78, 0.76, 4.0, p.accent_alt),
-            (0.22, 0.74, 3.0, p.warning),
+            (0.12, 0.18, 4.0, p.warning),
+            (0.86, 0.18, 5.0, p.warning),
+            (0.82, 0.78, 4.0, p.accent_alt),
+            (0.18, 0.74, 3.0, p.accent),
         ] {
             painter.circle_filled(
                 rect.left_top() + egui::vec2(rect.width() * x, rect.height() * y),
@@ -1725,46 +1725,30 @@ impl GitMarketApp {
             );
         }
 
-        let box_rect = egui::Rect::from_min_size(
-            rect.left_top() + egui::vec2(rect.width() * 0.30, rect.height() * 0.58),
-            egui::vec2(rect.width() * 0.44, rect.height() * 0.28),
+        let mark_rect = egui::Rect::from_center_size(
+            rect.center() + egui::vec2(rect.width() * 0.02, -rect.height() * 0.05),
+            egui::vec2(rect.height() * 0.78, rect.height() * 0.78),
         );
         painter.rect_filled(
-            box_rect,
-            Rounding::same(12.0),
-            Color32::from_rgb(255, 197, 107),
+            mark_rect,
+            Rounding::same(18.0),
+            Color32::from_rgb(255, 247, 234),
         );
         painter.rect_stroke(
-            box_rect,
-            Rounding::same(12.0),
-            Stroke::new(1.0, Color32::from_rgb(214, 132, 47)),
+            mark_rect,
+            Rounding::same(18.0),
+            Stroke::new(1.0, Color32::from_rgb(243, 197, 140)),
         );
-        painter.line_segment(
-            [
-                egui::pos2(box_rect.left() + box_rect.width() * 0.18, box_rect.top()),
-                egui::pos2(box_rect.left() + box_rect.width() * 0.08, box_rect.bottom()),
-            ],
-            Stroke::new(1.0, Color32::from_rgb(226, 151, 66)),
-        );
-        painter.line_segment(
-            [
-                egui::pos2(box_rect.right() - box_rect.width() * 0.18, box_rect.top()),
-                egui::pos2(
-                    box_rect.right() - box_rect.width() * 0.08,
-                    box_rect.bottom(),
-                ),
-            ],
-            Stroke::new(1.0, Color32::from_rgb(226, 151, 66)),
-        );
+        self.draw_gitmarket_mark(painter, mark_rect.shrink(12.0));
 
-        self.draw_cat_face(
-            painter,
-            egui::Rect::from_center_size(
-                rect.center() + egui::vec2(0.0, -rect.height() * 0.10),
-                egui::vec2(rect.width() * 0.34, rect.height() * 0.48),
-            ),
-            true,
-        );
+        let node_line_y = rect.bottom() - 26.0;
+        let left = egui::pos2(rect.left() + 22.0, node_line_y);
+        let right = egui::pos2(rect.right() - 22.0, node_line_y);
+        painter.line_segment([left, right], Stroke::new(2.0, p.stroke));
+        for (i, color) in [p.accent, p.accent_alt, p.warning].into_iter().enumerate() {
+            let x = left.x + (i as f32 + 1.0) * ((right.x - left.x) / 4.0);
+            painter.circle_filled(egui::pos2(x, node_line_y), 5.0, color);
+        }
 
         let badge = egui::Rect::from_min_size(
             rect.left_top() + egui::vec2(14.0, rect.height() - 42.0),
@@ -2326,156 +2310,73 @@ impl GitMarketApp {
     fn logo_tile_sized(&self, ui: &mut egui::Ui, size: f32) {
         let p = self.palette();
         let (rect, _) = ui.allocate_exact_size(egui::vec2(size, size), egui::Sense::hover());
-        if self.theme == ThemeChoice::HappyCat {
-            ui.painter()
-                .rect_filled(rect, Rounding::same(size * 0.28), p.panel);
-            ui.painter().rect_stroke(
-                rect,
-                Rounding::same(size * 0.28),
-                Stroke::new(1.0, p.stroke),
-            );
-            self.draw_cat_face(ui.painter(), rect.shrink(size * 0.12), false);
-            return;
-        }
 
         let round = (size * 0.26).round();
+        let fill = if matches!(
+            self.theme,
+            ThemeChoice::Launch | ThemeChoice::Aurora | ThemeChoice::Graphite
+        ) {
+            p.panel_alt
+        } else {
+            Color32::from_rgb(255, 247, 234)
+        };
+        ui.painter().rect_filled(rect, Rounding::same(round), fill);
         ui.painter()
-            .rect_filled(rect, Rounding::same(round), p.accent);
-
-        let glow = egui::Rect::from_center_size(
-            rect.center() + egui::vec2(size * 0.16, -size * 0.16),
-            egui::vec2(size * 0.42, size * 0.42),
-        );
-        ui.painter().circle_filled(
-            glow.center(),
-            size * 0.22,
-            Color32::from_rgba_unmultiplied(
-                p.accent_alt.r(),
-                p.accent_alt.g(),
-                p.accent_alt.b(),
-                180,
-            ),
-        );
-
-        let stack_a = egui::Rect::from_min_size(
-            rect.left_top() + egui::vec2(size * 0.18, size * 0.22),
-            egui::vec2(size * 0.42, size * 0.12),
-        );
-        let stack_b = stack_a.translate(egui::vec2(size * 0.10, size * 0.14));
-        ui.painter().rect_filled(
-            stack_a,
-            Rounding::same(size * 0.04),
-            Color32::from_rgba_unmultiplied(255, 255, 255, 225),
-        );
-        ui.painter().rect_filled(
-            stack_b,
-            Rounding::same(size * 0.04),
-            Color32::from_rgba_unmultiplied(255, 255, 255, 170),
-        );
-
-        ui.painter().text(
-            rect.center() + egui::vec2(size * 0.03, size * 0.10),
-            egui::Align2::CENTER_CENTER,
-            "G",
-            egui::FontId::proportional(size * 0.43),
-            Color32::WHITE,
-        );
+            .rect_stroke(rect, Rounding::same(round), Stroke::new(1.0, p.stroke));
+        self.draw_gitmarket_mark(ui.painter(), rect.shrink(size * 0.11));
     }
 
-    fn draw_cat_face(&self, painter: &egui::Painter, rect: egui::Rect, full_body: bool) {
-        let center = rect.center();
-        let radius = rect.width().min(rect.height()) * if full_body { 0.30 } else { 0.34 };
-        let head_center = center
-            + egui::vec2(
-                0.0,
-                if full_body {
-                    -rect.height() * 0.06
-                } else {
-                    0.0
-                },
-            );
-        let fur = Color32::from_rgb(255, 242, 221);
-        let fur_shadow = Color32::from_rgb(244, 170, 80);
-        let ink = Color32::from_rgb(72, 43, 29);
-        let blush = Color32::from_rgba_unmultiplied(255, 134, 107, 120);
+    fn draw_gitmarket_mark(&self, painter: &egui::Painter, rect: egui::Rect) {
+        let p = self.palette();
+        let size = rect.width().min(rect.height());
+        let center = rect.center() + egui::vec2(-size * 0.04, -size * 0.04);
+        let radius = size * 0.27;
+        let orange = Color32::from_rgb(255, 138, 20);
+        let ink = Color32::from_rgb(30, 41, 59);
+        let green = Color32::from_rgb(47, 209, 138);
+        let amber = Color32::from_rgb(255, 184, 77);
 
-        for side in [-1.0, 1.0] {
-            let base = head_center + egui::vec2(side * radius * 0.58, -radius * 0.48);
-            let ear = vec![
-                base + egui::vec2(side * radius * 0.10, radius * 0.28),
-                base + egui::vec2(side * radius * 0.38, -radius * 0.42),
-                base + egui::vec2(-side * radius * 0.28, -radius * 0.04),
-            ];
-            painter.add(egui::Shape::convex_polygon(
-                ear,
-                fur,
-                Stroke::new(1.4, fur_shadow),
-            ));
-        }
-
-        painter.circle_filled(head_center, radius, fur);
-        painter.circle_stroke(head_center, radius, Stroke::new(1.4, fur_shadow));
-
-        painter.circle_filled(
-            head_center + egui::vec2(-radius * 0.33, -radius * 0.08),
-            radius * 0.075,
-            ink,
-        );
-        painter.circle_filled(
-            head_center + egui::vec2(radius * 0.33, -radius * 0.08),
-            radius * 0.075,
-            ink,
-        );
-        painter.circle_filled(
-            head_center + egui::vec2(0.0, radius * 0.08),
-            radius * 0.055,
-            Color32::from_rgb(231, 111, 73),
-        );
-        painter.circle_filled(
-            head_center + egui::vec2(-radius * 0.48, radius * 0.16),
-            radius * 0.12,
-            blush,
-        );
-        painter.circle_filled(
-            head_center + egui::vec2(radius * 0.48, radius * 0.16),
-            radius * 0.12,
-            blush,
-        );
-
+        painter.circle_stroke(center, radius, Stroke::new(size * 0.105, orange));
         painter.line_segment(
             [
-                head_center + egui::vec2(-radius * 0.15, radius * 0.24),
-                head_center + egui::vec2(0.0, radius * 0.32),
+                center + egui::vec2(radius * 0.70, radius * 0.70),
+                center + egui::vec2(radius * 1.30, radius * 1.30),
             ],
-            Stroke::new(1.4, ink),
-        );
-        painter.line_segment(
-            [
-                head_center + egui::vec2(radius * 0.15, radius * 0.24),
-                head_center + egui::vec2(0.0, radius * 0.32),
-            ],
-            Stroke::new(1.4, ink),
+            Stroke::new(size * 0.12, orange),
         );
 
-        for side in [-1.0, 1.0] {
-            for offset in [-0.10, 0.08] {
-                painter.line_segment(
-                    [
-                        head_center + egui::vec2(side * radius * 0.52, radius * (0.08 + offset)),
-                        head_center + egui::vec2(side * radius * 0.78, radius * (0.02 + offset)),
-                    ],
-                    Stroke::new(1.0, fur_shadow),
-                );
-            }
+        let hub = center + egui::vec2(-radius * 0.18, -radius * 0.10);
+        let left = center + egui::vec2(-radius * 0.88, -radius * 0.10);
+        let top = center + egui::vec2(radius * 0.45, -radius * 0.72);
+        let bottom = center + egui::vec2(radius * 0.55, radius * 0.70);
+        for end in [left, top, bottom] {
+            painter.line_segment([hub, end], Stroke::new(size * 0.045, ink));
+        }
+        for (point, color) in [(left, ink), (hub, green), (top, ink), (bottom, ink)] {
+            painter.circle_filled(point, size * 0.065, color);
         }
 
-        if full_body {
-            painter.circle_filled(
-                head_center + egui::vec2(radius * 0.74, radius * 0.64),
-                radius * 0.20,
-                fur,
+        let grid_size = size * 0.105;
+        let grid_gap = size * 0.035;
+        let grid_origin = rect.right_top() + egui::vec2(-grid_size * 2.0 - grid_gap, 0.0);
+        for (index, color) in [green, amber, amber, ink].into_iter().enumerate() {
+            let x = grid_origin.x + (index % 2) as f32 * (grid_size + grid_gap);
+            let y = grid_origin.y + (index / 2) as f32 * (grid_size + grid_gap);
+            painter.rect_filled(
+                egui::Rect::from_min_size(egui::pos2(x, y), egui::vec2(grid_size, grid_size)),
+                Rounding::same(grid_size * 0.32),
+                color,
             );
         }
+
+        painter.circle_stroke(
+            rect.center() + egui::vec2(0.0, size * 0.33),
+            size * 0.20,
+            Stroke::new(
+                size * 0.04,
+                Color32::from_rgba_unmultiplied(p.text.r(), p.text.g(), p.text.b(), 190),
+            ),
+        );
     }
 
     fn app_icon(&self, ui: &mut egui::Ui, item: &SearchRepo) {
@@ -2922,17 +2823,17 @@ impl GitMarketApp {
     fn palette(&self) -> ThemePalette {
         match self.theme {
             ThemeChoice::HappyCat => ThemePalette {
-                bg: Color32::from_rgb(255, 249, 238),
+                bg: Color32::from_rgb(255, 247, 234),
                 panel: Color32::from_rgb(255, 253, 247),
-                panel_alt: Color32::from_rgb(255, 241, 224),
-                text: Color32::from_rgb(43, 31, 25),
-                muted: Color32::from_rgb(123, 101, 89),
-                accent: Color32::from_rgb(247, 132, 20),
-                accent_alt: Color32::from_rgb(58, 188, 131),
-                warning: Color32::from_rgb(255, 193, 79),
+                panel_alt: Color32::from_rgb(255, 239, 214),
+                text: Color32::from_rgb(30, 41, 59),
+                muted: Color32::from_rgb(107, 91, 78),
+                accent: Color32::from_rgb(255, 138, 20),
+                accent_alt: Color32::from_rgb(47, 209, 138),
+                warning: Color32::from_rgb(255, 184, 77),
                 danger: Color32::from_rgb(236, 76, 80),
-                stroke: Color32::from_rgb(242, 218, 188),
-                chip: Color32::from_rgb(255, 246, 232),
+                stroke: Color32::from_rgb(243, 197, 140),
+                chip: Color32::from_rgb(255, 250, 241),
             },
             ThemeChoice::MeAgent => ThemePalette {
                 bg: Color32::from_rgb(244, 247, 252),
@@ -3203,7 +3104,7 @@ impl GitMarketApp {
 
     fn theme_name(&self, choice: ThemeChoice) -> &'static str {
         match (self.language, choice) {
-            (Language::Zh, ThemeChoice::HappyCat) => "暖橙陪伴",
+            (Language::Zh, ThemeChoice::HappyCat) => "GitMarket 橙绿",
             (Language::Zh, ThemeChoice::MeAgent) => "ME Agent",
             (Language::Zh, ThemeChoice::Warm) => "暖色卡片",
             (Language::Zh, ThemeChoice::Clean) => "清爽蓝白",
@@ -3212,7 +3113,7 @@ impl GitMarketApp {
             (Language::Zh, ThemeChoice::Sakura) => "樱粉产品",
             (Language::Zh, ThemeChoice::Graphite) => "石墨专业",
             (Language::Zh, ThemeChoice::Ocean) => "海盐蓝",
-            (Language::En, ThemeChoice::HappyCat) => "HappyCat",
+            (Language::En, ThemeChoice::HappyCat) => "GitMarket Orange",
             (Language::En, ThemeChoice::MeAgent) => "ME Agent",
             (Language::En, ThemeChoice::Warm) => "Warm",
             (Language::En, ThemeChoice::Clean) => "Clean",
@@ -3487,9 +3388,9 @@ fn source_id(source: SourceChoice) -> &'static str {
 
 fn zh(key: &str) -> &'static str {
     match key {
-        "happy_hero_title" => "嗨，今天也一起发现好项目",
+        "happy_hero_title" => "嗨，一起发现给人和 Agent 用的好项目",
         "happy_hero_sub" => {
-            "只链接官方 Release，不托管安装包；帮你把下载、校验、来源和更新放进一个安心的小工作台。"
+            "Release、Skill、MCP 分层检索；帮你把来源、许可证、资产、校验和接入方式放进一个安心的小工作台。"
         }
         "happy_mobile_sub" => "先给你一组安心精选；网络慢时也不空屏，接口回来后自动更新真实结果。",
         "happy_badge" => "开源安心下载",
@@ -3504,15 +3405,15 @@ fn zh(key: &str) -> &'static str {
         "verified" => "待校验",
         "start_discover" => "开始发现",
         "inspect_repo" => "检查仓库",
-        "tagline" => "发现 GitHub / Gitee / GitCode Release 资产",
+        "tagline" => "面向人类与 Agent 的 Git 搜索市场",
         "settings" => "设置",
         "settings_short" => "设置",
         "theme" => "主题",
         "language" => "语言",
         "repository" => "仓库",
         "source" => "来源",
-        "insight_title" => "发布洞察",
-        "insight_sub" => "把 Release、来源与安全信号放到一屏。",
+        "insight_title" => "Agent 可读洞察",
+        "insight_sub" => "把仓库、Release、Skill、MCP 与安全信号放到一屏。",
         "source_coverage" => "来源覆盖",
         "next_focus" => "下一步重点",
         "focus_ui" => "移动端真实界面继续向原生体验靠拢",
@@ -3585,7 +3486,7 @@ fn zh(key: &str) -> &'static str {
         "settings_sub" => "切换主题、语言、GitHub API Token，以及可选能力插件。",
         "plugin_modules" => "能力插件",
         "plugin_modules_sub" => {
-            "Release 发现保持主线；Skill 与 MCP 作为可选插件，开启后才进入对应广场。"
+            "Release 发现保持主线；Skill 与 MCP 作为可选插件，开启后才进入对应广场，服务 AI Agent 的能力检索。"
         }
         "skill_plugin" => "Skill 发现插件",
         "skill_plugin_desc" => "发现可复用的本地技能、预览工作流、设计与 QA 能力包。",
@@ -3603,11 +3504,11 @@ fn zh(key: &str) -> &'static str {
         "open_plugin_settings" => "打开插件设置",
         "skill_market_title" => "Skill 广场",
         "skill_market_sub" => {
-            "把开发、设计、测试、发布等可复用工作流整理成能力卡片，后续可安装到本地技能目录。"
+            "把开发、设计、测试、发布等可复用工作流整理成能力卡片，后续可安装到本地技能目录，供 Agent 直接调用。"
         }
         "mcp_market_title" => "MCP 广场",
         "mcp_market_sub" => {
-            "把 GitHub、Figma、移动端构建和测试等连接器作为可选能力接入，按需启用。"
+            "把 GitHub、Figma、移动端构建和测试等连接器作为可选能力接入，按需启用，供 Agent 扩展工具边界。"
         }
         "plugin_enabled" => "插件已启用",
         "plugin_opt_in" => "手动开启",
@@ -3632,8 +3533,8 @@ fn zh(key: &str) -> &'static str {
 
 fn en(key: &str) -> &'static str {
     match key {
-        "happy_hero_title" => "Hi, let's find something useful today",
-        "happy_hero_sub" => "GitMarket links to upstream Releases only, then keeps downloads, hashes, sources, and updates in one calmer workspace.",
+        "happy_hero_title" => "Find useful Git projects for humans and agents",
+        "happy_hero_sub" => "Search Releases, Skills, and MCPs as separate layers so people and agents can judge sources, licenses, assets, and setup paths quickly.",
         "happy_mobile_sub" => "Curated picks appear instantly while live source results arrive in the background.",
         "happy_badge" => "Upstream safe",
         "safe_original" => "Official source",
@@ -3647,15 +3548,15 @@ fn en(key: &str) -> &'static str {
         "verified" => "Verify",
         "start_discover" => "Discover",
         "inspect_repo" => "Inspect Repo",
-        "tagline" => "Discover GitHub / Gitee / GitCode release assets",
+        "tagline" => "A Git search market for humans and agents",
         "settings" => "Settings",
         "settings_short" => "Settings",
         "theme" => "Theme",
         "language" => "Language",
         "repository" => "Repository",
         "source" => "Source",
-        "insight_title" => "Release Insight",
-        "insight_sub" => "Source, assets, and safety signals in one working view.",
+        "insight_title" => "Agent-readable Insight",
+        "insight_sub" => "Repositories, Releases, Skills, MCPs, and safety signals in one working view.",
         "source_coverage" => "Sources",
         "next_focus" => "Next Focus",
         "focus_ui" => "Move mobile UI closer to native product quality",
@@ -3727,7 +3628,7 @@ fn en(key: &str) -> &'static str {
         "token_storage_desc" => "GitHub tokens only raise API limits; production mobile builds should use OS credential storage.",
         "settings_sub" => "Switch theme, language, GitHub API token, and optional capability plugins.",
         "plugin_modules" => "Capability plugins",
-        "plugin_modules_sub" => "Release discovery stays primary. Skill and MCP markets are optional plugin surfaces.",
+        "plugin_modules_sub" => "Release discovery stays primary. Skill and MCP markets are optional agent capability surfaces.",
         "skill_plugin" => "Skill discovery plugin",
         "skill_plugin_desc" => "Discover reusable local skills, preview workflows, design systems, and QA packs.",
         "mcp_plugin" => "MCP discovery plugin",
@@ -3739,9 +3640,9 @@ fn en(key: &str) -> &'static str {
         "plugin_locked_sub" => "To keep Release discovery focused, Skill and MCP markets must be enabled from Settings first.",
         "open_plugin_settings" => "Open Plugin Settings",
         "skill_market_title" => "Skill Market",
-        "skill_market_sub" => "Reusable workflows for development, design, testing, and release work. Later they can install into a local skills directory.",
+        "skill_market_sub" => "Reusable workflows for development, design, testing, and release work. Later they can install into a local skills directory for agents.",
         "mcp_market_title" => "MCP Market",
-        "mcp_market_sub" => "Optional connectors for GitHub, Figma, mobile builds, and testing workflows.",
+        "mcp_market_sub" => "Optional connectors for GitHub, Figma, mobile builds, and testing workflows that expand an agent's tool boundary.",
         "plugin_enabled" => "Plugin enabled",
         "plugin_opt_in" => "Opt-in",
         "plugin_no_mix" => "Separate from Release search",

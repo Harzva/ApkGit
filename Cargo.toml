@@ -1,13 +1,13 @@
 [package]
 name = "gitmarket"
-version = "0.3.3"
+version = "0.3.4"
 edition = "2021"
-description = "GitHub/Gitee Release software discovery tool"
+description = "Human and agent Git release, skill, and MCP discovery market"
 authors = ["GitMarket Team"]
 license = "GPL-3.0-or-later"
 readme = "README.md"
 repository = "https://github.com/harzva/GitReleaseMarket"
-keywords = ["github", "release", "downloader", "foss", "market"]
+keywords = ["github", "release", "agent", "mcp", "market"]
 categories = ["gui", "network-programming"]
 
 [dependencies]

@@ -1,7 +1,11 @@
-# GitMarket
+<p align="center">
+  <img src="docs/assets/gitmarket-logo-512.png" alt="GitMarket logo" width="112" />
+</p>
+
+<h1 align="center">GitMarket</h1>
 
 <p align="center">
-  <strong>一个面向 GitHub / Gitee / GitCode Release 的开源软件发现、校验与下载助手。</strong>
+  <strong>面向人类移动端与 AI Agent 的 Git Release / Skill / MCP 搜索市场。</strong>
 </p>
 
 <p align="center">
@@ -28,13 +32,15 @@
 
 GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场入口”：搜索开源项目，读取官方 Release，展示资产类型、下载量、上游地址、SHA256 与安全提示，然后把下载动作导回原始发布源。
 
+新的产品方向是 **Human App + Agent Market**：普通用户在移动端/桌面端发现和下载上游 Release；AI Agent 通过 GitMarket Skill / MCP 接口发现仓库、可安装资产、可复用 Skill、MCP Server、许可证和安全证据。
+
 <p align="center">
   <img src="docs/assets/architecture_diagram.png" alt="GitMarket architecture" width="860" />
 </p>
 
 ## 最新发布
 
-`v0.3.3` 继续把 GitMarket 往移动端主打产品推进：在 Release 发现主线之外新增 Skill 发现插件和 MCP 发现插件。两个广场默认不进入导航，用户在设置里手动开启后才显示，避免把软件包搜索、技能工作流和连接器生态混在一起；各 Tab 现在有独立滚动位置，进入广场会从顶部开始。CI 继续产出 Android APK、iOS simulator、Apple Silicon / Intel macOS、Windows 和 Linux 包。Android 仍只产出一个包：`gitmarket-android-experimental.apk`。
+`v0.3.4` 把品牌和定位升级为“人类 + Agent 共用的 Git 搜索市场”：新增 GitMarket 自有图标，补充 `gitmarket-agent-search` Skill 雏形和 Agent Market 设计文档。Release 发现仍是主线；Skill 发现插件和 MCP 发现插件保持可选开启，避免把软件包搜索、技能工作流和连接器生态混在一起。CI 继续产出 Android APK、iOS simulator、Apple Silicon / Intel macOS、Windows 和 Linux 包。Android 仍只产出一个包：`gitmarket-android-experimental.apk`。
 
 | 产物 | 入口 |
 | --- | --- |
@@ -51,16 +57,30 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 | 模块 | 状态 | 说明 |
 | --- | --- | --- |
 | Web 首页 / Pages | 已上线 | `docs/index.html` 作为宣传页，`docs/app.html` 作为可交互预览，`docs/mobile-preview.html` 作为移动 UI 本地预演 |
-| Rust / egui 客户端 | `0.3.3` | Release 发现保持主线，Skill / MCP 广场作为设置中手动开启的能力插件，并修复跨 Tab 滚动位置继承 |
-| Android Rust experimental APK | `0.3.3` | 唯一 Android 发布包；使用公开 experimental 测试签名以保持后续覆盖安装能力，不再额外维护 WebView preview APK |
+| Rust / egui 客户端 | `0.3.4` | Release 发现保持主线，Skill / MCP 广场作为设置中手动开启的能力插件，并切换到新的 Agent Git Market 品牌图标 |
+| Android Rust experimental APK | `0.3.4` | 唯一 Android 发布包；使用公开 experimental 测试签名以保持后续覆盖安装能力，不再额外维护 WebView preview APK |
 | 桌面包 | 已发布 | Windows / Linux / macOS Apple Silicon / macOS Intel release artifact |
 | iOS | SwiftUI 预览版 | `ios/GitMarket` 已提供原生 SwiftUI 壳、搜索台 WebView、安全页、来源页、主题和中英双语；正式 IPA 需要 Apple 签名配置 |
+| GitMarket Skill | 初始可用 | `skills/gitmarket-agent-search` 用于 Agent 检索上游 Release、Skill、MCP 与安全证据 |
+
+## Agent Market
+
+GitMarket 参考 [MinishLab/semble](https://github.com/MinishLab/semble) 的 Agent-first README 思路：第一屏直接说明 Agent 价值、接入方式和结果形态。但 GitMarket 的范围不是代码片段检索，而是开源能力市场：
+
+| 层 | 面向对象 | 入口 | 目标 |
+| --- | --- | --- | --- |
+| Release Market | 人类用户 + Agent | App / Pages / Skill | 找到官方上游 Release、资产、许可证、SHA256、签名和下载链接 |
+| Skill Market | Agent | 可选插件 / `skills/gitmarket-agent-search` | 发现可复用工作流，如 UI 预览、README 设计、Android QA |
+| MCP Market | Agent 工具链 | 可选插件 / 规划中的 MCP server | 发现可连接能力，如 GitHub、Figma、iOS 构建、Android 测试 |
+
+更多见 [Agent Market 设计说明](docs/AGENT_MARKET.md)。
 
 ## 新版 App 方向
 
 这次移动端 UI 不再是单页输入框，而是完整的产品壳：
 
-- **ME Agent 主题**：默认主题，白底、轻阴影、信息流卡片，参考移动端个人工作台风格。
+- **GitMarket 橙绿主题**：默认主题，与新 logo 保持同一套奶油底、橙色搜索、绿色节点和深蓝灰文字。
+- **ME Agent 主题**：白底、轻阴影、信息流卡片，参考移动端个人工作台风格。
 - **暖色卡片主题**：柔和橙色软件市场视觉，适合轻量应用集合页。
 - **清爽蓝白主题**：偏工具型、干净、高对比，适合桌面和浅色系统。
 - **橙色发布主题**：偏品牌发布和活动宣传，适合展示新版本与推荐项目。
@@ -128,8 +148,8 @@ Android 当前只维护 `gitmarket-android-experimental.apk`，由 GitHub Action
 发布新版本：
 
 ```bash
-git tag v0.3.3
-git push origin v0.3.3
+git tag v0.3.4
+git push origin v0.3.4
 ```
 
 Tag 构建通过后，GitHub Release 会自动上传桌面包、Android experimental APK、iOS simulator 预览包和 SHA256 文件。
@@ -142,6 +162,8 @@ Tag 构建通过后，GitHub Release 会自动上传桌面包、Android experime
 - 给移动端补截图、录屏 GIF、下载流和安全提示的真实演示。
 - 增强 GitCode 接入方式，必要时通过后端代理统一多源搜索协议。
 - 增加 Release 缓存、懒加载、Show more 展开和失败重试。
+- 把 `gitmarket-agent-search` Skill 做成可安装包，并补真实搜索脚本或服务端 API。
+- 设计 GitMarket MCP server：`search_releases`、`search_skills`、`search_mcp_servers`、`inspect_repo`。
 - 提取 Android 包签名指纹、权限说明和签名变更提醒。
 
 长期路线：
