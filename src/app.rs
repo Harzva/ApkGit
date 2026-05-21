@@ -3278,19 +3278,11 @@ impl GitMarketApp {
     }
 
     fn section_size(&self) -> f32 {
-        if self.is_android {
-            19.0
-        } else {
-            19.0
-        }
+        19.0
     }
 
     fn body_size(&self) -> f32 {
-        if self.is_android {
-            14.0
-        } else {
-            14.0
-        }
+        14.0
     }
 
     fn button_height(&self) -> f32 {
