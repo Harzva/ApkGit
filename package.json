@@ -1,6 +1,6 @@
 {
   "name": "@harzva/gitmarket",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "npx launcher for GitMarket GitHub Release binaries",
   "license": "GPL-3.0-or-later",
   "repository": {

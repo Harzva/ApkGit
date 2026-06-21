@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 enum GitMarketTab: Hashable {
@@ -75,6 +76,17 @@ enum GitMarketLanguage: String, CaseIterable, Identifiable {
             "mitLicense": "MIT License",
             "verified": "已验证",
             "release": "Release",
+            "versionCenter": "版本中心",
+            "localVersion": "当前版本",
+            "onlineVersion": "在线版本",
+            "checkingVersion": "检查中",
+            "checkFailed": "检查失败",
+            "downloadLatest": "一键下载最新版",
+            "releaseUpToDate": "已是最新",
+            "newVersionAvailable": "发现新版",
+            "installNoteFresh": "在线版本与当前版本一致。下载按钮会打开最新 Release，方便重新获取安装包。",
+            "installNoteUpdate": "检测到线上有新版本。Android 同包名同签名可覆盖安装；桌面端可由 launcher 替换；iOS 请使用 TestFlight、App Store 或 simulator 包。",
+            "installNoteChecking": "正在读取线上版本 JSON，用于判断是否需要更新。",
             "githubDesc": "主来源，读取仓库、Release、资产与下载统计。",
             "giteeDesc": "补充国内开源生态，适合中文项目与镜像发现。",
             "gitcodeDesc": "作为搜索入口兜底，后续可接入统一多源协议。"
@@ -133,6 +145,17 @@ enum GitMarketLanguage: String, CaseIterable, Identifiable {
             "mitLicense": "MIT License",
             "verified": "Verified",
             "release": "Release",
+            "versionCenter": "Version Center",
+            "localVersion": "Current",
+            "onlineVersion": "Online",
+            "checkingVersion": "Checking",
+            "checkFailed": "Check failed",
+            "downloadLatest": "Download Latest",
+            "releaseUpToDate": "Up to date",
+            "newVersionAvailable": "Update available",
+            "installNoteFresh": "The online version matches this build. The download button opens the latest Release for a fresh installer.",
+            "installNoteUpdate": "A newer online version is available. Android can overwrite with the same package and signature; desktop launchers can replace binaries; iOS should use TestFlight, App Store, MDM, or simulator packages.",
+            "installNoteChecking": "Reading the online version JSON to decide whether this app needs an update.",
             "githubDesc": "Primary source for repositories, releases, assets, and download stats.",
             "giteeDesc": "Adds Chinese open-source projects and mirror discovery.",
             "gitcodeDesc": "Fallback search source before a unified multi-source protocol."
@@ -140,6 +163,112 @@ enum GitMarketLanguage: String, CaseIterable, Identifiable {
 
         return (self == .zh ? zh : en)[key] ?? key
     }
+}
+
+@MainActor
+final class AppVersionStore: ObservableObject {
+    @Published private(set) var manifest: AppUpdateManifest?
+    @Published private(set) var isLoading = false
+    @Published private(set) var errorMessage: String?
+
+    private static let manifestURL = URL(string: "https://harzva.github.io/GitReleaseMarket/app-update.json")!
+
+    var currentVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.3.7"
+    }
+
+    var currentBuild: String {
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "22"
+    }
+
+    var latestVersion: String? {
+        manifest?.latestVersion
+    }
+
+    var isUpdateAvailable: Bool {
+        guard let latestVersion else { return false }
+        return compareVersions(latestVersion, currentVersion) == .orderedDescending
+    }
+
+    var preferredDownloadURL: URL? {
+        let preferred = manifest?.platforms?["iosSimulator"]?.downloadUrl ?? manifest?.releaseUrl
+        return preferred.flatMap(URL.init(string:)) ?? URL(string: "https://github.com/Harzva/GitReleaseMarket/releases/latest")
+    }
+
+    func refresh(force: Bool = false) async {
+        if isLoading || (manifest != nil && !force) {
+            return
+        }
+
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            let (data, _) = try await URLSession.shared.data(from: Self.manifestURL)
+            manifest = try JSONDecoder().decode(AppUpdateManifest.self, from: data)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func onlineVersionText(language: GitMarketLanguage) -> String {
+        if let latestVersion {
+            return latestVersion
+        }
+        return isLoading ? language.text("checkingVersion") : language.text("checkFailed")
+    }
+
+    func statusText(language: GitMarketLanguage) -> String {
+        if isLoading {
+            return language.text("checkingVersion")
+        }
+        if errorMessage != nil && manifest == nil {
+            return language.text("checkFailed")
+        }
+        return isUpdateAvailable ? language.text("newVersionAvailable") : language.text("releaseUpToDate")
+    }
+
+    func installNote(language: GitMarketLanguage) -> String {
+        if isLoading || manifest == nil {
+            return language.text("installNoteChecking")
+        }
+        return isUpdateAvailable ? language.text("installNoteUpdate") : language.text("installNoteFresh")
+    }
+
+    private func compareVersions(_ lhs: String, _ rhs: String) -> ComparisonResult {
+        let leftParts = lhs.split(separator: ".").map { Int($0) ?? 0 }
+        let rightParts = rhs.split(separator: ".").map { Int($0) ?? 0 }
+        let count = max(leftParts.count, rightParts.count)
+
+        for index in 0..<count {
+            let left = index < leftParts.count ? leftParts[index] : 0
+            let right = index < rightParts.count ? rightParts[index] : 0
+            if left > right { return .orderedDescending }
+            if left < right { return .orderedAscending }
+        }
+
+        return .orderedSame
+    }
+}
+
+struct AppUpdateManifest: Decodable {
+    let schemaVersion: Int
+    let appId: String
+    let name: String
+    let latestVersion: String
+    let latestTag: String
+    let releaseUrl: String
+    let publishedAt: String
+    let platforms: [String: AppPlatformUpdate]?
+}
+
+struct AppPlatformUpdate: Decodable {
+    let version: String
+    let downloadUrl: String
+    let installMode: String
+    let packageId: String?
+    let bundleId: String?
 }
 
 enum GitMarketTheme: String, CaseIterable, Identifiable {

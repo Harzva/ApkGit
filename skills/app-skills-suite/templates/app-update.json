@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "appId": "com.example.app",
+  "name": "ExampleApp",
+  "latestVersion": "1.0.0",
+  "latestTag": "v1.0.0",
+  "releaseUrl": "https://github.com/owner/repo/releases/tag/v1.0.0",
+  "publishedAt": "2026-01-01T00:00:00Z",
+  "platforms": {
+    "android": {
+      "version": "1.0.0",
+      "downloadUrl": "https://github.com/owner/repo/releases/download/v1.0.0/example-android.apk",
+      "installMode": "same-package-same-signature-overwrite",
+      "packageId": "com.example.app"
+    },
+    "iosSimulator": {
+      "version": "1.0.0",
+      "downloadUrl": "https://github.com/owner/repo/releases/download/v1.0.0/example-ios-simulator.zip",
+      "installMode": "replace-simulator-app",
+      "bundleId": "com.example.app"
+    },
+    "macosAarch64": {
+      "version": "1.0.0",
+      "downloadUrl": "https://github.com/owner/repo/releases/download/v1.0.0/example-macos-aarch64.tar.gz",
+      "installMode": "launcher-cache-replace"
+    },
+    "windowsX86_64": {
+      "version": "1.0.0",
+      "downloadUrl": "https://github.com/owner/repo/releases/download/v1.0.0/example-windows-x86_64.zip",
+      "installMode": "launcher-cache-replace"
+    },
+    "linuxX86_64": {
+      "version": "1.0.0",
+      "downloadUrl": "https://github.com/owner/repo/releases/download/v1.0.0/example-linux-x86_64.tar.gz",
+      "installMode": "launcher-cache-replace"
+    }
+  }
+}

@@ -4,10 +4,11 @@ struct ContentView: View {
     @State private var selectedTab: GitMarketTab = .home
     @State private var language: GitMarketLanguage = .zh
     @State private var theme: GitMarketTheme = .meAgent
+    @StateObject private var versionStore = AppVersionStore()
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            HomeView(language: language, theme: theme, selectedTab: $selectedTab)
+            HomeView(language: language, theme: theme, versionStore: versionStore, selectedTab: $selectedTab)
                 .tabItem { Label(text("home"), systemImage: "house.fill") }
                 .tag(GitMarketTab.home)
 
@@ -28,6 +29,9 @@ struct ContentView: View {
                 .tag(GitMarketTab.settings)
         }
         .tint(theme.accent)
+        .task {
+            await versionStore.refresh()
+        }
     }
 
     private func text(_ key: String) -> String {
@@ -38,7 +42,9 @@ struct ContentView: View {
 private struct HomeView: View {
     let language: GitMarketLanguage
     let theme: GitMarketTheme
+    @ObservedObject var versionStore: AppVersionStore
     @Binding var selectedTab: GitMarketTab
+    @Environment(\.openURL) private var openURL
 
     private let quickColumns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 4)
 
@@ -55,6 +61,7 @@ private struct HomeView: View {
                     )
 
                     metrics
+                    versionStatus
                     quickActions
                     sourceStrip
                     popularRepositories
@@ -65,6 +72,22 @@ private struct HomeView: View {
             }
             .background(theme.background.ignoresSafeArea())
             .navigationBarHidden(true)
+        }
+    }
+
+    private var versionStatus: some View {
+        VersionStatusCard(
+            language: language,
+            theme: theme,
+            versionStore: versionStore
+        ) {
+            if let url = versionStore.preferredDownloadURL {
+                openURL(url)
+            }
+        } refresh: {
+            Task {
+                await versionStore.refresh(force: true)
+            }
         }
     }
 
@@ -144,6 +167,118 @@ private struct HomeView: View {
                 }
             }
         }
+    }
+}
+
+private struct VersionStatusCard: View {
+    let language: GitMarketLanguage
+    let theme: GitMarketTheme
+    @ObservedObject var versionStore: AppVersionStore
+    let download: () -> Void
+    let refresh: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "arrow.down.app")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(theme.accent)
+                    .frame(width: 34, height: 34)
+                    .background(theme.accent.opacity(0.10))
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text(language.text("versionCenter"))
+                            .font(.headline)
+                            .foregroundStyle(theme.primaryText)
+
+                        Spacer()
+
+                        StatusBadge(
+                            title: versionStore.statusText(language: language),
+                            color: versionStore.isUpdateAvailable ? theme.warning : theme.success,
+                            fill: (versionStore.isUpdateAvailable ? theme.warning : theme.success).opacity(0.12)
+                        )
+                    }
+
+                    HStack(spacing: 10) {
+                        VersionValue(
+                            title: language.text("localVersion"),
+                            value: versionStore.currentVersion,
+                            theme: theme
+                        )
+
+                        VersionValue(
+                            title: language.text("onlineVersion"),
+                            value: versionStore.onlineVersionText(language: language),
+                            theme: theme
+                        )
+                    }
+                }
+            }
+
+            Text(versionStore.installNote(language: language))
+                .font(.caption)
+                .foregroundStyle(theme.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: 10) {
+                Button(action: download) {
+                    Label(language.text("downloadLatest"), systemImage: "arrow.down.circle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 40)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.white)
+                .background(versionStore.preferredDownloadURL == nil ? theme.mutedText : theme.accent)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .disabled(versionStore.preferredDownloadURL == nil)
+
+                Button(action: refresh) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(theme.primaryText)
+                        .frame(width: 40, height: 40)
+                        .background(theme.subtleSurface)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(12)
+        .background(theme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(theme.hairline, lineWidth: 1)
+        }
+    }
+}
+
+private struct VersionValue: View {
+    let title: String
+    let value: String
+    let theme: GitMarketTheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(theme.mutedText)
+
+            Text(value)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(theme.primaryText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(theme.subtleSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }
 
