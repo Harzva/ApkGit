@@ -1,0 +1,19 @@
+{
+  "name": "@harzva/gitmarket",
+  "version": "0.3.6",
+  "description": "npx launcher for GitMarket GitHub Release binaries",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Harzva/GitReleaseMarket.git"
+  },
+  "bin": {
+    "gitmarket": "./bin/gitmarket.mjs"
+  },
+  "files": [
+    "bin"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

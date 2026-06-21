@@ -40,7 +40,7 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 
 ## 最新发布
 
-`v0.3.5` 重点修复 Android / 移动端真实体验：内置完整 Noto Sans SC 中文字体，避免仓库描述、按钮和状态文本出现方框；重排手机端标题栏、搜索框、结果卡片、Release 资产和下载页指标，避免日期、大小和标签在窄屏竖排挤爆。CI 继续产出 Android APK、iOS simulator、Apple Silicon / Intel macOS、Windows 和 Linux 包。Android 仍只产出一个包：`gitmarket-android-experimental.apk`。
+`v0.3.6` 新增 `npx` 启动器：可以直接从 GitHub 仓库安装 wrapper，由 wrapper 自动下载 GitHub Release 中匹配当前系统的桌面包并启动。iOS SwiftUI 预览也换成更接近移动端产品稿的首页、发现页和安全验证页。CI 继续产出 Android APK、iOS simulator、Apple Silicon / Intel macOS、Windows 和 Linux 包。Android 仍只产出一个包：`gitmarket-android-experimental.apk`。
 
 | 产物 | 入口 |
 | --- | --- |
@@ -52,15 +52,32 @@ GitMarket 不是重新分发 APK 的应用商店，而是一个“Release 市场
 | macOS Intel 桌面包 | [gitmarket-macos-x86_64.tar.gz](https://github.com/Harzva/GitReleaseMarket/releases/latest) |
 | 在线体验 | [GitHub Pages](https://harzva.github.io/GitReleaseMarket/) |
 
+## npx 安装
+
+不需要先发布 npm 包，也可以直接通过 GitHub 仓库运行：
+
+```bash
+npx github:Harzva/GitReleaseMarket
+```
+
+默认会下载最新 GitHub Release；需要固定版本时：
+
+```bash
+GITMARKET_VERSION=v0.3.6 npx github:Harzva/GitReleaseMarket
+```
+
+支持 macOS Apple Silicon / Intel、Linux x86_64 和 Windows x86_64。下载缓存位于 `~/.cache/gitmarket/npx-release`，可用 `GITMARKET_CACHE_DIR` 覆盖。
+
 ## 当前进度
 
 | 模块 | 状态 | 说明 |
 | --- | --- | --- |
 | Web 首页 / Pages | 已上线 | `docs/index.html` 作为宣传页，`docs/app.html` 作为可交互预览，`docs/mobile-preview.html` 作为移动 UI 本地预演 |
-| Rust / egui 客户端 | `0.3.5` | Release 发现保持主线，Skill / MCP 广场作为设置中手动开启的能力插件；移动端补齐中文字体兜底和窄屏卡片布局 |
-| Android Rust experimental APK | `0.3.5` | 唯一 Android 发布包；使用公开 experimental 测试签名以保持后续覆盖安装能力，不再额外维护 WebView preview APK |
+| Rust / egui 客户端 | `0.3.6` | Release 发现保持主线，Skill / MCP 广场作为设置中手动开启的能力插件；移动端补齐中文字体兜底和窄屏卡片布局 |
+| npx GitHub 启动器 | `0.3.6` | `npx github:Harzva/GitReleaseMarket` 会下载并运行当前平台的 GitHub Release 桌面包 |
+| Android Rust experimental APK | `0.3.6` | 唯一 Android 发布包；使用公开 experimental 测试签名以保持后续覆盖安装能力，不再额外维护 WebView preview APK |
 | 桌面包 | 已发布 | Windows / Linux / macOS Apple Silicon / macOS Intel release artifact |
-| iOS | SwiftUI 预览版 | `ios/GitMarket` 已提供原生 SwiftUI 壳、搜索台 WebView、安全页、来源页、主题和中英双语；正式 IPA 需要 Apple 签名配置 |
+| iOS | SwiftUI 预览版 | `ios/GitMarket` 已提供原生 SwiftUI 首页、发现页、安全验证页、来源页、主题和中英双语；正式 IPA 需要 Apple 签名配置 |
 | GitMarket Skill | 初始可用 | `skills/gitmarket-agent-search` 用于 Agent 检索上游 Release、Skill、MCP 与安全证据 |
 
 ## Agent Market
@@ -148,8 +165,8 @@ Android 当前只维护 `gitmarket-android-experimental.apk`，由 GitHub Action
 发布新版本：
 
 ```bash
-git tag v0.3.5
-git push origin v0.3.5
+git tag v0.3.6
+git push origin v0.3.6
 ```
 
 Tag 构建通过后，GitHub Release 会自动上传桌面包、Android experimental APK、iOS simulator 预览包和 SHA256 文件。
