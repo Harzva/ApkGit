@@ -1,6 +1,6 @@
 [package]
 name = "gitmarket"
-version = "0.3.7"
+version = "0.3.8"
 edition = "2021"
 description = "Human and agent Git release, skill, and MCP discovery market"
 authors = ["GitMarket Team"]

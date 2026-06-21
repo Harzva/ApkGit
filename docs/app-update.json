@@ -2,41 +2,41 @@
   "schemaVersion": 1,
   "appId": "com.gitmarket",
   "name": "GitMarket",
-  "latestVersion": "0.3.7",
-  "latestTag": "v0.3.7",
-  "releaseUrl": "https://github.com/Harzva/GitReleaseMarket/releases/tag/v0.3.7",
+  "latestVersion": "0.3.8",
+  "latestTag": "v0.3.8",
+  "releaseUrl": "https://github.com/Harzva/GitReleaseMarket/releases/tag/v0.3.8",
   "publishedAt": "2026-06-21T08:00:00Z",
   "platforms": {
     "android": {
-      "version": "0.3.7",
-      "downloadUrl": "https://github.com/Harzva/GitReleaseMarket/releases/download/v0.3.7/gitmarket-android-experimental.apk",
+      "version": "0.3.8",
+      "downloadUrl": "https://github.com/Harzva/GitReleaseMarket/releases/download/v0.3.8/gitmarket-android-experimental.apk",
       "installMode": "same-package-same-signature-overwrite",
       "packageId": "com.gitmarket.app"
     },
     "iosSimulator": {
-      "version": "0.3.7",
-      "downloadUrl": "https://github.com/Harzva/GitReleaseMarket/releases/download/v0.3.7/gitmarket-ios-simulator.zip",
+      "version": "0.3.8",
+      "downloadUrl": "https://github.com/Harzva/GitReleaseMarket/releases/download/v0.3.8/gitmarket-ios-simulator.zip",
       "installMode": "replace-simulator-app",
       "bundleId": "com.gitmarket.ios"
     },
     "macosAarch64": {
-      "version": "0.3.7",
-      "downloadUrl": "https://github.com/Harzva/GitReleaseMarket/releases/download/v0.3.7/gitmarket-macos-aarch64.tar.gz",
+      "version": "0.3.8",
+      "downloadUrl": "https://github.com/Harzva/GitReleaseMarket/releases/download/v0.3.8/gitmarket-macos-aarch64.tar.gz",
       "installMode": "launcher-cache-replace"
     },
     "macosX86_64": {
-      "version": "0.3.7",
-      "downloadUrl": "https://github.com/Harzva/GitReleaseMarket/releases/download/v0.3.7/gitmarket-macos-x86_64.tar.gz",
+      "version": "0.3.8",
+      "downloadUrl": "https://github.com/Harzva/GitReleaseMarket/releases/download/v0.3.8/gitmarket-macos-x86_64.tar.gz",
       "installMode": "launcher-cache-replace"
     },
     "linuxX86_64": {
-      "version": "0.3.7",
-      "downloadUrl": "https://github.com/Harzva/GitReleaseMarket/releases/download/v0.3.7/gitmarket-linux-x86_64.tar.gz",
+      "version": "0.3.8",
+      "downloadUrl": "https://github.com/Harzva/GitReleaseMarket/releases/download/v0.3.8/gitmarket-linux-x86_64.tar.gz",
       "installMode": "launcher-cache-replace"
     },
     "windowsX86_64": {
-      "version": "0.3.7",
-      "downloadUrl": "https://github.com/Harzva/GitReleaseMarket/releases/download/v0.3.7/gitmarket-windows-x86_64.zip",
+      "version": "0.3.8",
+      "downloadUrl": "https://github.com/Harzva/GitReleaseMarket/releases/download/v0.3.8/gitmarket-windows-x86_64.zip",
       "installMode": "launcher-cache-replace"
     }
   }

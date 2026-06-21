@@ -3,9 +3,13 @@ use crate::data::{parse_repo_url, Platform, ReleaseInfo, RepoInfo, SearchRepo};
 use crate::download;
 use eframe::egui;
 use egui::{Color32, Margin, RichText, Rounding, Stroke};
+use serde::Deserialize;
 use std::path::PathBuf;
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
+
+const APP_UPDATE_MANIFEST_URL: &str = "https://harzva.github.io/GitReleaseMarket/app-update.json";
+const FALLBACK_RELEASE_URL: &str = "https://github.com/Harzva/GitReleaseMarket/releases/latest";
 
 pub struct GitMarketApp {
     repo_input: String,
@@ -35,6 +39,7 @@ pub struct GitMarketApp {
     is_android: bool,
     fonts_ready: bool,
     styled_theme: Option<ThemeChoice>,
+    app_update: AppUpdateState,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -98,6 +103,7 @@ enum AppMessage {
         path: Option<PathBuf>,
     },
     InstallComplete(String),
+    AppUpdateChecked(Result<AppUpdateManifest, String>),
 }
 
 #[derive(Clone, Copy)]
@@ -113,6 +119,60 @@ struct ThemePalette {
     danger: Color32,
     stroke: Color32,
     chip: Color32,
+}
+
+#[derive(Clone)]
+struct AppUpdateState {
+    requested: bool,
+    status: UpdateCheckStatus,
+    latest_version: Option<String>,
+    release_url: String,
+    android_download_url: Option<String>,
+    android_install_mode: Option<String>,
+}
+
+#[derive(Clone, PartialEq)]
+enum UpdateCheckStatus {
+    Idle,
+    Checking,
+    Ready,
+    Failed,
+}
+
+impl Default for AppUpdateState {
+    fn default() -> Self {
+        Self {
+            requested: false,
+            status: UpdateCheckStatus::Idle,
+            latest_version: None,
+            release_url: FALLBACK_RELEASE_URL.to_string(),
+            android_download_url: None,
+            android_install_mode: None,
+        }
+    }
+}
+
+#[derive(Deserialize)]
+struct AppUpdateManifest {
+    #[serde(rename = "latestVersion")]
+    latest_version: String,
+    #[serde(rename = "releaseUrl")]
+    release_url: String,
+    platforms: AppUpdatePlatforms,
+}
+
+#[derive(Deserialize)]
+struct AppUpdatePlatforms {
+    android: Option<AppPlatformUpdate>,
+}
+
+#[derive(Deserialize)]
+struct AppPlatformUpdate {
+    version: String,
+    #[serde(rename = "downloadUrl")]
+    download_url: String,
+    #[serde(rename = "installMode")]
+    install_mode: String,
 }
 
 impl Default for GitMarketApp {
@@ -147,6 +207,7 @@ impl Default for GitMarketApp {
             is_android: cfg!(target_os = "android"),
             fonts_ready: false,
             styled_theme: None,
+            app_update: AppUpdateState::default(),
         }
     }
 }
@@ -159,6 +220,7 @@ impl eframe::App for GitMarketApp {
             self.apply_style(ctx);
             self.styled_theme = Some(self.theme);
         }
+        self.ensure_update_manifest();
 
         let palette = self.palette();
         egui::CentralPanel::default()
@@ -507,8 +569,8 @@ impl GitMarketApp {
                 .inner_margin(Margin::symmetric(12.0, 8.0))
                 .show(ui, |ui| {
                     let width = ui.available_width();
-                    let logo = if width < 340.0 { 36.0 } else { 40.0 };
-                    let action_width = if width < 360.0 { 126.0 } else { 154.0 };
+                    let logo = if width < 340.0 { 34.0 } else { 38.0 };
+                    let action_width = if width < 360.0 { 90.0 } else { 112.0 };
                     let title_width = (width - logo - action_width - 16.0).max(118.0);
 
                     ui.horizontal(|ui| {
@@ -537,9 +599,6 @@ impl GitMarketApp {
                                 .clicked()
                             {
                                 self.current_tab = Tab::Settings;
-                            }
-                            if self.header_pill_button(ui, self.t("theme")).clicked() {
-                                self.theme = self.next_theme();
                             }
                             if self.header_pill_button(ui, self.language_label()).clicked() {
                                 self.language = match self.language {
@@ -586,17 +645,43 @@ impl GitMarketApp {
 
     fn show_home(&mut self, ui: &mut egui::Ui) {
         if self.compact_layout(ui) {
-            if self.theme == ThemeChoice::HappyCat {
-                self.happy_cat_mobile_welcome(ui);
-                ui.add_space(12.0);
-            }
+            self.mobile_home_lead(ui);
+            ui.add_space(10.0);
+            self.app_version_card(ui);
+            ui.add_space(10.0);
             self.search_box(ui);
+            ui.add_space(10.0);
+            self.category_row(ui);
             ui.add_space(12.0);
+
+            ui.horizontal(|ui| {
+                ui.label(
+                    RichText::new(self.t("popular"))
+                        .size(self.section_size())
+                        .strong()
+                        .color(self.palette().text),
+                );
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    if self.text_button(ui, self.t("view_all")).clicked() {
+                        self.current_tab = Tab::Discover;
+                        self.start_discovery();
+                    }
+                });
+            });
+            ui.add_space(8.0);
+
+            for repo in self.sample_repos().into_iter().take(4) {
+                self.repo_row(ui, &repo);
+                ui.add_space(8.0);
+            }
+            return;
         }
         self.category_row(ui);
         ui.add_space(14.0);
         if !self.compact_layout(ui) || self.theme != ThemeChoice::HappyCat {
             self.hero_card(ui);
+            ui.add_space(12.0);
+            self.app_version_card(ui);
         }
         self.mobile_feature_strip(ui);
         ui.add_space(18.0);
@@ -629,6 +714,172 @@ impl GitMarketApp {
         } else {
             self.popular_repo_table(ui);
         }
+    }
+
+    fn mobile_home_lead(&mut self, ui: &mut egui::Ui) {
+        let p = self.palette();
+        egui::Frame::none()
+            .fill(p.panel)
+            .stroke(Stroke::new(1.0, p.stroke))
+            .rounding(Rounding::same(18.0))
+            .inner_margin(Margin::symmetric(12.0, 12.0))
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    self.logo_tile_sized(ui, 42.0);
+                    ui.add_space(8.0);
+                    ui.vertical(|ui| {
+                        ui.horizontal_wrapped(|ui| {
+                            self.tag(ui, self.t("safe_original"));
+                            self.tag(ui, self.t("cross_platform"));
+                        });
+                        ui.add_space(4.0);
+                        ui.label(
+                            RichText::new(self.t("happy_hero_title"))
+                                .size(self.title_size())
+                                .strong()
+                                .color(p.text),
+                        );
+                    });
+                });
+                ui.add_space(8.0);
+                ui.add(
+                    egui::Label::new(
+                        RichText::new(self.t("happy_mobile_sub"))
+                            .size(self.body_size())
+                            .color(p.muted),
+                    )
+                    .wrap(),
+                );
+                ui.add_space(10.0);
+                ui.columns(2, |columns| {
+                    let left_width = columns[0].available_width();
+                    if self
+                        .primary_button_sized(&mut columns[0], self.t("start_discover"), left_width)
+                        .clicked()
+                    {
+                        self.current_tab = Tab::Discover;
+                        self.start_discovery();
+                    }
+                    let right_width = columns[1].available_width();
+                    if self
+                        .text_button_sized(&mut columns[1], self.t("inspect_repo"), right_width)
+                        .clicked()
+                    {
+                        self.current_tab = Tab::Repository;
+                    }
+                });
+            });
+    }
+
+    fn app_version_card(&mut self, ui: &mut egui::Ui) {
+        let p = self.palette();
+        egui::Frame::none()
+            .fill(p.panel_alt)
+            .stroke(Stroke::new(1.0, p.stroke))
+            .rounding(Rounding::same(18.0))
+            .inner_margin(Margin::symmetric(12.0, 12.0))
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label(
+                        RichText::new(self.t("version_center"))
+                            .size(self.body_size() + 2.0)
+                            .strong()
+                            .color(p.text),
+                    );
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        self.tag(ui, self.update_status_text());
+                    });
+                });
+                ui.add_space(8.0);
+                let online_version = self.online_version_text();
+                ui.columns(2, |columns| {
+                    self.version_value(
+                        &mut columns[0],
+                        self.t("current_version"),
+                        env!("CARGO_PKG_VERSION"),
+                    );
+                    self.version_value(&mut columns[1], self.t("online_version"), &online_version);
+                });
+                ui.add_space(8.0);
+                let note = if self.is_android
+                    && self
+                        .app_update
+                        .android_install_mode
+                        .as_deref()
+                        .unwrap_or("same-package-same-signature-overwrite")
+                        == "same-package-same-signature-overwrite"
+                {
+                    self.t("android_update_note")
+                } else {
+                    self.t("download_latest_note")
+                };
+                ui.add(
+                    egui::Label::new(
+                        RichText::new(note)
+                            .size(self.body_size() - 1.0)
+                            .color(p.muted),
+                    )
+                    .wrap(),
+                );
+                ui.add_space(10.0);
+                ui.columns(2, |columns| {
+                    let left_width = columns[0].available_width();
+                    if self
+                        .primary_button_sized(
+                            &mut columns[0],
+                            self.t("download_latest"),
+                            left_width,
+                        )
+                        .clicked()
+                    {
+                        columns[0]
+                            .ctx()
+                            .open_url(egui::OpenUrl::new_tab(self.update_download_url()));
+                    }
+                    let right_width = columns[1].available_width();
+                    let retry = self.app_update.status == UpdateCheckStatus::Failed;
+                    let label = if retry {
+                        self.t("retry_check")
+                    } else {
+                        self.t("open_release")
+                    };
+                    if self
+                        .text_button_sized(&mut columns[1], label, right_width)
+                        .clicked()
+                    {
+                        if retry {
+                            self.app_update.requested = false;
+                            self.ensure_update_manifest();
+                        } else {
+                            columns[1].ctx().open_url(egui::OpenUrl::new_tab(
+                                self.app_update.release_url.clone(),
+                            ));
+                        }
+                    }
+                });
+            });
+    }
+
+    fn version_value(&self, ui: &mut egui::Ui, label: &str, value: &str) {
+        let p = self.palette();
+        egui::Frame::none()
+            .fill(p.panel)
+            .stroke(Stroke::new(1.0, p.stroke))
+            .rounding(Rounding::same(12.0))
+            .inner_margin(Margin::symmetric(10.0, 8.0))
+            .show(ui, |ui| {
+                ui.label(
+                    RichText::new(label)
+                        .size(self.body_size() - 1.0)
+                        .color(p.muted),
+                );
+                ui.label(
+                    RichText::new(value)
+                        .size(self.body_size() + 2.0)
+                        .strong()
+                        .color(p.text),
+                );
+            });
     }
 
     fn show_discover(&mut self, ui: &mut egui::Ui) {
@@ -1169,6 +1420,18 @@ impl GitMarketApp {
         card(ui, self.palette(), |ui| {
             if self.compact_layout(ui) {
                 let mut submit = false;
+                ui.horizontal(|ui| {
+                    ui.label(
+                        RichText::new(search_label)
+                            .size(self.body_size() + 1.0)
+                            .strong()
+                            .color(self.palette().text),
+                    );
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        self.tag(ui, self.source_name(self.active_source));
+                    });
+                });
+                ui.add_space(8.0);
                 let field_width = ui.available_width();
                 let response = ui.add_sized(
                     egui::vec2(field_width, self.button_height()),
@@ -1178,16 +1441,21 @@ impl GitMarketApp {
                 );
                 submit |= response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
                 ui.add_space(8.0);
-                ui.horizontal(|ui| {
-                    let primary_width = (ui.available_width() * 0.52).max(112.0);
+                ui.columns(2, |columns| {
+                    let primary_width = columns[0].available_width();
                     if self
-                        .primary_button_sized(ui, go_label, primary_width)
+                        .primary_button_sized(&mut columns[0], go_label, primary_width)
                         .clicked()
                     {
                         submit = true;
                     }
+                    let source_width = columns[1].available_width();
                     if self
-                        .text_button(ui, self.source_name(self.active_source))
+                        .text_button_sized(
+                            &mut columns[1],
+                            self.source_name(self.active_source),
+                            source_width,
+                        )
                         .clicked()
                     {
                         self.current_tab = Tab::Discover;
@@ -1426,7 +1694,7 @@ impl GitMarketApp {
 
     fn bottom_nav_height(&self) -> f32 {
         if self.is_android {
-            74.0
+            66.0
         } else {
             84.0
         }
@@ -1434,7 +1702,7 @@ impl GitMarketApp {
 
     fn hero_title_size(&self) -> f32 {
         if self.is_android {
-            28.0
+            22.0
         } else {
             self.title_size() + 4.0
         }
@@ -1695,53 +1963,6 @@ impl GitMarketApp {
                     self.happy_cat_visual(ui, egui::vec2(ui.available_width().min(310.0), 138.0));
                 }
             });
-    }
-
-    fn happy_cat_mobile_welcome(&mut self, ui: &mut egui::Ui) {
-        let p = self.palette();
-        egui::Frame::none()
-            .fill(p.panel)
-            .stroke(Stroke::new(1.0, p.stroke))
-            .rounding(Rounding::same(22.0))
-            .inner_margin(Margin::same(14.0))
-            .show(ui, |ui| {
-                let wide = ui.available_width() > 430.0;
-                if wide {
-                    ui.horizontal(|ui| {
-                        ui.vertical(|ui| self.happy_cat_mobile_copy(ui));
-                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                            self.happy_cat_visual(ui, egui::vec2(128.0, 92.0));
-                        });
-                    });
-                } else {
-                    self.happy_cat_mobile_copy(ui);
-                    ui.add_space(10.0);
-                    self.happy_cat_visual(ui, egui::vec2(ui.available_width().min(260.0), 104.0));
-                }
-            });
-    }
-
-    fn happy_cat_mobile_copy(&mut self, ui: &mut egui::Ui) {
-        let p = self.palette();
-        ui.horizontal_wrapped(|ui| {
-            self.tag(ui, self.t("safe_original"));
-            self.tag(ui, self.t("cross_platform"));
-        });
-        ui.add_space(8.0);
-        ui.label(
-            RichText::new(self.t("happy_hero_title"))
-                .size(self.section_size() + 2.0)
-                .strong()
-                .color(p.text),
-        );
-        ui.add(
-            egui::Label::new(
-                RichText::new(self.t("happy_mobile_sub"))
-                    .size(self.body_size())
-                    .color(p.muted),
-            )
-            .wrap(),
-        );
     }
 
     fn happy_cat_copy(&mut self, ui: &mut egui::Ui) {
@@ -3083,6 +3304,89 @@ impl GitMarketApp {
                 AppMessage::InstallComplete(msg) => {
                     *self.download_status.lock().unwrap() = msg;
                 }
+                AppMessage::AppUpdateChecked(result) => match result {
+                    Ok(manifest) => {
+                        self.app_update.status = UpdateCheckStatus::Ready;
+                        self.app_update.latest_version = Some(
+                            manifest
+                                .platforms
+                                .android
+                                .as_ref()
+                                .map(|platform| platform.version.clone())
+                                .unwrap_or_else(|| manifest.latest_version.clone()),
+                        );
+                        self.app_update.release_url = manifest.release_url;
+                        self.app_update.android_download_url = manifest
+                            .platforms
+                            .android
+                            .as_ref()
+                            .map(|platform| platform.download_url.clone());
+                        self.app_update.android_install_mode = manifest
+                            .platforms
+                            .android
+                            .map(|platform| platform.install_mode);
+                    }
+                    Err(_message) => {
+                        self.app_update.status = UpdateCheckStatus::Failed;
+                    }
+                },
+            }
+        }
+    }
+
+    fn ensure_update_manifest(&mut self) {
+        if self.app_update.requested {
+            return;
+        }
+
+        self.app_update.requested = true;
+        self.app_update.status = UpdateCheckStatus::Checking;
+        let tx = self.tx.clone();
+        thread::spawn(move || {
+            let result = reqwest::blocking::get(APP_UPDATE_MANIFEST_URL)
+                .and_then(|response| response.error_for_status())
+                .and_then(|response| response.json::<AppUpdateManifest>())
+                .map_err(|error| error.to_string());
+            let _ = tx.send(AppMessage::AppUpdateChecked(result));
+        });
+    }
+
+    fn update_download_url(&self) -> String {
+        self.app_update
+            .android_download_url
+            .clone()
+            .unwrap_or_else(|| self.app_update.release_url.clone())
+    }
+
+    fn online_version_text(&self) -> String {
+        match self.app_update.status {
+            UpdateCheckStatus::Checking | UpdateCheckStatus::Idle => {
+                self.t("checking_version").to_string()
+            }
+            UpdateCheckStatus::Failed => self.t("check_failed").to_string(),
+            UpdateCheckStatus::Ready => self
+                .app_update
+                .latest_version
+                .clone()
+                .unwrap_or_else(|| "-".to_string()),
+        }
+    }
+
+    fn update_status_text(&self) -> &'static str {
+        match self.app_update.status {
+            UpdateCheckStatus::Checking | UpdateCheckStatus::Idle => self.t("checking_version"),
+            UpdateCheckStatus::Failed => self.t("check_failed"),
+            UpdateCheckStatus::Ready => {
+                if self
+                    .app_update
+                    .latest_version
+                    .as_deref()
+                    .is_some_and(|latest| version_is_newer(latest, env!("CARGO_PKG_VERSION")))
+                {
+                    self.t("update_available")
+                } else {
+                    self.t("up_to_date")
+                }
             }
         }
     }
@@ -3259,7 +3563,7 @@ impl GitMarketApp {
 
     fn top_padding(&self) -> f32 {
         if self.is_android {
-            12.0
+            28.0
         } else {
             10.0
         }
@@ -3271,23 +3575,31 @@ impl GitMarketApp {
 
     fn title_size(&self) -> f32 {
         if self.is_android {
-            24.0
+            22.0
         } else {
             28.0
         }
     }
 
     fn section_size(&self) -> f32 {
-        19.0
+        if self.is_android {
+            17.0
+        } else {
+            19.0
+        }
     }
 
     fn body_size(&self) -> f32 {
-        14.0
+        if self.is_android {
+            13.0
+        } else {
+            14.0
+        }
     }
 
     fn button_height(&self) -> f32 {
         if self.is_android {
-            44.0
+            38.0
         } else {
             34.0
         }
@@ -3438,8 +3750,8 @@ fn card<R>(ui: &mut egui::Ui, p: ThemePalette, add_contents: impl FnOnce(&mut eg
     egui::Frame::none()
         .fill(p.panel)
         .stroke(Stroke::new(1.0, p.stroke))
-        .rounding(Rounding::same(if compact { 14.0 } else { 8.0 }))
-        .inner_margin(Margin::same(if compact { 12.0 } else { 16.0 }))
+        .rounding(Rounding::same(if compact { 16.0 } else { 8.0 }))
+        .inner_margin(Margin::same(if compact { 10.0 } else { 16.0 }))
         .show(ui, add_contents)
         .inner
 }
@@ -3457,7 +3769,7 @@ fn nav_button(
     selected: bool,
     p: ThemePalette,
 ) -> egui::Response {
-    let desired = egui::vec2(ui.available_width().max(54.0), 54.0);
+    let desired = egui::vec2(ui.available_width().max(50.0), 48.0);
     let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::click());
 
     if ui.is_rect_visible(rect) {
@@ -3478,15 +3790,15 @@ fn nav_button(
         );
 
         let icon_rect = egui::Rect::from_center_size(
-            egui::pos2(rect.center().x, rect.top() + 21.0),
-            egui::vec2(22.0, 22.0),
+            egui::pos2(rect.center().x, rect.top() + 18.0),
+            egui::vec2(20.0, 20.0),
         );
         draw_tab_icon(ui.painter(), tab, icon_rect, text_color);
         ui.painter().text(
-            egui::pos2(rect.center().x, rect.bottom() - 14.0),
+            egui::pos2(rect.center().x, rect.bottom() - 12.0),
             egui::Align2::CENTER_CENTER,
             label,
-            egui::FontId::proportional(12.0),
+            egui::FontId::proportional(11.0),
             text_color,
         );
     }
@@ -3649,6 +3961,23 @@ fn ellipsize_chars(value: &str, max_chars: usize) -> String {
         out.push_str("...");
     }
     out
+}
+
+fn version_is_newer(latest: &str, current: &str) -> bool {
+    let parse = |value: &str| -> [u32; 3] {
+        let mut parts = [0, 0, 0];
+        for (idx, part) in value.trim_start_matches('v').split('.').take(3).enumerate() {
+            parts[idx] = part
+                .chars()
+                .take_while(|ch| ch.is_ascii_digit())
+                .collect::<String>()
+                .parse()
+                .unwrap_or(0);
+        }
+        parts
+    };
+
+    parse(latest) > parse(current)
 }
 
 fn register_font_family(fonts: &mut egui::FontDefinitions, name: &str, index: usize) {
@@ -3842,6 +4171,18 @@ fn zh(key: &str) -> &'static str {
         "mcp_ios_desc" => "连接 iOS 构建、模拟器、SwiftUI 预览和性能检查能力。",
         "mcp_android_desc" => "连接安卓模拟器、性能采样、截图巡检和发布验收能力。",
         "token_help" => "可选。仅用于提高 GitHub API 频率限制，不应在共享设备长期保存。",
+        "version_center" => "版本中心",
+        "current_version" => "当前版本",
+        "online_version" => "在线版本",
+        "checking_version" => "检查中",
+        "check_failed" => "检查失败",
+        "up_to_date" => "已是最新",
+        "update_available" => "发现新版",
+        "download_latest" => "下载最新版",
+        "open_release" => "Release",
+        "retry_check" => "重试",
+        "android_update_note" => "Android 支持同包名、同签名覆盖安装；下载后会交给系统安装器确认。",
+        "download_latest_note" => "打开最新版下载页；安装方式以平台系统规则为准。",
         "empty_repo" => "请输入仓库 URL 或 owner/repo。",
         "invalid_repo" => "格式无效。支持 github.com、gitee.com、gitcode.com 或 owner/repo。",
         _ => "",
@@ -3976,6 +4317,18 @@ fn en(key: &str) -> &'static str {
         "mcp_ios_desc" => "Connect iOS builds, simulators, SwiftUI previews, and performance checks.",
         "mcp_android_desc" => "Connect Android emulator, performance sampling, screenshot checks, and release QA.",
         "token_help" => "Optional. Only used to raise GitHub API limits. Avoid long-term storage on shared devices.",
+        "version_center" => "Version Center",
+        "current_version" => "Current",
+        "online_version" => "Online",
+        "checking_version" => "Checking",
+        "check_failed" => "Check failed",
+        "up_to_date" => "Up to date",
+        "update_available" => "Update ready",
+        "download_latest" => "Download Latest",
+        "open_release" => "Release",
+        "retry_check" => "Retry",
+        "android_update_note" => "Android can overwrite only when package id and signing lineage match; the system installer still asks for confirmation.",
+        "download_latest_note" => "Open the latest download page; install behavior follows platform rules.",
         "empty_repo" => "Enter a repository URL or owner/repo.",
         "invalid_repo" => "Invalid format. Use github.com, gitee.com, gitcode.com, or owner/repo.",
         _ => "",
